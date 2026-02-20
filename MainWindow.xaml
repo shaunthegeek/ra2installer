@@ -6,12 +6,12 @@
         xmlns:local="clr-namespace:RA2Installer"
         xmlns:resx="clr-namespace:RA2Installer.Resources"
         mc:Ignorable="d"
-        Title="{x:Static resx:Strings.WindowTitle}" Height="600" Width="800" ResizeMode="NoResize">
-    <Grid>
+        Title="{x:Static resx:Strings.WindowTitle}" ResizeMode="NoResize" SizeToContent="WidthAndHeight">
+    <Grid Width="640" Height="480">
         
         <!-- 语言切换按钮和退出按钮 -->
-        <StackPanel Orientation="Vertical" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,10,21">
-            <Button Width="143" Height="42" Margin="0,0,0,0" Cursor="Hand" Click="ChineseSimplifiedButton_Click">
+        <StackPanel Orientation="Vertical" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,9,29">
+            <Button Width="145" Height="42" Margin="0,0,0,0" Cursor="Hand" Click="ChineseSimplifiedButton_Click">
                 <Button.Template>
                     <ControlTemplate TargetType="Button">
                         <Grid>
@@ -26,7 +26,7 @@
                     </ControlTemplate>
                 </Button.Template>
             </Button>
-            <Button Width="143" Height="42" Margin="0,0,0,0" Cursor="Hand" Click="ChineseTraditionalButton_Click">
+            <Button Width="145" Height="42" Margin="0,0,0,0" Cursor="Hand" Click="ChineseTraditionalButton_Click">
                 <Button.Template>
                     <ControlTemplate TargetType="Button">
                         <Grid>
@@ -41,7 +41,7 @@
                     </ControlTemplate>
                 </Button.Template>
             </Button>
-            <Button Width="143" Height="42" Margin="0,0,0,188" Cursor="Hand" Click="EnglishButton_Click">
+            <Button Width="145" Height="42" Margin="0,0,0,85" Cursor="Hand" Click="EnglishButton_Click">
                 <Button.Template>
                     <ControlTemplate TargetType="Button">
                         <Grid>
@@ -56,7 +56,7 @@
                     </ControlTemplate>
                 </Button.Template>
             </Button>
-            <Button x:Name="ExitButton" Width="143" Height="42" Cursor="Hand" Click="ExitButton_Click">
+            <Button x:Name="ExitButton" Width="145" Height="42" Cursor="Hand" Click="ExitButton_Click">
             <Button.Template>
                 <ControlTemplate TargetType="Button">
                     <Grid>

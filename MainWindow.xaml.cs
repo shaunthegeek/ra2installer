@@ -5,7 +5,6 @@ using System.Windows.Documents;
 using System.Windows.Media;
 using RA2Installer.Resources;
 
-
 namespace RA2Installer
 {
     /// <summary>
