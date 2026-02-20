@@ -4,9 +4,74 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:RA2Installer"
+        xmlns:resx="clr-namespace:RA2Installer.Resources"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="{x:Static resx:Strings.WindowTitle}" Height="600" Width="800" ResizeMode="NoResize">
     <Grid>
-
+        <Image Source="Assets/install_bkg.png" Stretch="Fill"/>
+        
+        <!-- 语言切换按钮和退出按钮 -->
+        <StackPanel Orientation="Vertical" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,10,21">
+            <Button Width="143" Height="42" Margin="0,0,0,0" Cursor="Hand" Click="ChineseSimplifiedButton_Click">
+                <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                        <Grid>
+                            <Image Name="bgImage" Source="Assets/nav_bkg0.jpg" Stretch="Fill"/>
+                            <TextBlock Text="简体中文" Foreground="Yellow" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="16"/>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bgImage" Property="Source" Value="Assets/nav_bkg1.jpg"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Button.Template>
+            </Button>
+            <Button Width="143" Height="42" Margin="0,0,0,0" Cursor="Hand" Click="ChineseTraditionalButton_Click">
+                <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                        <Grid>
+                            <Image Name="bgImage" Source="Assets/nav_bkg0.jpg" Stretch="Fill"/>
+                            <TextBlock Text="繁體中文" Foreground="Yellow" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="16"/>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bgImage" Property="Source" Value="Assets/nav_bkg1.jpg"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Button.Template>
+            </Button>
+            <Button Width="143" Height="42" Margin="0,0,0,188" Cursor="Hand" Click="EnglishButton_Click">
+                <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                        <Grid>
+                            <Image Name="bgImage" Source="Assets/nav_bkg0.jpg" Stretch="Fill"/>
+                            <TextBlock Text="English" Foreground="Yellow" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="16"/>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bgImage" Property="Source" Value="Assets/nav_bkg1.jpg"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Button.Template>
+            </Button>
+            <Button x:Name="ExitButton" Width="143" Height="42" Cursor="Hand" Click="ExitButton_Click">
+            <Button.Template>
+                <ControlTemplate TargetType="Button">
+                    <Grid>
+                        <Image Name="bgImage" Source="Assets/nav_bkg0.jpg" Stretch="Fill"/>
+                        <TextBlock Name="ButtonTextBlock" Foreground="Yellow" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="16"/>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="bgImage" Property="Source" Value="Assets/nav_bkg1.jpg"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Button.Template>
+        </Button>
+        </StackPanel>
     </Grid>
 </Window>
