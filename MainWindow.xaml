@@ -8,7 +8,6 @@
         mc:Ignorable="d"
         Title="{x:Static resx:Strings.WindowTitle}" Height="600" Width="800" ResizeMode="NoResize">
     <Grid>
-        <Image Source="Assets/install_bkg.png" Stretch="Fill"/>
         
         <!-- 语言切换按钮和退出按钮 -->
         <StackPanel Orientation="Vertical" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,10,21">
