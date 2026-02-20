@@ -1,0 +1,52 @@
+# Visual Studio
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Build directories
+bin/
+obj/
+
+# Visual Studio 2015/2017 cache/options directory
+.vs/
+
+# ReSharper cache files
+_ReSharper*/
+*.[Rr]e[Ss]harper
+
+# NuGet packages
+packages/
+*.nupkg
+
+# MSTest test results
+TestResults/
+
+# Build results
+[Bb]uild/
+
+# Visual Studio build outputs
+*.cache
+*.tlog
+*.log
+
+# dotnet
+bin/
+obj/
+
+# Rider
+.idea/
+*.sln.iml
+
+# VSCode
+.vscode/
+
+# Windows
+Thumbs.db
+
+# macOS
+.DS_Store
+
+# Linux
+*~
