@@ -698,6 +698,10 @@ namespace RA2Installer
             {
                 SetLanguage("zh-TW");
             }
+            else if (systemLanguage.Name.StartsWith("zh"))
+            {
+                SetLanguage("zh-TW");
+            }
             else
             {
                 SetLanguage("en-US");
