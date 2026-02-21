@@ -112,5 +112,14 @@ namespace RA2Installer.Resources {
                 return ResourceManager.GetString("LicenseContent", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to I agree to these terms.
+        /// </summary>
+        public static string IAgreeToTheseTerms {
+            get {
+                return ResourceManager.GetString("IAgreeToTheseTerms", resourceCulture);
+            }
+        }
     }
 }

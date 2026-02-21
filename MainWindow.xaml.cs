@@ -16,7 +16,7 @@ namespace RA2Installer
     {
         // 常量：Setup.mix 文件路径
         private const string SetupMixPath = "Assets/RA1/Setup/Setup.mix";
-        
+
         private System.Windows.Media.MediaPlayer _backgroundMusicPlayer;
         private System.Windows.Media.MediaPlayer _soundPlayer;
         private string _buttonClickSoundFile;
@@ -26,7 +26,7 @@ namespace RA2Installer
 
         // 日志文件路径
         private string _logFile;
-        
+
         // 当前选择的语言
         private string _currentLanguage;
 
@@ -42,7 +42,7 @@ namespace RA2Installer
                 InitializeComponent();
 
                 File.AppendAllText(_logFile, "Components initialized, checking AnimationImage\n");
-                
+
                 // 检查 AnimationImage 是否存在
                 if (AnimationImage != null)
                 {
@@ -84,7 +84,7 @@ namespace RA2Installer
 
                 File.AppendAllText(_logFile, "Adding Loaded event handler\n");
                 Loaded += MainWindow_Loaded;
-                
+
                 File.AppendAllText(_logFile, "MainWindow initialization completed\n");
             }
             catch (Exception ex)
@@ -172,7 +172,7 @@ namespace RA2Installer
                 // 简单的日志写入，避免格式化字符串可能的问题
                 File.AppendAllText(_logFile, "Starting to load SHP animation\n");
                 File.AppendAllText(_logFile, "Hash: " + fileNameHash + "\n");
-                
+
                 // 检查 AnimationImage 是否存在
                 if (AnimationImage == null)
                 {
@@ -183,11 +183,11 @@ namespace RA2Installer
                 {
                     File.AppendAllText(_logFile, "AnimationImage control is available\n");
                 }
-                
+
                 // 加载 Setup.mix 文件
                 File.AppendAllText(_logFile, "Loading mix file\n");
                 File.AppendAllText(_logFile, "Path: " + setupMixPath + "\n");
-                
+
                 // 检查文件是否存在
                 if (!File.Exists(setupMixPath))
                 {
@@ -198,7 +198,7 @@ namespace RA2Installer
                 {
                     File.AppendAllText(_logFile, "Mix file exists\n");
                 }
-                
+
                 MixFile mixFile = new MixFile(setupMixPath);
                 File.AppendAllText(_logFile, "Mix file loaded\n");
 
@@ -216,9 +216,9 @@ namespace RA2Installer
                     File.AppendAllText(_logFile, "Successfully loaded SHP file\n");
                     File.AppendAllText(_logFile, "Size: " + shpData.Length + " bytes\n");
                 }
-                
+
                 ShpFile shpFile;
-                
+
                 // 使用用户指定的 PAL 文件
                 byte[] palData = null;
                 string userSpecifiedPalHash = "397C46E0";
@@ -227,7 +227,7 @@ namespace RA2Installer
                 {
                     File.AppendAllText(_logFile, "Successfully loaded user specified PAL file with hash: " + userSpecifiedPalHash + "\n");
                     File.AppendAllText(_logFile, "Size: " + palData.Length + " bytes\n");
-                    
+
                     // 使用找到的 PAL 文件解析 SHP 文件
                     File.AppendAllText(_logFile, "Parsing SHP file with PAL\n");
                     shpFile = new ShpFile(shpData, palData);
@@ -237,7 +237,7 @@ namespace RA2Installer
                     File.AppendAllText(_logFile, "Failed to load user specified PAL file with hash: " + userSpecifiedPalHash + "\n");
                     throw new Exception($"Failed to load specified PAL file with hash: {userSpecifiedPalHash}");
                 }
-                
+
                 File.AppendAllText(_logFile, "SHP file parsed successfully\n");
                 File.AppendAllText(_logFile, "Frame count: " + shpFile.FrameCount + "\n");
                 File.AppendAllText(_logFile, "Width: " + shpFile.Width + "\n");
@@ -395,7 +395,7 @@ namespace RA2Installer
                 {
                     // 停止当前播放
                     player.Stop();
-                    
+
                     // 重新打开音频文件并播放
                     player.Open(new Uri(audioFile));
                     player.Play();
@@ -509,7 +509,7 @@ namespace RA2Installer
             {
                 // 每次点击按钮时，重置动画到第一帧并重新开始播放
                 File.AppendAllText(_logFile, "Starting SHP animation playback on language button click\n");
-                
+
                 // 重置动画到第一帧
                 _shpAnimationPlayer.Reset();
                 // 开始播放
@@ -521,7 +521,7 @@ namespace RA2Installer
                 File.AppendAllText(_logFile, "_shpAnimationPlayer is null, cannot start playback\n");
             }
         }
-        
+
         /// <summary>
         /// 动画播放完成事件处理
         /// </summary>
@@ -542,24 +542,38 @@ namespace RA2Installer
             Page1.Visibility = Visibility.Collapsed;
             // 显示第二页
             Page2.Visibility = Visibility.Visible;
-            
+
             // 确保许可证边框初始状态为隐藏
             if (LicenseBorder != null)
             {
                 LicenseBorder.Visibility = Visibility.Collapsed;
                 File.AppendAllText(_logFile, "LicenseBorder visibility reset to Collapsed\n");
             }
+
+            // 确保同意条款文本初始状态为隐藏
+            if (IAgreeToTheseTermsTextBlock != null)
+            {
+                IAgreeToTheseTermsTextBlock.Visibility = Visibility.Collapsed;
+                File.AppendAllText(_logFile, "IAgreeToTheseTermsTextBlock visibility reset to Collapsed\n");
+            }
             
+            // 确保同意按钮初始状态为隐藏
+            if (AgreeButtonImage != null)
+            {
+                AgreeButtonImage.Visibility = Visibility.Collapsed;
+                File.AppendAllText(_logFile, "AgreeButtonImage visibility reset to Collapsed\n");
+            }
+
             // 为第二页加载相同的背景图片
             LoadBackgroundImageForPage2();
-            
+
             // 加载并播放第二页的动画
             LoadAndPlayPage2Animation();
-            
+
             // 更新第二页的UI文本，使用当前选择的语言
             UpdatePage2UIText();
         }
-        
+
         /// <summary>
         /// 加载并播放第二页的动画
         /// </summary>
@@ -568,17 +582,17 @@ namespace RA2Installer
             try
             {
                 File.AppendAllText(_logFile, "Loading and playing Page2 animation with hash: D6D75E64\n");
-                
+
                 // 检查Page2AnimationImage是否存在
                 if (Page2AnimationImage == null)
                 {
                     File.AppendAllText(_logFile, "Page2AnimationImage control is null\n");
                     return;
                 }
-                
+
                 // 加载Setup.mix文件
                 MixFile mixFile = new MixFile(SetupMixPath);
-                
+
                 // 获取SHP文件数据
                 byte[] shpData = mixFile.GetShpByHash("D6D75E64");
                 if (shpData == null)
@@ -586,7 +600,7 @@ namespace RA2Installer
                     File.AppendAllText(_logFile, "Failed to load SHP file for Page2 animation\n");
                     return;
                 }
-                
+
                 // 获取PAL文件数据
                 string palHash = "397C46E0";
                 byte[] palData = mixFile.GetPalByHash(palHash);
@@ -595,20 +609,20 @@ namespace RA2Installer
                     File.AppendAllText(_logFile, "Failed to load PAL file for Page2 animation\n");
                     return;
                 }
-                
+
                 // 解析SHP文件
                 ShpFile shpFile = new ShpFile(shpData, palData);
-                
+
                 // 创建动画播放器
                 _page2ShpAnimationPlayer = new ShpAnimationPlayer(shpFile, Page2AnimationImage);
-                
+
                 // 添加动画播放完成事件处理程序
                 _page2ShpAnimationPlayer.AnimationCompleted += Page2Animation_Completed;
-                
+
                 // 开始播放动画
                 _page2ShpAnimationPlayer.Play();
                 File.AppendAllText(_logFile, "Page2 animation playback started\n");
-                
+
                 // 播放第二页的音效
                 PlayPage2Sounds();
             }
@@ -617,7 +631,7 @@ namespace RA2Installer
                 File.AppendAllText(_logFile, "Error loading Page2 animation: " + ex.Message + "\n");
             }
         }
-        
+
         /// <summary>
         /// 播放第二页的音效
         /// </summary>
@@ -633,7 +647,7 @@ namespace RA2Installer
                 File.AppendAllText(_logFile, "Error playing Page2 sounds: " + ex.Message + "\n");
             }
         }
-        
+
         /// <summary>
         /// 为第二页加载背景图片
         /// </summary>
@@ -658,7 +672,7 @@ namespace RA2Installer
                 Console.WriteLine($"Error loading background image for Page2: {ex.Message}");
             }
         }
-        
+
         /// <summary>
         /// 更新第二页的UI文本
         /// </summary>
@@ -677,7 +691,7 @@ namespace RA2Installer
                     }
                 }
             }
-            
+
             // 更新下一步按钮文本
             if (NextButton != null)
             {
@@ -691,7 +705,7 @@ namespace RA2Installer
                     }
                 }
             }
-            
+
             // 更新取消按钮文本
             if (Page2CancelButton != null)
             {
@@ -705,26 +719,32 @@ namespace RA2Installer
                     }
                 }
             }
-            
+
             // 更新许可证内容文本
             if (LicenseTextBlock != null)
             {
                 LicenseTextBlock.Text = Strings.LicenseContent;
             }
+
+            // 更新同意条款文本
+            if (IAgreeToTheseTermsTextBlock != null)
+            {
+                IAgreeToTheseTermsTextBlock.Text = Strings.IAgreeToTheseTerms;
+            }
         }
-        
+
         /// <summary>
         /// 上一步按钮点击事件
         /// </summary>
         private void PreviousButton_Click(object sender, RoutedEventArgs e)
         {
             PlayButtonClickSound();
-            
+
             // 隐藏第二页
             Page2.Visibility = Visibility.Collapsed;
             // 显示第一页
             Page1.Visibility = Visibility.Visible;
-            
+
             // 显示第一帧，不播放动画
             if (_shpAnimationPlayer != null)
             {
@@ -734,16 +754,88 @@ namespace RA2Installer
                 _shpAnimationPlayer.Reset();
             }
         }
-        
+
         /// <summary>
         /// 下一步按钮点击事件
         /// </summary>
         private void NextButton_Click(object sender, RoutedEventArgs e)
         {
             PlayButtonClickSound();
-            // 这里可以添加下一步的逻辑
+
+            // 隐藏许可证内容和同意条款文本
+            if (LicenseBorder != null)
+            {
+                LicenseBorder.Visibility = Visibility.Collapsed;
+                File.AppendAllText(_logFile, "LicenseBorder visibility set to Collapsed\n");
+            }
+            if (IAgreeToTheseTermsTextBlock != null)
+            {
+                IAgreeToTheseTermsTextBlock.Visibility = Visibility.Collapsed;
+                File.AppendAllText(_logFile, "IAgreeToTheseTermsTextBlock visibility set to Collapsed\n");
+            }
+
+            // 显示动画 hash 134B6332 的第一帧
+            ShowAnimationFirstFrame("134B6332");
         }
-        
+
+        /// <summary>
+        /// 显示指定动画的第一帧
+        /// </summary>
+        /// <param name="animationHash">动画的哈希值</param>
+        private void ShowAnimationFirstFrame(string animationHash)
+        {
+            try
+            {
+                File.AppendAllText(_logFile, $"Loading first frame of animation with hash: {animationHash}\n");
+
+                // 检查Page2AnimationImage是否存在
+                if (Page2AnimationImage == null)
+                {
+                    File.AppendAllText(_logFile, "Page2AnimationImage control is null\n");
+                    return;
+                }
+
+                // 加载Setup.mix文件
+                MixFile mixFile = new MixFile(SetupMixPath);
+
+                // 获取SHP文件数据
+                byte[] shpData = mixFile.GetShpByHash(animationHash);
+                if (shpData == null)
+                {
+                    File.AppendAllText(_logFile, $"Failed to load SHP file for animation {animationHash}\n");
+                    return;
+                }
+
+                // 获取PAL文件数据（使用与第二页相同的调色板）
+                string palHash = "397C46E0";
+                byte[] palData = mixFile.GetPalByHash(palHash);
+                if (palData == null)
+                {
+                    File.AppendAllText(_logFile, "Failed to load PAL file for animation\n");
+                    return;
+                }
+
+                // 解析SHP文件
+                ShpFile shpFile = new ShpFile(shpData, palData);
+
+                // 获取第一帧图像并显示
+                var frames = shpFile.GetFrames();
+                if (frames.Count > 0)
+                {
+                    Page2AnimationImage.Source = frames[0];
+                    File.AppendAllText(_logFile, $"First frame of animation {animationHash} displayed\n");
+                }
+                else
+                {
+                    File.AppendAllText(_logFile, $"No frames found in SHP file for animation {animationHash}\n");
+                }
+            }
+            catch (Exception ex)
+            {
+                File.AppendAllText(_logFile, $"Error displaying first frame of animation: {ex.Message}\n");
+            }
+        }
+
         /// <summary>
         /// 取消按钮点击事件
         /// </summary>
@@ -752,6 +844,9 @@ namespace RA2Installer
             PlayButtonClickSound();
             Application.Current.Shutdown();
         }
+
+        // 存储动画帧用于同意按钮
+        private List<System.Windows.Media.Imaging.BitmapSource> _agreeButtonAnimationFrames;
 
         /// <summary>
         /// 第二页动画播放完成事件处理程序
@@ -763,7 +858,7 @@ namespace RA2Installer
             try
             {
                 File.AppendAllText(_logFile, "Page2 animation completed, showing license agreement\n");
-                
+
                 // 显示许可证内容
                 if (LicenseBorder != null)
                 {
@@ -774,11 +869,104 @@ namespace RA2Installer
                 {
                     File.AppendAllText(_logFile, "LicenseBorder is null\n");
                 }
+
+                // 显示同意条款文本
+                if (IAgreeToTheseTermsTextBlock != null)
+                {
+                    IAgreeToTheseTermsTextBlock.Visibility = Visibility.Visible;
+                    File.AppendAllText(_logFile, "IAgreeToTheseTermsTextBlock visibility set to Visible\n");
+                }
+                else
+                {
+                    File.AppendAllText(_logFile, "IAgreeToTheseTermsTextBlock is null\n");
+                }
+
+                // 加载并显示同意按钮动画的第一帧
+                LoadAgreeButtonAnimation();
             }
             catch (Exception ex)
             {
                 File.AppendAllText(_logFile, "Error in Page2Animation_Completed: " + ex.Message + "\n");
             }
+        }
+
+        /// <summary>
+        /// 加载同意按钮的动画帧
+        /// </summary>
+        private void LoadAgreeButtonAnimation()
+        {
+            try
+            {
+                File.AppendAllText(_logFile, "Loading agree button animation with hash: 134B6332\n");
+
+                // 检查AgreeButtonImage是否存在
+                if (AgreeButtonImage == null)
+                {
+                    File.AppendAllText(_logFile, "AgreeButtonImage control is null\n");
+                    return;
+                }
+
+                // 加载Setup.mix文件
+                MixFile mixFile = new MixFile(SetupMixPath);
+
+                // 获取SHP文件数据
+                byte[] shpData = mixFile.GetShpByHash("134B6332");
+                if (shpData == null)
+                {
+                    File.AppendAllText(_logFile, "Failed to load SHP file for agree button animation\n");
+                    return;
+                }
+
+                // 获取PAL文件数据（使用指定的调色板 hash 297C46E0）
+                string palHash = "297C46E0";
+                byte[] palData = mixFile.GetPalByHash(palHash);
+                if (palData == null)
+                {
+                    File.AppendAllText(_logFile, "Failed to load PAL file for agree button animation\n");
+                    return;
+                }
+
+                // 解析SHP文件
+                ShpFile shpFile = new ShpFile(shpData, palData);
+
+                // 存储动画帧
+                _agreeButtonAnimationFrames = shpFile.GetFrames();
+
+                // 显示第一帧
+                if (_agreeButtonAnimationFrames.Count > 0)
+                {
+                    AgreeButtonImage.Source = _agreeButtonAnimationFrames[0];
+                    AgreeButtonImage.Visibility = Visibility.Visible;
+                    File.AppendAllText(_logFile, "Agree button animation first frame displayed\n");
+                }
+                else
+                {
+                    File.AppendAllText(_logFile, "No frames found in SHP file for agree button animation\n");
+                }
+            }
+            catch (Exception ex)
+            {
+                File.AppendAllText(_logFile, "Error loading agree button animation: " + ex.Message + "\n");
+            }
+        }
+
+        /// <summary>
+        /// 同意按钮点击事件处理程序
+        /// </summary>
+        /// <param name="sender">发送者</param>
+        /// <param name="e">事件参数</param>
+        private void AgreeButtonImage_MouseLeftButtonUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            PlayButtonClickSound();
+
+            // 显示第二帧
+            if (_agreeButtonAnimationFrames != null && _agreeButtonAnimationFrames.Count > 1)
+            {
+                AgreeButtonImage.Source = _agreeButtonAnimationFrames[1];
+                File.AppendAllText(_logFile, "Agree button animation second frame displayed\n");
+            }
+            
+            // 这里可以添加同意后的逻辑
         }
     }
 }

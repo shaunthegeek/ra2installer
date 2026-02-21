@@ -92,6 +92,11 @@
                     <TextBlock x:Name="LicenseTextBlock" Foreground="#BB080B" FontSize="12" TextWrapping="Wrap"/>
                 </ScrollViewer>
             </Border>
+            <!-- 同意按钮（动画帧） -->
+            <Image x:Name="AgreeButtonImage" Cursor="Hand" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="130,295,0,0" Width="210" Visibility="Collapsed" MouseLeftButtonUp="AgreeButtonImage_MouseLeftButtonUp"/>
+
+            <!-- 同意条款文本 -->
+            <TextBlock x:Name="IAgreeToTheseTermsTextBlock" Foreground="#FFEF84" FontSize="12" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="205,300,0,0" Width="130" TextAlignment="Left" Visibility="Collapsed"/>
             
             <!-- 按钮容器 -->
             <StackPanel Orientation="Vertical" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,9,29">

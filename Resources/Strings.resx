@@ -113,4 +113,7 @@ Neither EA nor Westwood shall have any responsibility or liability to you or any
 
 13.	GENERAL.   This License sets forth the entire agreement between the parties with respect to the subject matter hereof and supersedes all prior negotiations, understandings and agreements, whether written or oral, between the parties hereto concerning the subject matter hereof.  This License is governed by the laws of the State of California.  This License is severable.  Should any provision of this License be held to be void, invalid or unenforceable, the remaining provisions hereof shall not be affected and shall continue in effect as though such unenforceable provision has been deleted herefrom.  The name of this License and the headings of the sections of this License are inserted merely for convenience and shall not be used or relied upon in connection with the construction or interpretation of this License.  For more information about EA's or Westwood's licensing policies, please write: Electronic Arts Inc., 209 Redwood Shores Parkway, Redwood City, CA  94065-1175, Attention: General Counsel.</value>
   </data>
+  <data name="IAgreeToTheseTerms" xml:space="preserve">
+    <value>I agree to these terms</value>
+  </data>
 </root>
