@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.IO;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
@@ -16,8 +17,8 @@ namespace RA2Installer
         // 常量：Setup.mix 文件路径
         private const string SetupMixPath = "Assets/RA1/Setup/Setup.mix";
         
-        private System.Windows.Media.MediaPlayer _mediaPlayer;
         private System.Windows.Media.MediaPlayer _backgroundMusicPlayer;
+        private System.Windows.Media.MediaPlayer _soundPlayer;
         private string _buttonClickSoundFile;
         private string _backgroundMusicFile;
         private ShpAnimationPlayer _shpAnimationPlayer;
@@ -70,8 +71,8 @@ namespace RA2Installer
 
                 // 初始化 MediaPlayer
                 File.AppendAllText(_logFile, "Initializing MediaPlayer\n");
-                _mediaPlayer = new System.Windows.Media.MediaPlayer();
                 _backgroundMusicPlayer = new System.Windows.Media.MediaPlayer();
+                _soundPlayer = new System.Windows.Media.MediaPlayer();
 
                 // 加载按钮点击音效
                 File.AppendAllText(_logFile, "Loading button click sound\n");
@@ -93,6 +94,9 @@ namespace RA2Installer
                 File.AppendAllText(logFile, $"Stack trace: {ex.StackTrace}\n");
                 // 不退出程序，继续初始化
                 InitializeComponent();
+                // 初始化所有MediaPlayers
+                _backgroundMusicPlayer = new System.Windows.Media.MediaPlayer();
+                _soundPlayer = new System.Windows.Media.MediaPlayer();
                 Loaded += MainWindow_Loaded;
             }
         }
@@ -431,6 +435,10 @@ namespace RA2Installer
             {
                 if (!string.IsNullOrEmpty(audioFile) && File.Exists(audioFile))
                 {
+                    // 停止播放器并重置
+                    player.Stop();
+                    player.Close();
+                    
                     // 使用 Uri 播放音频
                     player.Open(new Uri(audioFile));
                     player.Play();
@@ -455,7 +463,7 @@ namespace RA2Installer
         /// </summary>
         private void PlayButtonClickSound()
         {
-            PlayAudio(_mediaPlayer, _buttonClickSoundFile);
+            PlayAudio(_soundPlayer, _buttonClickSoundFile);
         }
 
         private static T? FindVisualChild<T>(DependencyObject parent) where T : DependencyObject
@@ -608,10 +616,29 @@ namespace RA2Installer
                 // 开始播放动画
                 _page2ShpAnimationPlayer.Play();
                 File.AppendAllText(_logFile, "Page2 animation playback started\n");
+                
+                // 播放第二页的音效
+                PlayPage2Sounds();
             }
             catch (Exception ex)
             {
                 File.AppendAllText(_logFile, "Error loading Page2 animation: " + ex.Message + "\n");
+            }
+        }
+        
+        /// <summary>
+        /// 播放第二页的音效
+        /// </summary>
+        private void PlayPage2Sounds()
+        {
+            try
+            {
+                string soundFile1 = LoadAudioFromMix("B1C914DD");
+                PlayAudio(_soundPlayer, soundFile1);
+            }
+            catch (Exception ex)
+            {
+                File.AppendAllText(_logFile, "Error playing Page2 sounds: " + ex.Message + "\n");
             }
         }
         
