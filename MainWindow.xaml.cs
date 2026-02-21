@@ -745,6 +745,15 @@ namespace RA2Installer
             Page2.Visibility = Visibility.Collapsed;
             // 显示第一页
             Page1.Visibility = Visibility.Visible;
+            
+            // 显示第一帧，不播放动画
+            if (_shpAnimationPlayer != null)
+            {
+                // 停止动画（如果正在播放）
+                _shpAnimationPlayer.Stop();
+                // 重置到第一帧
+                _shpAnimationPlayer.Reset();
+            }
         }
         
         /// <summary>
