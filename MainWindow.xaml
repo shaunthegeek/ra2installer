@@ -88,6 +88,9 @@
         <Grid x:Name="Page2" Width="640" Height="480" Visibility="Collapsed">
             <!-- 动画显示控件 -->
             <Image x:Name="Page2AnimationImage" HorizontalAlignment="Left" VerticalAlignment="Top" Width="470"/>
+
+            <!-- 从Language.dll读取的文本显示区域 -->
+            <StackPanel x:Name="Page2LanguageTextStackPanel" Orientation="Vertical" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="483,39,0,0" Width="154"/>
             
             <!-- 许可证内容显示区域 -->
             <Border HorizontalAlignment="Left" VerticalAlignment="Top" Margin="115,45,0,0" Width="245" Height="245" BorderThickness="1" BorderBrush="#BB080B" Visibility="Collapsed" x:Name="LicenseBorder">

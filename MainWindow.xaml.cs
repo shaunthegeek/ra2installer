@@ -1328,10 +1328,78 @@ namespace RA2Installer
 
                 // 加载并显示同意按钮动画的第一帧
                 LoadAgreeButtonAnimation();
+
+                // 加载并显示language.dll中ID 255的内容
+                LoadAndDisplayLanguageStringId255();
             }
             catch (Exception ex)
             {
                 File.AppendAllText(_logFile, "Error in Page2Animation_Completed: " + ex.Message + "\n");
+            }
+        }
+
+        /// <summary>
+        /// 加载并显示language.dll中ID 255的内容
+        /// </summary>
+        private void LoadAndDisplayLanguageStringId255()
+        {
+            try
+            {
+                File.AppendAllText(_logFile, "Starting to load language string ID 255 from Language.dll\n");
+
+                // Language.dll文件路径
+                string languageDllPath = "Assets/RA1/Setup/Language.dll";
+
+                // 检查文件是否存在
+                if (!File.Exists(languageDllPath))
+                {
+                    File.AppendAllText(_logFile, "Language.dll file not found\n");
+                    return;
+                }
+
+                File.AppendAllText(_logFile, "Language.dll file found, loading string ID 255\n");
+
+                // 确定要使用的语言
+                ushort languageId = GetLanguageIdForCurrentLanguage();
+                File.AppendAllText(_logFile, $"Using language ID: {languageId}\n");
+
+                // 读取字符串ID 255
+                int stringId = 255;
+                string text = ReadStringFromLanguageDll(languageDllPath, stringId, languageId);
+                if (!string.IsNullOrEmpty(text))
+                {
+                    // 清除现有内容
+                    if (Page2LanguageTextStackPanel != null)
+                    {
+                        Page2LanguageTextStackPanel.Children.Clear();
+
+                        // 创建TextBlock并添加到StackPanel
+                        TextBlock textBlock = new TextBlock
+                        {
+                            Text = text,
+                            Foreground = Brushes.Yellow,
+                            FontSize = 10,
+                            TextAlignment = TextAlignment.Left,
+                            TextWrapping = TextWrapping.Wrap,
+                        };
+                        Page2LanguageTextStackPanel.Children.Add(textBlock);
+                        File.AppendAllText(_logFile, $"Added string ID {stringId}: {text}\n");
+                    }
+                    else
+                    {
+                        File.AppendAllText(_logFile, "Page2LanguageTextStackPanel is null\n");
+                    }
+                }
+                else
+                {
+                    File.AppendAllText(_logFile, $"Failed to read string ID {stringId}\n");
+                }
+
+                File.AppendAllText(_logFile, "Language string ID 255 loaded and displayed\n");
+            }
+            catch (Exception ex)
+            {
+                File.AppendAllText(_logFile, $"Error loading language string ID 255: {ex.Message}\n");
             }
         }
 
