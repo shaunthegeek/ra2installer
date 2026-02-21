@@ -426,12 +426,11 @@ namespace RA2Installer
         }
 
         /// <summary>
-        /// 根据文件名哈希值和类型从 mix 文件中查找图片
+        /// 根据文件名哈希值从 mix 文件中查找图片
         /// </summary>
         /// <param name="fileNameHash">文件名哈希值</param>
-        /// <param name="fileType">文件类型（如 "bmp"）</param>
         /// <returns>找到的图片的 BitmapImage 实例</returns>
-        public BitmapImage GetImageByHash(string fileNameHash, string fileType)
+        public BitmapImage GetImageByHash(string fileNameHash)
         {
             try
             {
@@ -491,82 +490,11 @@ namespace RA2Installer
         }
 
         /// <summary>
-        /// 直接从文件中提取第一个 BMP 图片
-        /// </summary>
-        /// <returns>找到的 BMP 图片的 BitmapImage 实例</returns>
-        public BitmapImage ExtractFirstBmpImage()
-        {
-            try
-            {
-
-
-                using (var stream = new FileStream(_filePath, FileMode.Open, FileAccess.Read))
-                {
-                    // BMP 文件头签名
-                    byte[] bmpSignature = new byte[] { 0x42, 0x4D }; // "BM"
-
-                    // 搜索文件中的 BMP 签名
-                    byte[] buffer = new byte[4096];
-                    int bytesRead;
-                    long position = 0;
-
-                    while ((bytesRead = stream.Read(buffer, 0, buffer.Length)) > 0)
-                    {
-                        for (int i = 0; i < bytesRead - 1; i++)
-                        {
-                            if (buffer[i] == bmpSignature[0] && buffer[i + 1] == bmpSignature[1])
-                            {
-                                // 找到 BMP 签名，计算位置
-                                long bmpPosition = position + i;
-
-
-                                // 重置流位置到 BMP 开始
-                                stream.Position = bmpPosition;
-
-                                // 读取 BMP 文件
-                                using (var memoryStream = new MemoryStream())
-                                {
-                                    // 读取剩余的文件内容
-                                    stream.CopyTo(memoryStream);
-                                    memoryStream.Position = 0;
-
-                                    try
-                                    {
-                                        var bitmap = new BitmapImage();
-                                        bitmap.BeginInit();
-                                        bitmap.StreamSource = memoryStream;
-                                        bitmap.CacheOption = BitmapCacheOption.OnLoad;
-                                        bitmap.EndInit();
-                                        bitmap.Freeze();
-
-                                        return bitmap;
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        Console.WriteLine($"Error loading BMP image: {ex.Message}");
-                                    }
-                                }
-                            }
-                        }
-                        position += bytesRead;
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error extracting BMP image: {ex.Message}");
-            }
-
-            return null;
-        }
-
-        /// <summary>
         /// 根据文件名哈希值从 mix 文件中获取音频文件
         /// </summary>
         /// <param name="fileNameHash">文件名哈希值</param>
-        /// <param name="fileType">文件类型（如 "aud"）</param>
         /// <returns>音频文件的字节数组</returns>
-        public byte[] GetAudioByHash(string fileNameHash, string fileType)
+        public byte[] GetAudioByHash(string fileNameHash)
         {
             try
             {
@@ -608,15 +536,14 @@ namespace RA2Installer
         /// 根据文件名哈希值从 mix 文件中获取 SHP 文件
         /// </summary>
         /// <param name="fileNameHash">文件名哈希值</param>
-        /// <param name="fileType">文件类型（如 "shp"）</param>
         /// <returns>SHP 文件的字节数组</returns>
-        public byte[] GetShpByHash(string fileNameHash, string fileType)
+        public byte[] GetShpByHash(string fileNameHash)
         {
             try
             {
                 // 创建日志文件
                 string logFile = Path.Combine(Path.GetTempPath(), "ra2installer.log");
-                File.AppendAllText(logFile, $"GetShpByHash called with hash: {fileNameHash}, type: {fileType}\n");
+                File.AppendAllText(logFile, $"GetShpByHash called with hash: {fileNameHash}\n");
                 
                 // 将字符串哈希值转换为整数
                 int hashValue = Convert.ToInt32(fileNameHash, 16);
@@ -677,38 +604,6 @@ namespace RA2Installer
                 File.AppendAllText(logFile, $"Stack trace: {ex.StackTrace}\n");
                 return null;
             }
-        }
-
-        /// <summary>
-        /// 获取所有 PAL 文件的哈希值
-        /// </summary>
-        /// <returns>PAL 文件哈希值列表</returns>
-        public List<int> GetAllPalFileHashes()
-        {
-            List<int> palHashes = new List<int>();
-            
-            foreach (var entry in _fileInfos)
-            {
-                try
-                {
-                    var fileContent = ReadFileByHash(entry.Key);
-                    if (fileContent != null)
-                    {
-                        // 检查文件是否为 PAL 文件：大小为 768 字节（256 色 × 3 字节/色）
-                        if (fileContent.Length == 768)
-                        {
-                            palHashes.Add(entry.Key);
-                            
-                            // 记录找到的 PAL 文件
-                            string logFile = Path.Combine(Path.GetTempPath(), "ra2installer.log");
-                            File.AppendAllText(logFile, $"Found potential PAL file with hash: {entry.Key.ToString("X8")}, size: {fileContent.Length} bytes\n");
-                        }
-                    }
-                }
-                catch { }
-            }
-            
-            return palHashes;
         }
 
         /// <summary>
