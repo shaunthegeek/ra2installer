@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Windows.Media.Imaging;
 
@@ -516,6 +514,50 @@ namespace RA2Installer
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// 根据文件名哈希值从 mix 文件中获取音频文件
+        /// </summary>
+        /// <param name="fileNameHash">文件名哈希值</param>
+        /// <param name="fileType">文件类型（如 "aud"）</param>
+        /// <returns>音频文件的字节数组</returns>
+        public byte[] GetAudioByHash(string fileNameHash, string fileType)
+        {
+            try
+            {
+                // 将字符串哈希值转换为整数
+                int hashValue = Convert.ToInt32(fileNameHash, 16);
+                
+                // 检查哈希值是否存在于存储的哈希值中
+                if (!_fileInfos.ContainsKey(hashValue))
+                {
+                    // 尝试不同的哈希值表示方式
+                    // 尝试将哈希值转换为无符号整数
+                    uint uintHashValue = Convert.ToUInt32(fileNameHash, 16);
+                    
+                    // 尝试将无符号整数转换为有符号整数
+                    int signedHashValue = unchecked((int)uintHashValue);
+                    
+                    if (_fileInfos.ContainsKey(signedHashValue))
+                    {
+                        hashValue = signedHashValue;
+                    }
+                    else
+                    {
+                        return null;
+                    }
+                }
+                
+                // 使用哈希值读取文件内容
+                var fileContent = ReadFileByHash(hashValue);
+                return fileContent;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in GetAudioByHash: {ex.Message}");
+                return null;
+            }
         }
     }
 }

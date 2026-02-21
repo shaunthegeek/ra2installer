@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
@@ -12,6 +13,12 @@ namespace RA2Installer
     /// </summary>
     public partial class MainWindow : Window
     {
+        // 常量：Setup.mix 文件路径
+        private const string SetupMixPath = "Assets/RA1/Setup/Setup.mix";
+        
+        private System.Windows.Media.MediaPlayer _mediaPlayer;
+        private byte[] _buttonClickSound;
+
         public MainWindow()
         {
             try
@@ -24,7 +31,13 @@ namespace RA2Installer
                 Console.WriteLine("Components initialized, loading background image");
 
                 // 然后加载背景图片
-                LoadBackgroundImageFromMix("Assets/cd1/Setup/Setup.mix", "B1D71F00", "bmp");
+                LoadBackgroundImageFromMix(SetupMixPath, "B1D71F00", "bmp");
+
+                // 初始化 MediaPlayer
+                _mediaPlayer = new System.Windows.Media.MediaPlayer();
+
+                // 加载按钮点击音效
+                LoadButtonClickSound();
 
                 Loaded += MainWindow_Loaded;
             }
@@ -217,6 +230,82 @@ namespace RA2Installer
             }
         }
 
+        /// <summary>
+        /// 加载按钮点击音效
+        /// </summary>
+        private void LoadButtonClickSound()
+        {
+            try
+            {
+                // 使用确定的路径加载 Setup.mix 文件
+                if (File.Exists(SetupMixPath))
+                {
+                    // 加载 Setup.mix 文件
+                    MixFile mixFile = new MixFile(SetupMixPath);
+
+                    // 尝试获取指定哈希值和类型的音频
+                    _buttonClickSound = mixFile.GetAudioByHash("C7A23518", "aud");
+
+                    if (_buttonClickSound != null)
+                    {
+                        Console.WriteLine("Button click sound loaded successfully.");
+                    }
+                    else
+                    {
+                        Console.WriteLine("Failed to load button click sound.");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine($"Setup.mix file not found at: {SetupMixPath}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading button click sound: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 播放按钮点击音效
+        /// </summary>
+        private void PlayButtonClickSound()
+        {
+            try
+            {
+                if (_buttonClickSound != null)
+                {
+                    // 保存音频数据到临时文件
+                    string tempFile = Path.GetTempFileName() + ".wav";
+                    File.WriteAllBytes(tempFile, _buttonClickSound);
+                    
+                    // 使用 Uri 播放音频
+                    _mediaPlayer.Open(new Uri(tempFile));
+                    _mediaPlayer.Play();
+                    
+                    // 播放完成后删除临时文件
+                    _mediaPlayer.MediaEnded += (sender, e) =>
+                    {
+                        try
+                        {
+                            if (File.Exists(tempFile))
+                            {
+                                File.Delete(tempFile);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"Error deleting temp audio file: {ex.Message}");
+                        }
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error playing button click sound: {ex.Message}");
+            }
+        }
+
         private static T? FindVisualChild<T>(DependencyObject parent) where T : DependencyObject
         {
             for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
@@ -256,21 +345,25 @@ namespace RA2Installer
 
         private void ExitButton_Click(object sender, RoutedEventArgs e)
         {
+            PlayButtonClickSound();
             Application.Current.Shutdown();
         }
 
         private void ChineseSimplifiedButton_Click(object sender, RoutedEventArgs e)
         {
+            PlayButtonClickSound();
             SetLanguage("zh-CN");
         }
 
         private void ChineseTraditionalButton_Click(object sender, RoutedEventArgs e)
         {
+            PlayButtonClickSound();
             SetLanguage("zh-TW");
         }
 
         private void EnglishButton_Click(object sender, RoutedEventArgs e)
         {
+            PlayButtonClickSound();
             SetLanguage("en-US");
         }
     }
