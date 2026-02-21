@@ -17,7 +17,9 @@ namespace RA2Installer
         private const string SetupMixPath = "Assets/RA1/Setup/Setup.mix";
         
         private System.Windows.Media.MediaPlayer _mediaPlayer;
-        private byte[] _buttonClickSound;
+        private System.Windows.Media.MediaPlayer _backgroundMusicPlayer;
+        private string _buttonClickSoundFile;
+        private string _backgroundMusicFile;
 
         public MainWindow()
         {
@@ -35,9 +37,13 @@ namespace RA2Installer
 
                 // 初始化 MediaPlayer
                 _mediaPlayer = new System.Windows.Media.MediaPlayer();
+                _backgroundMusicPlayer = new System.Windows.Media.MediaPlayer();
 
                 // 加载按钮点击音效
                 LoadButtonClickSound();
+
+                // 加载背景音乐
+                LoadBackgroundMusic();
 
                 Loaded += MainWindow_Loaded;
             }
@@ -55,6 +61,9 @@ namespace RA2Installer
         {
             // 初始化语言为系统默认语言
             InitializeLanguage();
+
+            // 播放背景音乐
+            PlayBackgroundMusic();
         }
 
 
@@ -70,19 +79,6 @@ namespace RA2Installer
         {
             try
             {
-                // 检查文件是否存在
-                if (setupMixPath == null)
-                {
-
-                    return;
-                }
-
-                if (!System.IO.File.Exists(setupMixPath))
-                {
-
-                    return;
-                }
-
                 // 加载 Setup.mix 文件
                 MixFile mixFile = new MixFile(setupMixPath);
 
@@ -231,39 +227,82 @@ namespace RA2Installer
         }
 
         /// <summary>
+        /// 从 Setup.mix 文件加载音频并保存到临时文件
+        /// </summary>
+        /// <param name="hashValue">音频文件的哈希值</param>
+        /// <param name="fileType">文件类型</param>
+        /// <returns>临时文件路径</returns>
+        private static string LoadAudioFromMix(string hashValue, string fileType)
+        {
+            try
+            {
+                // 加载 Setup.mix 文件
+                MixFile mixFile = new(SetupMixPath);
+
+                // 尝试获取指定哈希值和类型的音频
+                byte[] audioData = mixFile.GetAudioByHash(hashValue, fileType);
+
+                if (audioData != null)
+                {
+                    // 保存音频数据到临时文件，使用哈希值命名
+                    string tempFile = Path.Combine(Path.GetTempPath(), $"{hashValue}.wav");
+                    File.WriteAllBytes(tempFile, audioData);
+                    return tempFile;
+                }
+
+                return null;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error: {ex.Message}");
+                return null;
+            }
+        }
+
+        /// <summary>
         /// 加载按钮点击音效
         /// </summary>
         private void LoadButtonClickSound()
         {
+            _buttonClickSoundFile = LoadAudioFromMix("C7A23518", "aud");
+        }
+
+        /// <summary>
+        /// 加载背景音乐
+        /// </summary>
+        private void LoadBackgroundMusic()
+        {
+            _backgroundMusicFile = LoadAudioFromMix("D6A1C973", "aud");
+        }
+
+        /// <summary>
+        /// 播放音频文件
+        /// </summary>
+        /// <param name="player">MediaPlayer 实例</param>
+        /// <param name="audioFile">音频文件路径</param>
+        private void PlayAudio(System.Windows.Media.MediaPlayer player, string audioFile)
+        {
             try
             {
-                // 使用确定的路径加载 Setup.mix 文件
-                if (File.Exists(SetupMixPath))
+                if (!string.IsNullOrEmpty(audioFile) && File.Exists(audioFile))
                 {
-                    // 加载 Setup.mix 文件
-                    MixFile mixFile = new MixFile(SetupMixPath);
-
-                    // 尝试获取指定哈希值和类型的音频
-                    _buttonClickSound = mixFile.GetAudioByHash("C7A23518", "aud");
-
-                    if (_buttonClickSound != null)
-                    {
-                        Console.WriteLine("Button click sound loaded successfully.");
-                    }
-                    else
-                    {
-                        Console.WriteLine("Failed to load button click sound.");
-                    }
-                }
-                else
-                {
-                    Console.WriteLine($"Setup.mix file not found at: {SetupMixPath}");
+                    // 使用 Uri 播放音频
+                    player.Open(new Uri(audioFile));
+                    player.Play();
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error loading button click sound: {ex.Message}");
+                Console.WriteLine($"Error: {ex.Message}");
             }
+        }
+
+        /// <summary>
+        /// 播放背景音乐
+        /// </summary>
+        private void PlayBackgroundMusic()
+        {
+            PlayAudio(_backgroundMusicPlayer, _backgroundMusicFile);
         }
 
         /// <summary>
@@ -271,39 +310,7 @@ namespace RA2Installer
         /// </summary>
         private void PlayButtonClickSound()
         {
-            try
-            {
-                if (_buttonClickSound != null)
-                {
-                    // 保存音频数据到临时文件
-                    string tempFile = Path.GetTempFileName() + ".wav";
-                    File.WriteAllBytes(tempFile, _buttonClickSound);
-                    
-                    // 使用 Uri 播放音频
-                    _mediaPlayer.Open(new Uri(tempFile));
-                    _mediaPlayer.Play();
-                    
-                    // 播放完成后删除临时文件
-                    _mediaPlayer.MediaEnded += (sender, e) =>
-                    {
-                        try
-                        {
-                            if (File.Exists(tempFile))
-                            {
-                                File.Delete(tempFile);
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            Console.WriteLine($"Error deleting temp audio file: {ex.Message}");
-                        }
-                    };
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error playing button click sound: {ex.Message}");
-            }
+            PlayAudio(_mediaPlayer, _buttonClickSoundFile);
         }
 
         private static T? FindVisualChild<T>(DependencyObject parent) where T : DependencyObject
