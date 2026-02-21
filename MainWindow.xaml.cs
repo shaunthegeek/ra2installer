@@ -50,14 +50,14 @@ namespace RA2Installer
 
                 File.AppendAllText(_logFile, "Loading background image\n");
                 // 然后加载背景图片
-                LoadBackgroundImageFromMix(SetupMixPath, "B1D51F00", "bmp");
+                LoadBackgroundImageFromMix(SetupMixPath, "B1D51F00");
 
                 File.AppendAllText(_logFile, "Loading SHP animation data\n");
                 // 加载 SHP 动画数据（不播放）
                 try
                 {
-                    File.AppendAllText(_logFile, "Calling LoadShpAnimationData with parameters: " + SetupMixPath + ", 2012EC16, shp\n");
-                    LoadShpAnimationData(SetupMixPath, "2012EC16", "shp");
+                    File.AppendAllText(_logFile, "Calling LoadShpAnimationData with parameters: " + SetupMixPath + ", 2012EC16\n");
+                    LoadShpAnimationData(SetupMixPath, "2012EC16");
                 }
                 catch (Exception ex)
                 {
@@ -113,8 +113,7 @@ namespace RA2Installer
         /// </summary>
         /// <param name="setupMixPath">Setup.mix 文件的路径</param>
         /// <param name="fileNameHash">文件名哈希值</param>
-        /// <param name="fileType">文件类型（如 "bmp"）</param>
-        private void LoadBackgroundImageFromMix(string setupMixPath, string fileNameHash, string fileType)
+        private void LoadBackgroundImageFromMix(string setupMixPath, string fileNameHash)
         {
             try
             {
@@ -122,7 +121,7 @@ namespace RA2Installer
                 MixFile mixFile = new MixFile(setupMixPath);
 
                 // 尝试获取指定哈希值和类型的图片
-                System.Windows.Media.Imaging.BitmapImage backgroundImage = mixFile.GetImageByHash(fileNameHash, fileType);
+                System.Windows.Media.Imaging.BitmapImage backgroundImage = mixFile.GetImageByHash(fileNameHash);
 
                 if (backgroundImage == null)
                 {
@@ -158,15 +157,13 @@ namespace RA2Installer
         /// </summary>
         /// <param name="setupMixPath">Setup.mix 文件的路径</param>
         /// <param name="fileNameHash">文件名哈希值</param>
-        /// <param name="fileType">文件类型（如 "shp"）</param>
-        private void LoadShpAnimationData(string setupMixPath, string fileNameHash, string fileType)
+        private void LoadShpAnimationData(string setupMixPath, string fileNameHash)
         {
             try
             {
                 // 简单的日志写入，避免格式化字符串可能的问题
                 File.AppendAllText(_logFile, "Starting to load SHP animation\n");
                 File.AppendAllText(_logFile, "Hash: " + fileNameHash + "\n");
-                File.AppendAllText(_logFile, "Type: " + fileType + "\n");
                 
                 // 检查 AnimationImage 是否存在
                 if (AnimationImage == null)
@@ -199,7 +196,7 @@ namespace RA2Installer
 
                 // 尝试获取指定哈希值和类型的 SHP 文件
                 File.AppendAllText(_logFile, "Attempting to get SHP file\n");
-                byte[] shpData = mixFile.GetShpByHash(fileNameHash, fileType);
+                byte[] shpData = mixFile.GetShpByHash(fileNameHash);
 
                 if (shpData == null)
                 {
@@ -211,11 +208,6 @@ namespace RA2Installer
                     File.AppendAllText(_logFile, "Successfully loaded SHP file\n");
                     File.AppendAllText(_logFile, "Size: " + shpData.Length + " bytes\n");
                 }
-
-                // 尝试获取 PAL 文件
-                File.AppendAllText(_logFile, "Attempting to get PAL files\n");
-                List<int> palHashes = mixFile.GetAllPalFileHashes();
-                File.AppendAllText(_logFile, "Found " + palHashes.Count + " PAL files\n");
                 
                 ShpFile shpFile;
                 
@@ -374,9 +366,8 @@ namespace RA2Installer
         /// 从 Setup.mix 文件加载音频并保存到临时文件
         /// </summary>
         /// <param name="hashValue">音频文件的哈希值</param>
-        /// <param name="fileType">文件类型</param>
         /// <returns>临时文件路径</returns>
-        private static string LoadAudioFromMix(string hashValue, string fileType)
+        private static string LoadAudioFromMix(string hashValue)
         {
             try
             {
@@ -384,7 +375,7 @@ namespace RA2Installer
                 MixFile mixFile = new(SetupMixPath);
 
                 // 尝试获取指定哈希值和类型的音频
-                byte[] audioData = mixFile.GetAudioByHash(hashValue, fileType);
+                byte[] audioData = mixFile.GetAudioByHash(hashValue);
 
                 if (audioData != null)
                 {
@@ -408,7 +399,7 @@ namespace RA2Installer
         /// </summary>
         private void LoadButtonClickSound()
         {
-            _buttonClickSoundFile = LoadAudioFromMix("C7A23518", "aud");
+            _buttonClickSoundFile = LoadAudioFromMix("C7A23518");
         }
 
         /// <summary>
@@ -416,7 +407,7 @@ namespace RA2Installer
         /// </summary>
         private void LoadBackgroundMusic()
         {
-            _backgroundMusicFile = LoadAudioFromMix("D6A1C973", "aud");
+            _backgroundMusicFile = LoadAudioFromMix("D6A1C973");
         }
 
         /// <summary>
