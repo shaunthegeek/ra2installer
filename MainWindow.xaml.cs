@@ -569,45 +569,6 @@ namespace RA2Installer
             
             // 更新第二页的UI文本，使用当前选择的语言
             UpdatePage2UIText();
-            
-            // 加载并显示许可证内容
-            LoadLicenseContent();
-        }
-        
-        /// <summary>
-        /// 加载并显示许可证内容
-        /// </summary>
-        private void LoadLicenseContent()
-        {
-            try
-            {
-                // 使用应用程序基目录构建绝对路径
-                string appBaseDir = AppDomain.CurrentDomain.BaseDirectory;
-                string licensePath = Path.Combine(appBaseDir, "Assets", "RA1", "LICENSE.txt");
-                
-                // 使用FileShare.ReadWrite以避免文件锁定
-                string content = null;
-            
-                using (FileStream fs = new FileStream(licensePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-                {
-                    using (StreamReader reader = new StreamReader(fs, System.Text.Encoding.UTF8))
-                    {
-                        content = reader.ReadToEnd();
-                    }
-                }
-                    
-                if (LicenseTextBlock != null)
-                {
-                    LicenseTextBlock.Text = content;
-                }
-            }
-            catch (Exception ex)
-            {
-                if (LicenseTextBlock != null)
-                {
-                    LicenseTextBlock.Text = "Error loading license: " + ex.Message;
-                }
-            }
         }
         
         /// <summary>
@@ -751,6 +712,12 @@ namespace RA2Installer
                         textBlock.Text = Strings.CancelButton;
                     }
                 }
+            }
+            
+            // 更新许可证内容文本
+            if (LicenseTextBlock != null)
+            {
+                LicenseTextBlock.Text = Strings.LicenseContent;
             }
             
             // 重新应用字符间距，确保和第一页相同

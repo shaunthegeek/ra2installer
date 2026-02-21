@@ -103,5 +103,14 @@ namespace RA2Installer.Resources {
                 return ResourceManager.GetString("CancelButton", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string containing the license agreement.
+        /// </summary>
+        public static string LicenseContent {
+            get {
+                return ResourceManager.GetString("LicenseContent", resourceCulture);
+            }
+        }
     }
 }
