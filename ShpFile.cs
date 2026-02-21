@@ -456,6 +456,11 @@ namespace RA2Installer
         private System.Windows.Threading.DispatcherTimer _timer;
 
         /// <summary>
+        /// 动画播放完成事件
+        /// </summary>
+        public event EventHandler AnimationCompleted;
+
+        /// <summary>
         /// 初始化 ShpAnimationPlayer 实例
         /// </summary>
         /// <param name="shpFile">ShpFile 实例</param>
@@ -532,8 +537,19 @@ namespace RA2Installer
                 {
                     // 是最后一帧，停止播放
                     _timer.Stop();
+                    // 触发动画播放完成事件
+                    OnAnimationCompleted(EventArgs.Empty);
                 }
             }
+        }
+
+        /// <summary>
+        /// 触发动画播放完成事件
+        /// </summary>
+        /// <param name="e">事件参数</param>
+        protected virtual void OnAnimationCompleted(EventArgs e)
+        {
+            AnimationCompleted?.Invoke(this, e);
         }
     }
 }

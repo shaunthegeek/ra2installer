@@ -87,9 +87,11 @@
             <Image x:Name="Page2AnimationImage" HorizontalAlignment="Left" VerticalAlignment="Top" Width="470"/>
             
             <!-- 许可证内容显示区域 -->
-            <ScrollViewer x:Name="LicenseScrollViewer" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,10,0,0" Width="450" Height="420" VerticalScrollBarVisibility="Auto">
-                <TextBlock x:Name="LicenseTextBlock" Foreground="White" FontSize="12" TextWrapping="Wrap"/>
-            </ScrollViewer>
+            <Border HorizontalAlignment="Left" VerticalAlignment="Top" Margin="115,45,0,0" Width="245" Height="245" BorderThickness="1" BorderBrush="#BB080B" Visibility="Collapsed" x:Name="LicenseBorder">
+                <ScrollViewer x:Name="LicenseScrollViewer" Width="235" Height="230" VerticalScrollBarVisibility="Auto" Padding="5">
+                    <TextBlock x:Name="LicenseTextBlock" Foreground="#BB080B" FontSize="12" TextWrapping="Wrap"/>
+                </ScrollViewer>
+            </Border>
             
             <!-- 按钮容器 -->
             <StackPanel Orientation="Vertical" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,9,29">

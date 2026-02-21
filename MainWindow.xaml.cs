@@ -561,6 +561,13 @@ namespace RA2Installer
             // 显示第二页
             Page2.Visibility = Visibility.Visible;
             
+            // 确保许可证边框初始状态为隐藏
+            if (LicenseBorder != null)
+            {
+                LicenseBorder.Visibility = Visibility.Collapsed;
+                File.AppendAllText(_logFile, "LicenseBorder visibility reset to Collapsed\n");
+            }
+            
             // 为第二页加载相同的背景图片
             LoadBackgroundImageForPage2();
             
@@ -612,6 +619,9 @@ namespace RA2Installer
                 
                 // 创建动画播放器
                 _page2ShpAnimationPlayer = new ShpAnimationPlayer(shpFile, Page2AnimationImage);
+                
+                // 添加动画播放完成事件处理程序
+                _page2ShpAnimationPlayer.AnimationCompleted += Page2Animation_Completed;
                 
                 // 开始播放动画
                 _page2ShpAnimationPlayer.Play();
@@ -753,6 +763,34 @@ namespace RA2Installer
         {
             PlayButtonClickSound();
             Application.Current.Shutdown();
+        }
+
+        /// <summary>
+        /// 第二页动画播放完成事件处理程序
+        /// </summary>
+        /// <param name="sender">发送者</param>
+        /// <param name="e">事件参数</param>
+        private void Page2Animation_Completed(object sender, EventArgs e)
+        {
+            try
+            {
+                File.AppendAllText(_logFile, "Page2 animation completed, showing license agreement\n");
+                
+                // 显示许可证内容
+                if (LicenseBorder != null)
+                {
+                    LicenseBorder.Visibility = Visibility.Visible;
+                    File.AppendAllText(_logFile, "LicenseBorder visibility set to Visible\n");
+                }
+                else
+                {
+                    File.AppendAllText(_logFile, "LicenseBorder is null\n");
+                }
+            }
+            catch (Exception ex)
+            {
+                File.AppendAllText(_logFile, "Error in Page2Animation_Completed: " + ex.Message + "\n");
+            }
         }
     }
 }
