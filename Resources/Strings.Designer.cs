@@ -76,5 +76,32 @@ namespace RA2Installer.Resources {
                 return ResourceManager.GetString("WindowTitle", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Previous.
+        /// </summary>
+        public static string PreviousButton {
+            get {
+                return ResourceManager.GetString("PreviousButton", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Next.
+        /// </summary>
+        public static string NextButton {
+            get {
+                return ResourceManager.GetString("NextButton", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cancel.
+        /// </summary>
+        public static string CancelButton {
+            get {
+                return ResourceManager.GetString("CancelButton", resourceCulture);
+            }
+        }
     }
 }

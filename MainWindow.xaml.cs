@@ -24,6 +24,9 @@ namespace RA2Installer
 
         // 日志文件路径
         private string _logFile;
+        
+        // 当前选择的语言
+        private string _currentLanguage;
 
         public MainWindow()
         {
@@ -275,8 +278,14 @@ namespace RA2Installer
             CultureInfo.CurrentUICulture = culture;
             Strings.Culture = culture;
 
+            // 保存当前选择的语言
+            _currentLanguage = cultureName;
+
             // 更新UI文本
             UpdateUIText();
+            
+            // 切换到第二页
+            SwitchToPage2();
         }
 
         private void UpdateUIText()
@@ -293,32 +302,32 @@ namespace RA2Installer
 
         private void UpdateButtonTexts()
         {
-            // 直接通过Name找到退出按钮
-            if (ExitButton != null)
+            // 直接通过Name找到取消按钮
+            if (CancelButton != null)
             {
-                _ = ExitButton.ApplyTemplate();
+                _ = CancelButton.ApplyTemplate();
 
                 // 通过ControlTemplate.FindName方法找到ButtonTextBlock
-                ControlTemplate template = ExitButton.Template;
+                ControlTemplate template = CancelButton.Template;
                 if (template != null)
                 {
-                    if (template.FindName("ButtonTextBlock", ExitButton) is TextBlock textBlock)
+                    if (template.FindName("ButtonTextBlock", CancelButton) is TextBlock textBlock)
                     {
                         // 清除Inlines，因为我们要直接设置Text
                         textBlock.Inlines.Clear();
                         // 更新文本
-                        textBlock.Text = Strings.ExitButton;
+                        textBlock.Text = Strings.CancelButton;
                     }
                 }
 
                 // 同时使用视觉树查找作为备用方法
-                TextBlock visualTextBlock = FindVisualChild<TextBlock>(ExitButton);
+                TextBlock visualTextBlock = FindVisualChild<TextBlock>(CancelButton);
                 if (visualTextBlock != null)
                 {
                     // 清除Inlines，因为我们要直接设置Text
                     visualTextBlock.Inlines.Clear();
                     // 更新文本
-                    visualTextBlock.Text = Strings.ExitButton;
+                    visualTextBlock.Text = Strings.CancelButton;
                 }
             }
         }
@@ -332,11 +341,11 @@ namespace RA2Installer
                 TextBlock textBlock = FindVisualChild<TextBlock>(button);
                 if (textBlock != null)
                 {
-                    // 对于退出按钮，使用资源文件中的原始文本
+                    // 对于取消按钮，使用资源文件中的原始文本
                     string originalText = "";
-                    if (button.Name == "ExitButton")
+                    if (button.Name == "CancelButton")
                     {
-                        originalText = Strings.ExitButton;
+                        originalText = Strings.CancelButton;
                     }
                     else if (textBlock.Text != null)
                     {
@@ -485,11 +494,7 @@ namespace RA2Installer
             }
         }
 
-        private void ExitButton_Click(object sender, RoutedEventArgs e)
-        {
-            PlayButtonClickSound();
-            Application.Current.Shutdown();
-        }
+
 
         private void ChineseSimplifiedButton_Click(object sender, RoutedEventArgs e)
         {
@@ -535,6 +540,130 @@ namespace RA2Installer
             {
                 File.AppendAllText(_logFile, "_shpAnimationPlayer is null, cannot start playback\n");
             }
+        }
+        
+        /// <summary>
+        /// 切换到第二页
+        /// </summary>
+        private void SwitchToPage2()
+        {
+            // 隐藏第一页
+            Page1.Visibility = Visibility.Collapsed;
+            // 显示第二页
+            Page2.Visibility = Visibility.Visible;
+            
+            // 为第二页加载相同的背景图片
+            LoadBackgroundImageForPage2();
+            
+            // 更新第二页的UI文本，使用当前选择的语言
+            UpdatePage2UIText();
+        }
+        
+        /// <summary>
+        /// 为第二页加载背景图片
+        /// </summary>
+        private void LoadBackgroundImageForPage2()
+        {
+            try
+            {
+                // 加载 Setup.mix 文件
+                MixFile mixFile = new MixFile(SetupMixPath);
+
+                // 尝试获取指定哈希值和类型的图片
+                System.Windows.Media.Imaging.BitmapImage backgroundImage = mixFile.GetImageByHash("B1D51F00");
+
+                if (backgroundImage != null)
+                {
+                    // 更新第二页 Grid 的 Background 属性
+                    Page2.Background = new ImageBrush(backgroundImage) { Stretch = Stretch.UniformToFill };
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading background image for Page2: {ex.Message}");
+            }
+        }
+        
+        /// <summary>
+        /// 更新第二页的UI文本
+        /// </summary>
+        private void UpdatePage2UIText()
+        {
+            // 更新上一步按钮文本
+            if (PreviousButton != null)
+            {
+                _ = PreviousButton.ApplyTemplate();
+                ControlTemplate template = PreviousButton.Template;
+                if (template != null)
+                {
+                    if (template.FindName("PreviousButtonTextBlock", PreviousButton) is TextBlock textBlock)
+                    {
+                        textBlock.Text = Strings.PreviousButton;
+                    }
+                }
+            }
+            
+            // 更新下一步按钮文本
+            if (NextButton != null)
+            {
+                _ = NextButton.ApplyTemplate();
+                ControlTemplate template = NextButton.Template;
+                if (template != null)
+                {
+                    if (template.FindName("NextButtonTextBlock", NextButton) is TextBlock textBlock)
+                    {
+                        textBlock.Text = Strings.NextButton;
+                    }
+                }
+            }
+            
+            // 更新取消按钮文本
+            if (Page2CancelButton != null)
+            {
+                _ = Page2CancelButton.ApplyTemplate();
+                ControlTemplate template = Page2CancelButton.Template;
+                if (template != null)
+                {
+                    if (template.FindName("CancelButtonTextBlock", Page2CancelButton) is TextBlock textBlock)
+                    {
+                        textBlock.Text = Strings.CancelButton;
+                    }
+                }
+            }
+            
+            // 重新应用字符间距，确保和第一页相同
+            ApplyCharacterSpacing();
+        }
+        
+        /// <summary>
+        /// 上一步按钮点击事件
+        /// </summary>
+        private void PreviousButton_Click(object sender, RoutedEventArgs e)
+        {
+            PlayButtonClickSound();
+            
+            // 隐藏第二页
+            Page2.Visibility = Visibility.Collapsed;
+            // 显示第一页
+            Page1.Visibility = Visibility.Visible;
+        }
+        
+        /// <summary>
+        /// 下一步按钮点击事件
+        /// </summary>
+        private void NextButton_Click(object sender, RoutedEventArgs e)
+        {
+            PlayButtonClickSound();
+            // 这里可以添加下一步的逻辑
+        }
+        
+        /// <summary>
+        /// 取消按钮点击事件
+        /// </summary>
+        private void CancelButton_Click(object sender, RoutedEventArgs e)
+        {
+            PlayButtonClickSound();
+            Application.Current.Shutdown();
         }
     }
 }

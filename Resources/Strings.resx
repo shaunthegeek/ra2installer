@@ -64,4 +64,13 @@
   <data name="ExitButton" xml:space="preserve">
     <value>Exit</value>
   </data>
+  <data name="PreviousButton" xml:space="preserve">
+    <value>Previous</value>
+  </data>
+  <data name="NextButton" xml:space="preserve">
+    <value>Next</value>
+  </data>
+  <data name="CancelButton" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
 </root>
