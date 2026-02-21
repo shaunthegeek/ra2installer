@@ -79,6 +79,9 @@
             </Button.Template>
         </Button>
             </StackPanel>
+
+            <!-- 从Language.dll读取的文本显示区域 -->
+            <StackPanel x:Name="LanguageTextStackPanel" Orientation="Vertical" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="483,39,0,0" Width="154"/>
         </Grid>
         
         <!-- 第二页 -->

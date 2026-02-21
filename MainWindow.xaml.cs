@@ -1,5 +1,7 @@
 using System.Globalization;
 using System.IO;
+using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -109,8 +111,430 @@ namespace RA2Installer
             // 播放背景音乐
             PlayBackgroundMusic();
 
+            // 从Language.dll读取字符串并显示
+            LoadAndDisplayLanguageStrings();
+
             // 不自动启动 SHP 动画，只显示第一帧
             File.AppendAllText(_logFile, "Not starting SHP animation automatically, showing only first frame\n");
+        }
+
+        /// <summary>
+        /// 从Language.dll读取字符串并显示在界面上
+        /// </summary>
+        private async Task LoadAndDisplayLanguageStringsAsync()
+        {
+            try
+            {
+                File.AppendAllText(_logFile, "Starting to load language strings from Language.dll\n");
+
+                // Language.dll文件路径
+                string languageDllPath = "Assets/RA1/Setup/Language.dll";
+
+                // 检查文件是否存在
+                if (!File.Exists(languageDllPath))
+                {
+                    File.AppendAllText(_logFile, "Language.dll file not found\n");
+                    return;
+                }
+
+                File.AppendAllText(_logFile, "Language.dll file found, loading strings\n");
+
+                // 确定要使用的语言
+                ushort languageId = GetLanguageIdForCurrentLanguage();
+                File.AppendAllText(_logFile, $"Using language ID: {languageId}\n");
+
+                // 读取字符串ID 250-254
+                int[] stringIds = { 250, 251, 252, 253, 254 };
+
+                foreach (int id in stringIds)
+                {
+                    string text = ReadStringFromLanguageDll(languageDllPath, id, languageId);
+                    if (!string.IsNullOrEmpty(text))
+                    {
+                        // 创建TextBlock并添加到StackPanel
+                        TextBlock textBlock = new TextBlock
+                        {
+                            Text = text,
+                            Foreground = Brushes.Yellow,
+                            FontSize = 10,
+                            TextAlignment = TextAlignment.Left,
+                            TextWrapping = TextWrapping.Wrap,
+                        };
+                        LanguageTextStackPanel.Children.Add(textBlock);
+                        File.AppendAllText(_logFile, $"Added string ID {id}: {text}\n");
+                    }
+                    else
+                    {
+                        File.AppendAllText(_logFile, $"Failed to read string ID {id}\n");
+                    }
+
+                    await Task.Delay(1000);
+                }
+
+                File.AppendAllText(_logFile, "Language strings loaded and displayed\n");
+            }
+            catch (Exception ex)
+            {
+                File.AppendAllText(_logFile, $"Error loading language strings: {ex.Message}\n");
+            }
+        }
+
+        /// <summary>
+        /// 从Language.dll读取字符串并显示在界面上（同步包装方法）
+        /// </summary>
+        private void LoadAndDisplayLanguageStrings()
+        {
+            // 调用异步方法
+            _ = LoadAndDisplayLanguageStringsAsync();
+        }
+
+        /// <summary>
+        /// 根据当前选择的语言获取对应的语言ID
+        /// </summary>
+        /// <returns>语言ID</returns>
+        private ushort GetLanguageIdForCurrentLanguage()
+        {
+            // 默认使用英文
+            if (string.IsNullOrEmpty(_currentLanguage))
+            {
+                return 0x0409; // en-US
+            }
+
+            // 根据当前语言选择对应的语言ID
+            switch (_currentLanguage)
+            {
+                case "zh-CN":
+                case "zh-TW":
+                    return 0x0404; // zh-TW
+                default:
+                    return 0x0409; // en-US
+            }
+        }
+
+        /// <summary>
+        /// 从Language.dll中读取指定ID的字符串
+        /// </summary>
+        /// <param name="dllPath">Language.dll文件路径</param>
+        /// <param name="stringId">字符串ID</param>
+        /// <param name="languageId">语言ID</param>
+        /// <returns>读取到的字符串</returns>
+        private string ReadStringFromLanguageDll(string dllPath, int stringId, ushort languageId)
+        {
+            try
+            {
+                File.AppendAllText(_logFile, $"=== Starting ReadStringFromLanguageDll ===\n");
+                File.AppendAllText(_logFile, $"DLL Path: {dllPath}\n");
+                File.AppendAllText(_logFile, $"String ID: {stringId}\n");
+                File.AppendAllText(_logFile, $"Language ID: {languageId:X4}\n");
+
+                // 检查文件是否存在
+                if (!File.Exists(dllPath))
+                {
+                    File.AppendAllText(_logFile, $"File does not exist: {dllPath}\n");
+                    return null;
+                }
+                File.AppendAllText(_logFile, $"File exists: {dllPath}\n");
+
+                // 获取文件大小
+                FileInfo fileInfo = new FileInfo(dllPath);
+                File.AppendAllText(_logFile, $"File size: {fileInfo.Length} bytes\n");
+
+                // 尝试使用Windows API读取DLL中的字符串
+                IntPtr dllHandle = IntPtr.Zero;
+                try
+                {
+                    // 使用LoadLibraryEx加载DLL，指定LOAD_LIBRARY_AS_DATAFILE标志
+                    File.AppendAllText(_logFile, $"Calling LoadLibraryEx with LOAD_LIBRARY_AS_DATAFILE...\n");
+                    const uint LOAD_LIBRARY_AS_DATAFILE = 0x00000002;
+                    dllHandle = NativeMethods.LoadLibraryEx(dllPath, IntPtr.Zero, LOAD_LIBRARY_AS_DATAFILE);
+                    if (dllHandle != IntPtr.Zero)
+                    {
+                        File.AppendAllText(_logFile, $"LoadLibraryEx succeeded, handle: {dllHandle}\n");
+
+                        // 尝试使用LoadString读取字符串
+                        File.AppendAllText(_logFile, $"Calling LoadString for ID {stringId}...\n");
+                        StringBuilder sb = new StringBuilder(256);
+                        int result = NativeMethods.LoadString(dllHandle, stringId, sb, sb.Capacity);
+                        if (result > 0)
+                        {
+                            string text = sb.ToString();
+                            File.AppendAllText(_logFile, $"LoadString succeeded, string: '{text}'\n");
+                            File.AppendAllText(_logFile, $"=== ReadStringFromLanguageDll completed with LoadString ===\n\n");
+                            return text;
+                        }
+                        else
+                        {
+                            int errorCode = Marshal.GetLastWin32Error();
+                            File.AppendAllText(_logFile, $"LoadString failed, error code: {errorCode}\n");
+                            File.AppendAllText(_logFile, $"Error message: {new System.ComponentModel.Win32Exception(errorCode).Message}\n");
+                        }
+
+                        // 尝试使用FindResourceEx根据语言ID查找特定语言的资源
+                        File.AppendAllText(_logFile, $"Trying FindResourceEx with language ID...\n");
+                        IntPtr hResource = NativeMethods.FindResourceEx(dllHandle, new IntPtr(6), new IntPtr((stringId / 16) + 1), languageId);
+                        if (hResource != IntPtr.Zero)
+                        {
+                            File.AppendAllText(_logFile, $"FindResourceEx succeeded, resource handle: {hResource}\n");
+                            string text = ReadStringFromResource(dllHandle, hResource, stringId);
+                            if (!string.IsNullOrEmpty(text))
+                            {
+                                File.AppendAllText(_logFile, $"ReadStringFromResource succeeded, string: '{text}'\n");
+                                File.AppendAllText(_logFile, $"=== ReadStringFromLanguageDll completed with FindResourceEx ===\n\n");
+                                return text;
+                            }
+                        }
+                        else
+                        {
+                            int errorCode = Marshal.GetLastWin32Error();
+                            File.AppendAllText(_logFile, $"FindResourceEx failed, error code: {errorCode}\n");
+                            File.AppendAllText(_logFile, $"Error message: {new System.ComponentModel.Win32Exception(errorCode).Message}\n");
+                        }
+                    }
+                    else
+                    {
+                        int errorCode = Marshal.GetLastWin32Error();
+                        File.AppendAllText(_logFile, $"LoadLibraryEx failed, error code: {errorCode}\n");
+                        File.AppendAllText(_logFile, $"Error message: {new System.ComponentModel.Win32Exception(errorCode).Message}\n");
+                        File.AppendAllText(_logFile, $"Trying LoadLibrary as fallback...\n");
+
+                        // 尝试使用LoadLibrary作为备选方案
+                        dllHandle = NativeMethods.LoadLibrary(dllPath);
+                        if (dllHandle != IntPtr.Zero)
+                        {
+                            File.AppendAllText(_logFile, $"LoadLibrary succeeded, handle: {dllHandle}\n");
+
+                            // 尝试使用LoadString读取字符串
+                            File.AppendAllText(_logFile, $"Calling LoadString for ID {stringId}...\n");
+                            StringBuilder sb = new StringBuilder(256);
+                            int result = NativeMethods.LoadString(dllHandle, stringId, sb, sb.Capacity);
+                            if (result > 0)
+                            {
+                                string text = sb.ToString();
+                                File.AppendAllText(_logFile, $"LoadString succeeded, string: '{text}'\n");
+                                File.AppendAllText(_logFile, $"=== ReadStringFromLanguageDll completed with LoadLibrary and LoadString ===\n\n");
+                                return text;
+                            }
+                            else
+                            {
+                                int errorCode2 = Marshal.GetLastWin32Error();
+                                File.AppendAllText(_logFile, $"LoadString failed, error code: {errorCode2}\n");
+                                File.AppendAllText(_logFile, $"Error message: {new System.ComponentModel.Win32Exception(errorCode2).Message}\n");
+                            }
+                        }
+                        else
+                        {
+                            int errorCode2 = Marshal.GetLastWin32Error();
+                            File.AppendAllText(_logFile, $"LoadLibrary also failed, error code: {errorCode2}\n");
+                            File.AppendAllText(_logFile, $"Error message: {new System.ComponentModel.Win32Exception(errorCode2).Message}\n");
+                        }
+                    }
+                }
+                finally
+                {
+                    if (dllHandle != IntPtr.Zero)
+                    {
+                        File.AppendAllText(_logFile, $"Calling FreeLibrary for handle: {dllHandle}\n");
+                        bool freed = NativeMethods.FreeLibrary(dllHandle);
+                        File.AppendAllText(_logFile, $"FreeLibrary result: {freed}\n");
+                    }
+                }
+
+                // 尝试使用替代方法：使用System.Reflection.Assembly加载DLL并读取资源
+                File.AppendAllText(_logFile, $"Trying to read with Assembly.LoadFrom...\n");
+                try
+                {
+                    // 加载DLL作为程序集
+                    var assembly = System.Reflection.Assembly.LoadFrom(dllPath);
+                    File.AppendAllText(_logFile, $"Assembly loaded successfully: {assembly.FullName}\n");
+
+                    // 尝试读取资源
+                    var resourceNames = assembly.GetManifestResourceNames();
+                    File.AppendAllText(_logFile, $"Found {resourceNames.Length} manifest resources\n");
+
+                    foreach (var resourceName in resourceNames)
+                    {
+                        File.AppendAllText(_logFile, $"Manifest resource found: {resourceName}\n");
+                    }
+
+                    // 尝试使用ResourceManager读取字符串资源
+                    var resourceManager = new System.Resources.ResourceManager("Language", assembly);
+                    File.AppendAllText(_logFile, $"ResourceManager created successfully\n");
+
+                    // 尝试获取字符串
+                    string text = resourceManager.GetString(stringId.ToString());
+                    if (!string.IsNullOrEmpty(text))
+                    {
+                        File.AppendAllText(_logFile, $"Found string for ID {stringId}: '{text}'\n");
+                        File.AppendAllText(_logFile, $"=== ReadStringFromLanguageDll completed with Assembly ===\n\n");
+                        return text;
+                    }
+                    else
+                    {
+                        File.AppendAllText(_logFile, $"No string found for ID {stringId}\n");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    File.AppendAllText(_logFile, $"Exception with Assembly.LoadFrom: {ex.Message}\n");
+                    File.AppendAllText(_logFile, $"Stack trace: {ex.StackTrace}\n");
+                }
+
+                // 如果所有方法都失败，使用硬编码的字符串映射
+                File.AppendAllText(_logFile, $"All methods failed, using hardcoded string mapping\n");
+                string hardcodedString = GetHardcodedString(stringId, languageId);
+                File.AppendAllText(_logFile, $"Returning hardcoded string: '{hardcodedString}'\n");
+                File.AppendAllText(_logFile, $"=== ReadStringFromLanguageDll completed with hardcoded string ===\n\n");
+                return hardcodedString;
+            }
+            catch (Exception ex)
+            {
+                File.AppendAllText(_logFile, $"Exception in ReadStringFromLanguageDll: {ex.Message}\n");
+                File.AppendAllText(_logFile, $"Stack trace: {ex.StackTrace}\n");
+                File.AppendAllText(_logFile, $"=== ReadStringFromLanguageDll completed with exception ===\n\n");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// 从资源中读取字符串
+        /// </summary>
+        /// <param name="dllHandle">DLL句柄</param>
+        /// <param name="hResource">资源句柄</param>
+        /// <param name="stringId">字符串ID</param>
+        /// <returns>读取到的字符串</returns>
+        private string ReadStringFromResource(IntPtr dllHandle, IntPtr hResource, int stringId)
+        {
+            try
+            {
+                // 加载资源
+                File.AppendAllText(_logFile, $"Calling LoadResource...\n");
+                IntPtr hGlobal = NativeMethods.LoadResource(dllHandle, hResource);
+                if (hGlobal == IntPtr.Zero)
+                {
+                    int errorCode = Marshal.GetLastWin32Error();
+                    File.AppendAllText(_logFile, $"Failed to load resource, error code: {errorCode}\n");
+                    File.AppendAllText(_logFile, $"Error message: {new System.ComponentModel.Win32Exception(errorCode).Message}\n");
+                    return null;
+                }
+                File.AppendAllText(_logFile, $"LoadResource succeeded, handle: {hGlobal}\n");
+
+                // 锁定资源
+                File.AppendAllText(_logFile, $"Calling LockResource...\n");
+                IntPtr lpBuffer = NativeMethods.LockResource(hGlobal);
+                if (lpBuffer == IntPtr.Zero)
+                {
+                    int errorCode = Marshal.GetLastWin32Error();
+                    File.AppendAllText(_logFile, $"Failed to lock resource, error code: {errorCode}\n");
+                    File.AppendAllText(_logFile, $"Error message: {new System.ComponentModel.Win32Exception(errorCode).Message}\n");
+                    return null;
+                }
+                File.AppendAllText(_logFile, $"LockResource succeeded, buffer address: {lpBuffer}\n");
+
+                // 查找字符串
+                int index = stringId % 16;
+                File.AppendAllText(_logFile, $"String index in table: {index}\n");
+
+                IntPtr currentPtr = lpBuffer;
+                File.AppendAllText(_logFile, $"Starting buffer address: {currentPtr}\n");
+
+                // 跳过前面的字符串
+                for (int i = 0; i < index; i++)
+                {
+                    // 读取字符串长度
+                    short length = Marshal.ReadInt16(currentPtr);
+                    File.AppendAllText(_logFile, $"String {i} length: {length}\n");
+                    if (length == 0)
+                    {
+                        File.AppendAllText(_logFile, $"Found empty string, breaking loop\n");
+                        break;
+                    }
+                    // 移动到下一个字符串
+                    currentPtr = currentPtr + 2 + length * 2;
+                    File.AppendAllText(_logFile, $"Moved to next string address: {currentPtr}\n");
+                }
+
+                // 读取目标字符串
+                short targetLength = Marshal.ReadInt16(currentPtr);
+                File.AppendAllText(_logFile, $"Target string length: {targetLength}\n");
+                if (targetLength > 0)
+                {
+                    currentPtr += 2;
+                    File.AppendAllText(_logFile, $"Target string address: {currentPtr}\n");
+                    string text = Marshal.PtrToStringUni(currentPtr, targetLength);
+                    File.AppendAllText(_logFile, $"Successfully read string: '{text}'\n");
+                    File.AppendAllText(_logFile, $"=== ReadStringFromResource completed successfully ===\n");
+                    return text;
+                }
+                else
+                {
+                    File.AppendAllText(_logFile, $"Empty string for ID {stringId}\n");
+                    File.AppendAllText(_logFile, $"=== ReadStringFromResource completed with empty string ===\n");
+                    return null;
+                }
+            }
+            catch (Exception ex)
+            {
+                File.AppendAllText(_logFile, $"Exception in ReadStringFromResource: {ex.Message}\n");
+                File.AppendAllText(_logFile, $"Stack trace: {ex.StackTrace}\n");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// 获取硬编码的字符串
+        /// </summary>
+        /// <param name="stringId">字符串ID</param>
+        /// <param name="languageId">语言ID</param>
+        /// <returns>硬编码的字符串</returns>
+        private string GetHardcodedString(int stringId, ushort languageId)
+        {
+            // 根据语言ID和字符串ID返回硬编码的字符串
+            // 由于我们无法从Language.dll中读取字符串，暂时使用硬编码的测试字符串
+            bool isChinese = (languageId == 0x0404); // zh-TW
+
+            switch (stringId)
+            {
+                case 250:
+                    return isChinese ? "测试字符串 250 (中文)" : "Test string 250 (English)";
+                case 251:
+                    return isChinese ? "测试字符串 251 (中文)" : "Test string 251 (English)";
+                case 252:
+                    return isChinese ? "测试字符串 252 (中文)" : "Test string 252 (English)";
+                case 253:
+                    return isChinese ? "测试字符串 253 (中文)" : "Test string 253 (English)";
+                case 254:
+                    return isChinese ? "测试字符串 254 (中文)" : "Test string 254 (English)";
+                default:
+                    return isChinese ? $"测试字符串 {stringId} (中文)" : $"Test string {stringId} (English)";
+            }
+        }
+
+        /// <summary>
+        /// 原生方法定义
+        /// </summary>
+        private static class NativeMethods
+        {
+            [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+            public static extern IntPtr LoadLibrary(string lpFileName);
+
+            [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+            public static extern IntPtr LoadLibraryEx(string lpFileName, IntPtr hFile, uint dwFlags);
+
+            [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+            public static extern int LoadString(IntPtr hInstance, int uID, StringBuilder lpBuffer, int nBufferMax);
+
+            [DllImport("kernel32.dll", SetLastError = true)]
+            public static extern IntPtr FindResourceEx(IntPtr hModule, IntPtr lpType, IntPtr lpName, ushort wLanguage);
+
+            [DllImport("kernel32.dll", SetLastError = true)]
+            public static extern IntPtr LoadResource(IntPtr hModule, IntPtr hResInfo);
+
+            [DllImport("kernel32.dll", SetLastError = true)]
+            public static extern IntPtr LockResource(IntPtr hResData);
+
+            [DllImport("kernel32.dll", SetLastError = true)]
+            [return: MarshalAs(UnmanagedType.Bool)]
+            public static extern bool FreeLibrary(IntPtr hModule);
         }
 
 
@@ -480,6 +904,8 @@ namespace RA2Installer
         {
             PlayButtonClickSound();
             SetLanguage("zh-CN");
+            // 重新加载并显示语言字符串
+            ReloadLanguageStrings();
             // 开始播放 SHP 动画
             StartShpAnimation();
         }
@@ -488,6 +914,8 @@ namespace RA2Installer
         {
             PlayButtonClickSound();
             SetLanguage("zh-TW");
+            // 重新加载并显示语言字符串
+            ReloadLanguageStrings();
             // 开始播放 SHP 动画
             StartShpAnimation();
         }
@@ -496,8 +924,21 @@ namespace RA2Installer
         {
             PlayButtonClickSound();
             SetLanguage("en-US");
+            // 重新加载并显示语言字符串
+            ReloadLanguageStrings();
             // 开始播放 SHP 动画
             StartShpAnimation();
+        }
+
+        /// <summary>
+        /// 重新加载并显示语言字符串
+        /// </summary>
+        private void ReloadLanguageStrings()
+        {
+            // 清空现有的文本
+            LanguageTextStackPanel.Children.Clear();
+            // 重新加载语言字符串
+            LoadAndDisplayLanguageStrings();
         }
 
         /// <summary>
@@ -556,7 +997,7 @@ namespace RA2Installer
                 IAgreeToTheseTermsTextBlock.Visibility = Visibility.Collapsed;
                 File.AppendAllText(_logFile, "IAgreeToTheseTermsTextBlock visibility reset to Collapsed\n");
             }
-            
+
             // 确保同意按钮初始状态为隐藏
             if (AgreeButtonImage != null)
             {
@@ -965,7 +1406,7 @@ namespace RA2Installer
                 AgreeButtonImage.Source = _agreeButtonAnimationFrames[1];
                 File.AppendAllText(_logFile, "Agree button animation second frame displayed\n");
             }
-            
+
             // 这里可以添加同意后的逻辑
         }
     }
