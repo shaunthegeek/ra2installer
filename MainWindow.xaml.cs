@@ -246,7 +246,10 @@ namespace RA2Installer
                 // 创建动画播放器但不开始播放（将在 Loaded 事件中播放）
                 File.AppendAllText(_logFile, "Creating animation player\n");
                 _shpAnimationPlayer = new ShpAnimationPlayer(shpFile, AnimationImage);
+                // 订阅动画完成事件
+                _shpAnimationPlayer.AnimationCompleted += ShpAnimationPlayer_AnimationCompleted;
                 File.AppendAllText(_logFile, "Animation player created, will start playback in Loaded event\n");
+                File.AppendAllText(_logFile, "AnimationCompleted event subscribed\n");
             }
             catch (Exception ex)
             {
@@ -288,9 +291,6 @@ namespace RA2Installer
 
             // 更新UI文本
             UpdateUIText();
-            
-            // 切换到第二页
-            SwitchToPage2();
         }
 
         private void UpdateUIText()
@@ -435,11 +435,10 @@ namespace RA2Installer
             {
                 if (!string.IsNullOrEmpty(audioFile) && File.Exists(audioFile))
                 {
-                    // 停止播放器并重置
+                    // 停止当前播放
                     player.Stop();
-                    player.Close();
                     
-                    // 使用 Uri 播放音频
+                    // 重新打开音频文件并播放
                     player.Open(new Uri(audioFile));
                     player.Play();
                 }
@@ -463,7 +462,21 @@ namespace RA2Installer
         /// </summary>
         private void PlayButtonClickSound()
         {
-            PlayAudio(_soundPlayer, _buttonClickSoundFile);
+            try
+            {
+                if (!string.IsNullOrEmpty(_buttonClickSoundFile) && File.Exists(_buttonClickSoundFile))
+                {
+                    // 创建一个临时的MediaPlayer实例来播放音效
+                    // 这样可以避免每次都重置主MediaPlayer实例
+                    var tempPlayer = new System.Windows.Media.MediaPlayer();
+                    tempPlayer.Open(new Uri(_buttonClickSoundFile));
+                    tempPlayer.Play();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error playing button click sound: {ex.Message}");
+            }
         }
 
         private static T? FindVisualChild<T>(DependencyObject parent) where T : DependencyObject
@@ -551,6 +564,17 @@ namespace RA2Installer
             }
         }
         
+        /// <summary>
+        /// 动画播放完成事件处理
+        /// </summary>
+        /// <param name="sender">发送者</param>
+        /// <param name="e">事件参数</param>
+        private void ShpAnimationPlayer_AnimationCompleted(object sender, EventArgs e)
+        {
+            File.AppendAllText(_logFile, "SHP animation completed, switching to Page 2\n");
+            SwitchToPage2();
+        }
+
         /// <summary>
         /// 切换到第二页
         /// </summary>
