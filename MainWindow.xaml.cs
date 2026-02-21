@@ -21,6 +21,7 @@ namespace RA2Installer
         private string _buttonClickSoundFile;
         private string _backgroundMusicFile;
         private ShpAnimationPlayer _shpAnimationPlayer;
+        private ShpAnimationPlayer _page2ShpAnimationPlayer;
 
         // 日志文件路径
         private string _logFile;
@@ -555,8 +556,63 @@ namespace RA2Installer
             // 为第二页加载相同的背景图片
             LoadBackgroundImageForPage2();
             
+            // 加载并播放第二页的动画
+            LoadAndPlayPage2Animation();
+            
             // 更新第二页的UI文本，使用当前选择的语言
             UpdatePage2UIText();
+        }
+        
+        /// <summary>
+        /// 加载并播放第二页的动画
+        /// </summary>
+        private void LoadAndPlayPage2Animation()
+        {
+            try
+            {
+                File.AppendAllText(_logFile, "Loading and playing Page2 animation with hash: D6D75E64\n");
+                
+                // 检查Page2AnimationImage是否存在
+                if (Page2AnimationImage == null)
+                {
+                    File.AppendAllText(_logFile, "Page2AnimationImage control is null\n");
+                    return;
+                }
+                
+                // 加载Setup.mix文件
+                MixFile mixFile = new MixFile(SetupMixPath);
+                
+                // 获取SHP文件数据
+                byte[] shpData = mixFile.GetShpByHash("D6D75E64");
+                if (shpData == null)
+                {
+                    File.AppendAllText(_logFile, "Failed to load SHP file for Page2 animation\n");
+                    return;
+                }
+                
+                // 获取PAL文件数据
+                string palHash = "397C46E0";
+                byte[] palData = mixFile.GetPalByHash(palHash);
+                if (palData == null)
+                {
+                    File.AppendAllText(_logFile, "Failed to load PAL file for Page2 animation\n");
+                    return;
+                }
+                
+                // 解析SHP文件
+                ShpFile shpFile = new ShpFile(shpData, palData);
+                
+                // 创建动画播放器
+                _page2ShpAnimationPlayer = new ShpAnimationPlayer(shpFile, Page2AnimationImage);
+                
+                // 开始播放动画
+                _page2ShpAnimationPlayer.Play();
+                File.AppendAllText(_logFile, "Page2 animation playback started\n");
+            }
+            catch (Exception ex)
+            {
+                File.AppendAllText(_logFile, "Error loading Page2 animation: " + ex.Message + "\n");
+            }
         }
         
         /// <summary>

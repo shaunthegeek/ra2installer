@@ -83,8 +83,8 @@
         
         <!-- 第二页 -->
         <Grid x:Name="Page2" Width="640" Height="480" Visibility="Collapsed">
-            <!-- 第二页内容可以在这里添加 -->
-            <TextBlock Text="第二页" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="24"/>
+            <!-- 动画显示控件 -->
+            <Image x:Name="Page2AnimationImage" HorizontalAlignment="Left" VerticalAlignment="Top" Width="470"/>
             
             <!-- 按钮容器 -->
             <StackPanel Orientation="Vertical" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,9,29">
