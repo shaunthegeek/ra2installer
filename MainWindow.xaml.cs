@@ -300,9 +300,6 @@ namespace RA2Installer
 
             // 手动更新按钮文本
             UpdateButtonTexts();
-
-            // 重新应用字符间距
-            ApplyCharacterSpacing();
         }
 
         private void UpdateButtonTexts()
@@ -333,45 +330,6 @@ namespace RA2Installer
                     visualTextBlock.Inlines.Clear();
                     // 更新文本
                     visualTextBlock.Text = Strings.CancelButton;
-                }
-            }
-        }
-
-        private void ApplyCharacterSpacing()
-        {
-            // 查找窗口中的所有按钮
-            foreach (Button button in FindVisualChildren<Button>(this))
-            {
-                _ = button.ApplyTemplate();
-                TextBlock textBlock = FindVisualChild<TextBlock>(button);
-                if (textBlock != null)
-                {
-                    // 对于取消按钮，使用资源文件中的原始文本
-                    string originalText = "";
-                    if (button.Name == "CancelButton")
-                    {
-                        originalText = Strings.CancelButton;
-                    }
-                    else if (textBlock.Text != null)
-                    {
-                        // 对于其他按钮，使用当前文本，但移除可能存在的多余空格
-                        originalText = textBlock.Text.Replace(" ", "");
-                    }
-
-                    if (!string.IsNullOrEmpty(originalText))
-                    {
-                        textBlock.Inlines.Clear();
-
-                        // 为每个字符添加Run元素，并在字符之间添加空格
-                        for (int i = 0; i < originalText.Length; i++)
-                        {
-                            textBlock.Inlines.Add(new Run(originalText[i].ToString()));
-                            if (i < originalText.Length - 1)
-                            {
-                                textBlock.Inlines.Add(new Run(" "));
-                            }
-                        }
-                    }
                 }
             }
         }
@@ -753,9 +711,6 @@ namespace RA2Installer
             {
                 LicenseTextBlock.Text = Strings.LicenseContent;
             }
-            
-            // 重新应用字符间距，确保和第一页相同
-            ApplyCharacterSpacing();
         }
         
         /// <summary>
