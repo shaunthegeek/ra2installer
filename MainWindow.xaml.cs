@@ -20,37 +20,73 @@ namespace RA2Installer
         private System.Windows.Media.MediaPlayer _backgroundMusicPlayer;
         private string _buttonClickSoundFile;
         private string _backgroundMusicFile;
+        private ShpAnimationPlayer _shpAnimationPlayer;
+
+        // 日志文件路径
+        private string _logFile;
 
         public MainWindow()
         {
             try
             {
-                Console.WriteLine("Starting MainWindow initialization");
+                // 创建日志文件
+                _logFile = Path.Combine(Path.GetTempPath(), "ra2installer.log");
+                File.WriteAllText(_logFile, "Starting MainWindow initialization\n");
 
                 // 首先初始化组件，这样 Grid 控件就会被创建
                 InitializeComponent();
 
-                Console.WriteLine("Components initialized, loading background image");
+                File.AppendAllText(_logFile, "Components initialized, checking AnimationImage\n");
+                
+                // 检查 AnimationImage 是否存在
+                if (AnimationImage != null)
+                {
+                    File.AppendAllText(_logFile, "AnimationImage control is available\n");
+                }
+                else
+                {
+                    File.AppendAllText(_logFile, "AnimationImage control is null\n");
+                }
 
+                File.AppendAllText(_logFile, "Loading background image\n");
                 // 然后加载背景图片
-                LoadBackgroundImageFromMix(SetupMixPath, "B1D71F00", "bmp");
+                LoadBackgroundImageFromMix(SetupMixPath, "B1D51F00", "bmp");
+
+                File.AppendAllText(_logFile, "Loading SHP animation data\n");
+                // 加载 SHP 动画数据（不播放）
+                try
+                {
+                    File.AppendAllText(_logFile, "Calling LoadShpAnimationData with parameters: " + SetupMixPath + ", 2012EC16, shp\n");
+                    LoadShpAnimationData(SetupMixPath, "2012EC16", "shp");
+                }
+                catch (Exception ex)
+                {
+                    File.AppendAllText(_logFile, "Error calling LoadShpAnimationData: " + ex.Message + "\n");
+                }
 
                 // 初始化 MediaPlayer
+                File.AppendAllText(_logFile, "Initializing MediaPlayer\n");
                 _mediaPlayer = new System.Windows.Media.MediaPlayer();
                 _backgroundMusicPlayer = new System.Windows.Media.MediaPlayer();
 
                 // 加载按钮点击音效
+                File.AppendAllText(_logFile, "Loading button click sound\n");
                 LoadButtonClickSound();
 
                 // 加载背景音乐
+                File.AppendAllText(_logFile, "Loading background music\n");
                 LoadBackgroundMusic();
 
+                File.AppendAllText(_logFile, "Adding Loaded event handler\n");
                 Loaded += MainWindow_Loaded;
+                
+                File.AppendAllText(_logFile, "MainWindow initialization completed\n");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error during MainWindow initialization: {ex.Message}");
-                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                string logFile = Path.Combine(Path.GetTempPath(), "ra2installer.log");
+                File.AppendAllText(logFile, $"Error during MainWindow initialization: {ex.Message}\n");
+                File.AppendAllText(logFile, $"Stack trace: {ex.StackTrace}\n");
                 // 不退出程序，继续初始化
                 InitializeComponent();
                 Loaded += MainWindow_Loaded;
@@ -64,6 +100,9 @@ namespace RA2Installer
 
             // 播放背景音乐
             PlayBackgroundMusic();
+
+            // 不自动启动 SHP 动画，只显示第一帧
+            File.AppendAllText(_logFile, "Not starting SHP animation automatically, showing only first frame\n");
         }
 
 
@@ -110,6 +149,111 @@ namespace RA2Installer
             {
                 // 记录错误但不退出程序
                 Console.WriteLine($"Error loading background image from Setup.mix: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 从指定路径的 Setup.mix 中加载指定哈希值和类型的 SHP 文件并准备动画
+        /// 如果加载失败则输出日志但不退出程序
+        /// </summary>
+        /// <param name="setupMixPath">Setup.mix 文件的路径</param>
+        /// <param name="fileNameHash">文件名哈希值</param>
+        /// <param name="fileType">文件类型（如 "shp"）</param>
+        private void LoadShpAnimationData(string setupMixPath, string fileNameHash, string fileType)
+        {
+            try
+            {
+                // 简单的日志写入，避免格式化字符串可能的问题
+                File.AppendAllText(_logFile, "Starting to load SHP animation\n");
+                File.AppendAllText(_logFile, "Hash: " + fileNameHash + "\n");
+                File.AppendAllText(_logFile, "Type: " + fileType + "\n");
+                
+                // 检查 AnimationImage 是否存在
+                if (AnimationImage == null)
+                {
+                    File.AppendAllText(_logFile, "AnimationImage control is null\n");
+                    return;
+                }
+                else
+                {
+                    File.AppendAllText(_logFile, "AnimationImage control is available\n");
+                }
+                
+                // 加载 Setup.mix 文件
+                File.AppendAllText(_logFile, "Loading mix file\n");
+                File.AppendAllText(_logFile, "Path: " + setupMixPath + "\n");
+                
+                // 检查文件是否存在
+                if (!File.Exists(setupMixPath))
+                {
+                    File.AppendAllText(_logFile, "Mix file does not exist\n");
+                    return;
+                }
+                else
+                {
+                    File.AppendAllText(_logFile, "Mix file exists\n");
+                }
+                
+                MixFile mixFile = new MixFile(setupMixPath);
+                File.AppendAllText(_logFile, "Mix file loaded\n");
+
+                // 尝试获取指定哈希值和类型的 SHP 文件
+                File.AppendAllText(_logFile, "Attempting to get SHP file\n");
+                byte[] shpData = mixFile.GetShpByHash(fileNameHash, fileType);
+
+                if (shpData == null)
+                {
+                    File.AppendAllText(_logFile, "Failed to load SHP file\n");
+                    return;
+                }
+                else
+                {
+                    File.AppendAllText(_logFile, "Successfully loaded SHP file\n");
+                    File.AppendAllText(_logFile, "Size: " + shpData.Length + " bytes\n");
+                }
+
+                // 尝试获取 PAL 文件
+                File.AppendAllText(_logFile, "Attempting to get PAL files\n");
+                List<int> palHashes = mixFile.GetAllPalFileHashes();
+                File.AppendAllText(_logFile, "Found " + palHashes.Count + " PAL files\n");
+                
+                ShpFile shpFile;
+                
+                // 使用用户指定的 PAL 文件
+                byte[] palData = null;
+                string userSpecifiedPalHash = "397C46E0";
+                palData = mixFile.GetPalByHash(userSpecifiedPalHash);
+                if (palData != null)
+                {
+                    File.AppendAllText(_logFile, "Successfully loaded user specified PAL file with hash: " + userSpecifiedPalHash + "\n");
+                    File.AppendAllText(_logFile, "Size: " + palData.Length + " bytes\n");
+                    
+                    // 使用找到的 PAL 文件解析 SHP 文件
+                    File.AppendAllText(_logFile, "Parsing SHP file with PAL\n");
+                    shpFile = new ShpFile(shpData, palData);
+                }
+                else
+                {
+                    File.AppendAllText(_logFile, "Failed to load user specified PAL file with hash: " + userSpecifiedPalHash + "\n");
+                    throw new Exception($"Failed to load specified PAL file with hash: {userSpecifiedPalHash}");
+                }
+                
+                File.AppendAllText(_logFile, "SHP file parsed successfully\n");
+                File.AppendAllText(_logFile, "Frame count: " + shpFile.FrameCount + "\n");
+                File.AppendAllText(_logFile, "Width: " + shpFile.Width + "\n");
+                File.AppendAllText(_logFile, "Height: " + shpFile.Height + "\n");
+
+                // 创建动画播放器但不开始播放（将在 Loaded 事件中播放）
+                File.AppendAllText(_logFile, "Creating animation player\n");
+                _shpAnimationPlayer = new ShpAnimationPlayer(shpFile, AnimationImage);
+                File.AppendAllText(_logFile, "Animation player created, will start playback in Loaded event\n");
+            }
+            catch (Exception ex)
+            {
+                // 记录错误但不退出程序
+                File.AppendAllText(_logFile, "Error loading SHP animation\n");
+                File.AppendAllText(_logFile, "Message: " + ex.Message + "\n");
+                File.AppendAllText(_logFile, "Stack trace: " + ex.StackTrace + "\n");
             }
         }
 
@@ -360,18 +504,46 @@ namespace RA2Installer
         {
             PlayButtonClickSound();
             SetLanguage("zh-CN");
+            // 开始播放 SHP 动画
+            StartShpAnimation();
         }
 
         private void ChineseTraditionalButton_Click(object sender, RoutedEventArgs e)
         {
             PlayButtonClickSound();
             SetLanguage("zh-TW");
+            // 开始播放 SHP 动画
+            StartShpAnimation();
         }
 
         private void EnglishButton_Click(object sender, RoutedEventArgs e)
         {
             PlayButtonClickSound();
             SetLanguage("en-US");
+            // 开始播放 SHP 动画
+            StartShpAnimation();
+        }
+
+        /// <summary>
+        /// 开始播放 SHP 动画
+        /// </summary>
+        private void StartShpAnimation()
+        {
+            if (_shpAnimationPlayer != null)
+            {
+                // 每次点击按钮时，重置动画到第一帧并重新开始播放
+                File.AppendAllText(_logFile, "Starting SHP animation playback on language button click\n");
+                
+                // 重置动画到第一帧
+                _shpAnimationPlayer.Reset();
+                // 开始播放
+                _shpAnimationPlayer.Play();
+                File.AppendAllText(_logFile, "SHP animation playback started\n");
+            }
+            else
+            {
+                File.AppendAllText(_logFile, "_shpAnimationPlayer is null, cannot start playback\n");
+            }
         }
     }
 }

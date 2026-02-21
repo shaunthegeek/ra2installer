@@ -283,18 +283,62 @@ namespace RA2Installer
         /// <returns>文件内容</returns>
         private byte[] ReadFileByHash(int fileNameHash)
         {
-            if (_fileInfos.TryGetValue(fileNameHash, out var fileInfo))
+            try
             {
-                using (var stream = new FileStream(_filePath, FileMode.Open, FileAccess.Read))
+                string logFile = Path.Combine(Path.GetTempPath(), "ra2installer.log");
+                File.AppendAllText(logFile, "ReadFileByHash called with hash: " + fileNameHash + "\n");
+                
+                if (_fileInfos.TryGetValue(fileNameHash, out var fileInfo))
                 {
-                    stream.Position = fileInfo.Offset;
-                    using (var reader = new BinaryReader(stream))
+                    File.AppendAllText(logFile, "File info found\n");
+                    File.AppendAllText(logFile, "Offset: " + fileInfo.Offset + "\n");
+                    File.AppendAllText(logFile, "Size: " + fileInfo.Size + "\n");
+                    
+                    using (var stream = new FileStream(_filePath, FileMode.Open, FileAccess.Read))
                     {
-                        return reader.ReadBytes(fileInfo.Size);
+                        File.AppendAllText(logFile, "File stream opened\n");
+                        File.AppendAllText(logFile, "Stream length: " + stream.Length + "\n");
+                        
+                        // 检查偏移量是否有效
+                        if (fileInfo.Offset >= stream.Length)
+                        {
+                            File.AppendAllText(logFile, "Invalid offset: offset >= stream length\n");
+                            return null;
+                        }
+                        
+                        // 检查大小是否有效
+                        if (fileInfo.Size <= 0 || fileInfo.Offset + fileInfo.Size > stream.Length)
+                        {
+                            File.AppendAllText(logFile, "Invalid size: size <= 0 or offset + size > stream length\n");
+                            return null;
+                        }
+                        
+                        stream.Position = fileInfo.Offset;
+                        File.AppendAllText(logFile, "Stream position set to offset\n");
+                        
+                        using (var reader = new BinaryReader(stream))
+                        {
+                            File.AppendAllText(logFile, "BinaryReader created\n");
+                            byte[] fileContent = reader.ReadBytes(fileInfo.Size);
+                            File.AppendAllText(logFile, "File content read successfully\n");
+                            File.AppendAllText(logFile, "Read size: " + fileContent.Length + "\n");
+                            return fileContent;
+                        }
                     }
                 }
+                else
+                {
+                    File.AppendAllText(logFile, "File info not found\n");
+                }
+                return null;
             }
-            return null;
+            catch (Exception ex)
+            {
+                string logFile = Path.Combine(Path.GetTempPath(), "ra2installer.log");
+                File.AppendAllText(logFile, "Error in ReadFileByHash: " + ex.Message + "\n");
+                File.AppendAllText(logFile, "Stack trace: " + ex.StackTrace + "\n");
+                return null;
+            }
         }
 
         /// <summary>
@@ -556,6 +600,167 @@ namespace RA2Installer
             catch (Exception ex)
             {
                 Console.WriteLine($"Error in GetAudioByHash: {ex.Message}");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// 根据文件名哈希值从 mix 文件中获取 SHP 文件
+        /// </summary>
+        /// <param name="fileNameHash">文件名哈希值</param>
+        /// <param name="fileType">文件类型（如 "shp"）</param>
+        /// <returns>SHP 文件的字节数组</returns>
+        public byte[] GetShpByHash(string fileNameHash, string fileType)
+        {
+            try
+            {
+                // 创建日志文件
+                string logFile = Path.Combine(Path.GetTempPath(), "ra2installer.log");
+                File.AppendAllText(logFile, $"GetShpByHash called with hash: {fileNameHash}, type: {fileType}\n");
+                
+                // 将字符串哈希值转换为整数
+                int hashValue = Convert.ToInt32(fileNameHash, 16);
+                File.AppendAllText(logFile, $"Converted hash to int: {hashValue}\n");
+                
+                // 检查哈希值是否存在于存储的哈希值中
+                if (!_fileInfos.ContainsKey(hashValue))
+                {
+                    File.AppendAllText(logFile, $"Hash {hashValue} not found in fileInfos\n");
+                    
+                    // 尝试不同的哈希值表示方式
+                    // 尝试将哈希值转换为无符号整数
+                    uint uintHashValue = Convert.ToUInt32(fileNameHash, 16);
+                    File.AppendAllText(logFile, $"Converted hash to uint: {uintHashValue}\n");
+                    
+                    // 尝试将无符号整数转换为有符号整数
+                    int signedHashValue = unchecked((int)uintHashValue);
+                    File.AppendAllText(logFile, $"Converted uint hash to signed int: {signedHashValue}\n");
+                    
+                    if (_fileInfos.ContainsKey(signedHashValue))
+                    {
+                        File.AppendAllText(logFile, $"Found hash {signedHashValue} in fileInfos\n");
+                        hashValue = signedHashValue;
+                    }
+                    else
+                    {
+                        File.AppendAllText(logFile, $"Hash {signedHashValue} not found in fileInfos\n");
+                        
+                        // 打印前几个哈希值，以便我们可以看到文件中的哈希值格式
+                        File.AppendAllText(logFile, $"Number of file infos: {_fileInfos.Count}\n");
+                        int count = 0;
+                        foreach (var key in _fileInfos.Keys)
+                        {
+                            if (count < 5)
+                            {
+                                File.AppendAllText(logFile, $"File info key: {key}, hex: {key.ToString("X8")}\n");
+                            }
+                            count++;
+                        }
+                        
+                        return null;
+                    }
+                }
+                else
+                {
+                    File.AppendAllText(logFile, $"Found hash {hashValue} in fileInfos\n");
+                }
+                
+                // 使用哈希值读取文件内容
+                var fileContent = ReadFileByHash(hashValue);
+                File.AppendAllText(logFile, $"Read file content with size: {fileContent?.Length}\n");
+                return fileContent;
+            }
+            catch (Exception ex)
+            {
+                string logFile = Path.Combine(Path.GetTempPath(), "ra2installer.log");
+                File.AppendAllText(logFile, $"Error in GetShpByHash: {ex.Message}\n");
+                File.AppendAllText(logFile, $"Stack trace: {ex.StackTrace}\n");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// 获取所有 PAL 文件的哈希值
+        /// </summary>
+        /// <returns>PAL 文件哈希值列表</returns>
+        public List<int> GetAllPalFileHashes()
+        {
+            List<int> palHashes = new List<int>();
+            
+            foreach (var entry in _fileInfos)
+            {
+                try
+                {
+                    var fileContent = ReadFileByHash(entry.Key);
+                    if (fileContent != null)
+                    {
+                        // 检查文件是否为 PAL 文件：大小为 768 字节（256 色 × 3 字节/色）
+                        if (fileContent.Length == 768)
+                        {
+                            palHashes.Add(entry.Key);
+                            
+                            // 记录找到的 PAL 文件
+                            string logFile = Path.Combine(Path.GetTempPath(), "ra2installer.log");
+                            File.AppendAllText(logFile, $"Found potential PAL file with hash: {entry.Key.ToString("X8")}, size: {fileContent.Length} bytes\n");
+                        }
+                    }
+                }
+                catch { }
+            }
+            
+            return palHashes;
+        }
+
+        /// <summary>
+        /// 根据哈希值获取 PAL 文件
+        /// </summary>
+        /// <param name="fileNameHash">文件名哈希值</param>
+        /// <returns>PAL 文件的字节数组</returns>
+        public byte[] GetPalByHash(string fileNameHash)
+        {
+            try
+            {
+                // 创建日志文件
+                string logFile = Path.Combine(Path.GetTempPath(), "ra2installer.log");
+                File.AppendAllText(logFile, $"GetPalByHash called with hash: {fileNameHash}\n");
+                
+                // 将字符串哈希值转换为整数
+                int hashValue = Convert.ToInt32(fileNameHash, 16);
+                File.AppendAllText(logFile, $"Converted hash to int: {hashValue}\n");
+                
+                // 检查哈希值是否存在于存储的哈希值中
+                if (!_fileInfos.ContainsKey(hashValue))
+                {
+                    File.AppendAllText(logFile, $"Hash {hashValue} not found in fileInfos\n");
+                    
+                    // 尝试不同的哈希值表示方式
+                    uint uintHashValue = Convert.ToUInt32(fileNameHash, 16);
+                    int signedHashValue = unchecked((int)uintHashValue);
+                    if (_fileInfos.ContainsKey(signedHashValue))
+                    {
+                        File.AppendAllText(logFile, $"Found hash {signedHashValue} in fileInfos\n");
+                        hashValue = signedHashValue;
+                    }
+                    else
+                    {
+                        File.AppendAllText(logFile, $"Hash {signedHashValue} not found in fileInfos\n");
+                        return null;
+                    }
+                }
+                else
+                {
+                    File.AppendAllText(logFile, $"Found hash {hashValue} in fileInfos\n");
+                }
+                
+                // 使用哈希值读取文件内容
+                var fileContent = ReadFileByHash(hashValue);
+                File.AppendAllText(logFile, $"Read file content with size: {fileContent?.Length}\n");
+                return fileContent;
+            }
+            catch (Exception ex)
+            {
+                string logFile = Path.Combine(Path.GetTempPath(), "ra2installer.log");
+                File.AppendAllText(logFile, $"Error in GetPalByHash: {ex.Message}\n");
                 return null;
             }
         }

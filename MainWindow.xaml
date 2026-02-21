@@ -9,6 +9,9 @@
         Title="{x:Static resx:Strings.WindowTitle}" ResizeMode="NoResize" SizeToContent="WidthAndHeight">
     <Grid Width="640" Height="480">
         
+        <!-- 动画显示控件 -->
+        <Image x:Name="AnimationImage" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,75,0,0" Width="470"/>
+        
         <!-- 语言切换按钮和退出按钮 -->
         <StackPanel Orientation="Vertical" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,9,29">
             <Button Width="145" Height="42" Margin="0,0,0,0" Cursor="Hand" Click="ChineseSimplifiedButton_Click">
