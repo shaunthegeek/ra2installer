@@ -31,6 +31,9 @@ namespace RA2Installer
         // 当前选择的语言
         private string _currentLanguage;
 
+        // 当前页码
+        private int _currentPage = 1;
+
         public MainWindow()
         {
             try
@@ -119,6 +122,9 @@ namespace RA2Installer
                 AnimationImage.Visibility = Visibility.Visible;
                 File.AppendAllText(_logFile, "AnimationImage visibility set to Visible\n");
             }
+
+            // 更新导航按钮状态
+            UpdateNavigationButtons();
 
             // 第1页启动时，自动倒放动画
             if (_shpAnimationPlayer != null)
@@ -977,8 +983,8 @@ namespace RA2Installer
                     File.AppendAllText(_logFile, "AnimationImage visibility set to Visible\n");
                 }
 
-                // 检查是否在第1页（LanguageButtonsStackPanel 可见）
-                bool isPage1 = LanguageButtonsStackPanel != null && LanguageButtonsStackPanel.Visibility == Visibility.Visible;
+                // 检查是否在第1页（使用当前页码变量）
+                bool isPage1 = _currentPage == 1;
 
                 if (isPage1)
                 {
@@ -1014,8 +1020,8 @@ namespace RA2Installer
         {
             File.AppendAllText(_logFile, "SHP animation completed\n");
             
-            // 检查是否在第1页（LanguageButtonsStackPanel 可见）
-            bool isPage1 = LanguageButtonsStackPanel != null && LanguageButtonsStackPanel.Visibility == Visibility.Visible;
+            // 检查是否在第1页（使用当前页码变量）
+            bool isPage1 = _currentPage == 1;
 
             if (isPage1)
             {
@@ -1034,9 +1040,9 @@ namespace RA2Installer
                 }
                 else
                 {
-                    // 正常模式（语言按钮触发）：跳转到第二页
+                    // 正常模式（下一步按钮触发）：跳转到第二页
                     File.AppendAllText(_logFile, "Page 1 normal animation completed, switching to Page 2\n");
-                    SwitchToPage2();
+                    SwitchToPage(2);
                 }
             }
             else
@@ -1047,49 +1053,159 @@ namespace RA2Installer
         }
 
         /// <summary>
-        /// 切换到第二页
+        /// 切换到指定页码
         /// </summary>
-        private void SwitchToPage2()
+        /// <param name="pageNumber">目标页码</param>
+        private void SwitchToPage(int pageNumber)
         {
-            // 隐藏第一页特有元素
-            LanguageButtonsStackPanel.Visibility = Visibility.Collapsed;
-            
-            // 显示第二页特有元素
+            _currentPage = pageNumber;
+            File.AppendAllText(_logFile, $"Switching to page {pageNumber}\n");
+
+            // 更新按钮状态
+            UpdateNavigationButtons();
+
+            if (pageNumber == 1)
+            {
+                // 第一页
+                // 隐藏第二页特有元素
+                LicenseBorder.Visibility = Visibility.Collapsed;
+                IAgreeToTheseTermsTextBlock.Visibility = Visibility.Collapsed;
+                AgreeButtonImage.Visibility = Visibility.Collapsed;
+
+                // 调整动画控件位置为第一页位置
+                if (AnimationImage != null)
+                {
+                    AnimationImage.Margin = new Thickness(0, 75, 0, 0);
+                    File.AppendAllText(_logFile, "AnimationImage margin set to (0,75,0,0) for Page 1\n");
+                }
+
+                // 加载并播放第一页的动画
+                LoadAndPlayPage1Animation();
+
+                // 更新第一页的UI文本
+                UpdatePage1UIText();
+            }
+            else if (pageNumber == 2)
+            {
+                // 第二页
+                // 隐藏第一页特有元素
+                
+                // 调整动画控件位置为第二页位置（紧贴顶部）
+                if (AnimationImage != null)
+                {
+                    AnimationImage.Margin = new Thickness(0, 0, 0, 0);
+                    File.AppendAllText(_logFile, "AnimationImage margin set to (0,0,0,0) for Page 2\n");
+                }
+
+                // 确保许可证边框初始状态为隐藏
+                if (LicenseBorder != null)
+                {
+                    LicenseBorder.Visibility = Visibility.Collapsed;
+                    File.AppendAllText(_logFile, "LicenseBorder visibility reset to Collapsed\n");
+                }
+
+                // 确保同意条款文本初始状态为隐藏
+                if (IAgreeToTheseTermsTextBlock != null)
+                {
+                    IAgreeToTheseTermsTextBlock.Visibility = Visibility.Collapsed;
+                    File.AppendAllText(_logFile, "IAgreeToTheseTermsTextBlock visibility reset to Collapsed\n");
+                }
+
+                // 确保同意按钮初始状态为隐藏
+                if (AgreeButtonImage != null)
+                {
+                    AgreeButtonImage.Visibility = Visibility.Collapsed;
+                    File.AppendAllText(_logFile, "AgreeButtonImage visibility reset to Collapsed\n");
+                }
+
+                // 加载并播放第二页的动画
+                LoadAndPlayPage2Animation();
+
+                // 更新第二页的UI文本，使用当前选择的语言
+                UpdatePage2UIText();
+            }
+        }
+
+        /// <summary>
+        /// 更新导航按钮状态
+        /// </summary>
+        private void UpdateNavigationButtons()
+        {
+            // 显示导航按钮容器
             NavigationButtonsStackPanel.Visibility = Visibility.Visible;
 
-            // 调整动画控件位置为第二页位置（紧贴顶部）
-            if (AnimationImage != null)
+            // 第一页隐藏后退按钮
+            if (PreviousButton != null)
             {
-                AnimationImage.Margin = new Thickness(0, 0, 0, 0);
-                File.AppendAllText(_logFile, "AnimationImage margin set to (0,0,0,0) for Page 2\n");
+                PreviousButton.Visibility = _currentPage == 1 ? Visibility.Collapsed : Visibility.Visible;
+                File.AppendAllText(_logFile, $"PreviousButton visibility set to {(PreviousButton.Visibility == Visibility.Visible ? "Visible" : "Collapsed")} for Page {_currentPage}\n");
             }
+        }
 
-            // 确保许可证边框初始状态为隐藏
-            if (LicenseBorder != null)
+        /// <summary>
+        /// 加载并播放第一页的动画
+        /// </summary>
+        private void LoadAndPlayPage1Animation()
+        {
+            try
             {
-                LicenseBorder.Visibility = Visibility.Collapsed;
-                File.AppendAllText(_logFile, "LicenseBorder visibility reset to Collapsed\n");
-            }
+                File.AppendAllText(_logFile, "Loading and playing Page1 animation with hash: 2012EC16\n");
 
-            // 确保同意条款文本初始状态为隐藏
-            if (IAgreeToTheseTermsTextBlock != null)
+                // 检查AnimationImage是否存在
+                if (AnimationImage == null)
+                {
+                    File.AppendAllText(_logFile, "AnimationImage control is null\n");
+                    return;
+                }
+
+                // 加载Setup.mix文件
+                MixFile mixFile = new MixFile(SetupMixPath);
+
+                // 获取SHP文件数据
+                byte[] shpData = mixFile.GetShpByHash("2012EC16");
+                if (shpData == null)
+                {
+                    File.AppendAllText(_logFile, "Failed to load SHP file for Page1 animation\n");
+                    return;
+                }
+
+                // 获取PAL文件数据
+                string palHash = "397C46E0";
+                byte[] palData = mixFile.GetPalByHash(palHash);
+                if (palData == null)
+                {
+                    File.AppendAllText(_logFile, "Failed to load PAL file for Page1 animation\n");
+                    return;
+                }
+
+                // 解析SHP文件
+                ShpFile shpFile = new ShpFile(shpData, palData);
+
+                // 创建动画播放器
+                _shpAnimationPlayer = new ShpAnimationPlayer(shpFile, AnimationImage);
+
+                // 添加动画播放完成事件处理程序
+                _shpAnimationPlayer.AnimationCompleted += ShpAnimationPlayer_AnimationCompleted;
+
+                // 第1页启动时，自动倒放动画
+                _shpAnimationPlayer.IsReverse = true;
+                _shpAnimationPlayer.ResetToLastFrame();
+                _shpAnimationPlayer.Play();
+                File.AppendAllText(_logFile, "Page1 animation playback started in reverse\n");
+            }
+            catch (Exception ex)
             {
-                IAgreeToTheseTermsTextBlock.Visibility = Visibility.Collapsed;
-                File.AppendAllText(_logFile, "IAgreeToTheseTermsTextBlock visibility reset to Collapsed\n");
+                File.AppendAllText(_logFile, "Error loading Page1 animation: " + ex.Message + "\n");
             }
+        }
 
-            // 确保同意按钮初始状态为隐藏
-            if (AgreeButtonImage != null)
-            {
-                AgreeButtonImage.Visibility = Visibility.Collapsed;
-                File.AppendAllText(_logFile, "AgreeButtonImage visibility reset to Collapsed\n");
-            }
-
-            // 加载并播放第二页的动画
-            LoadAndPlayPage2Animation();
-
-            // 更新第二页的UI文本，使用当前选择的语言
-            UpdatePage2UIText();
+        /// <summary>
+        /// 更新第一页的UI文本
+        /// </summary>
+        private void UpdatePage1UIText()
+        {
+            // 从Language.dll读取字符串并显示
+            LoadAndDisplayLanguageStrings();
         }
 
         /// <summary>
@@ -1235,37 +1351,10 @@ namespace RA2Installer
         {
             PlayButtonClickSound();
 
-            // 隐藏第二页特有元素
-            NavigationButtonsStackPanel.Visibility = Visibility.Collapsed;
-            LicenseBorder.Visibility = Visibility.Collapsed;
-            IAgreeToTheseTermsTextBlock.Visibility = Visibility.Collapsed;
-            AgreeButtonImage.Visibility = Visibility.Collapsed;
-            
-            // 显示第一页特有元素
-            LanguageButtonsStackPanel.Visibility = Visibility.Visible;
-
-            // 重置动画控件位置为第一页位置（顶部75像素）
-            if (AnimationImage != null)
+            // 切换到上一页
+            if (_currentPage > 1)
             {
-                AnimationImage.Margin = new Thickness(0, 75, 0, 0);
-                File.AppendAllText(_logFile, "AnimationImage margin set to (0,75,0,0) for Page 1\n");
-            }
-
-            // 重新加载第一页的动画数据
-            LoadShpAnimationData(SetupMixPath, "2012EC16");
-            
-            // 从第2页返回第1页时，倒放动画
-            if (_shpAnimationPlayer != null)
-            {
-                // 停止动画（如果正在播放）
-                _shpAnimationPlayer.Stop();
-                // 设置为倒放模式
-                _shpAnimationPlayer.IsReverse = true;
-                // 重置到最后一帧
-                _shpAnimationPlayer.ResetToLastFrame();
-                // 开始播放倒放动画
-                _shpAnimationPlayer.Play();
-                File.AppendAllText(_logFile, "Reverse animation started for Page 1 return\n");
+                SwitchToPage(_currentPage - 1);
             }
         }
 
@@ -1276,20 +1365,32 @@ namespace RA2Installer
         {
             PlayButtonClickSound();
 
-            // 隐藏许可证内容和同意条款文本
-            if (LicenseBorder != null)
+            if (_currentPage == 1)
             {
-                LicenseBorder.Visibility = Visibility.Collapsed;
-                File.AppendAllText(_logFile, "LicenseBorder visibility set to Collapsed\n");
+                // 第1页：执行与原来语言按钮相同的逻辑，只是不需要切换语言
+                // 重新加载并显示语言字符串
+                ReloadLanguageStrings();
+                // 开始播放 SHP 动画
+                StartShpAnimation();
             }
-            if (IAgreeToTheseTermsTextBlock != null)
+            else
             {
-                IAgreeToTheseTermsTextBlock.Visibility = Visibility.Collapsed;
-                File.AppendAllText(_logFile, "IAgreeToTheseTermsTextBlock visibility set to Collapsed\n");
-            }
+                // 其他页：执行原来的逻辑
+                // 隐藏许可证内容和同意条款文本
+                if (LicenseBorder != null)
+                {
+                    LicenseBorder.Visibility = Visibility.Collapsed;
+                    File.AppendAllText(_logFile, "LicenseBorder visibility set to Collapsed\n");
+                }
+                if (IAgreeToTheseTermsTextBlock != null)
+                {
+                    IAgreeToTheseTermsTextBlock.Visibility = Visibility.Collapsed;
+                    File.AppendAllText(_logFile, "IAgreeToTheseTermsTextBlock visibility set to Collapsed\n");
+                }
 
-            // 显示动画 hash 134B6332 的第一帧
-            ShowAnimationFirstFrame("134B6332");
+                // 显示动画 hash 134B6332 的第一帧
+                ShowAnimationFirstFrame("134B6332");
+            }
         }
 
         /// <summary>
