@@ -38,6 +38,15 @@ namespace RA2Installer
             { 2, new int[] { 255 } }
         };
 
+        // 存储每一页的底部文字ID和显示时长（毫秒）
+        private readonly Dictionary<int, (int StringId, int DisplayDurationMs)> _pageBottomTextConfig = new Dictionary<int, (int, int)> {
+            { 1, (144, 1000) }, // 第一页：ID 144，显示1秒
+            { 2, (145, 1000) }  // 第二页：ID 145，显示1秒
+        };
+
+        // 用于控制底部文字显示时长的定时器
+        private System.Timers.Timer? _bottomTextTimer;
+
         // 用于取消异步加载任务的令牌源
         private CancellationTokenSource? _loadStringsCancellationTokenSource;
 
@@ -119,6 +128,9 @@ namespace RA2Installer
 
             // 从Language.dll读取字符串并显示
             LoadAndDisplayRadarStrings();
+
+            // 加载并显示底部文本
+            LoadBottomText();
 
             // 确保AnimationImage可见
             if (AnimationImage != null)
@@ -835,6 +847,120 @@ namespace RA2Installer
         }
 
         /// <summary>
+        /// 加载并显示底部文本（根据当前页码从配置中获取）
+        /// </summary>
+        private void LoadBottomText()
+        {
+            try
+            {
+                File.AppendAllText(_logFile, $"Starting to load bottom text for page {_currentPage}\n");
+
+                // 获取当前页面的底部文字配置
+                if (!_pageBottomTextConfig.TryGetValue(_currentPage, out var config))
+                {
+                    File.AppendAllText(_logFile, $"No bottom text config defined for page {_currentPage}\n");
+                    return;
+                }
+
+                int stringId = config.StringId;
+                int displayDurationMs = config.DisplayDurationMs;
+                File.AppendAllText(_logFile, $"Using string ID: {stringId}, display duration: {displayDurationMs}ms\n");
+
+                // Language.dll文件路径
+                string languageDllPath = "Assets/RA1/Setup/Language.dll";
+
+                // 检查文件是否存在
+                if (!File.Exists(languageDllPath))
+                {
+                    File.AppendAllText(_logFile, "Language.dll file not found\n");
+                    return;
+                }
+
+                // 确定要使用的语言
+                ushort languageId = GetLanguageIdForCurrentLanguage();
+                File.AppendAllText(_logFile, $"Using language ID: {languageId}\n");
+
+                // 读取字符串
+                string text = ReadStringFromLanguageDll(languageDllPath, stringId, languageId);
+                if (!string.IsNullOrEmpty(text))
+                {
+                    // 显示文本
+                    if (BottomTextBlock != null)
+                    {
+                        BottomTextBlock.Text = text;
+                        BottomTextBlock.Visibility = Visibility.Visible;
+                        File.AppendAllText(_logFile, $"Bottom text loaded and displayed: '{text}'\n");
+                    }
+
+                    // 设置定时器，在指定时长后隐藏文本
+                    StartBottomTextTimer(displayDurationMs);
+                }
+                else
+                {
+                    File.AppendAllText(_logFile, $"Failed to read string ID {stringId}\n");
+                }
+            }
+            catch (Exception ex)
+            {
+                File.AppendAllText(_logFile, $"Error loading bottom text: {ex.Message}\n");
+            }
+        }
+
+        /// <summary>
+        /// 启动底部文字显示定时器
+        /// </summary>
+        /// <param name="durationMs">显示时长（毫秒）</param>
+        private void StartBottomTextTimer(int durationMs)
+        {
+            // 停止之前的定时器
+            StopBottomTextTimer();
+
+            // 创建新的定时器
+            _bottomTextTimer = new System.Timers.Timer(durationMs);
+            _bottomTextTimer.AutoReset = false;
+            _bottomTextTimer.Elapsed += (sender, e) =>
+            {
+                // 在UI线程上执行隐藏操作
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    if (BottomTextBlock != null)
+                    {
+                        BottomTextBlock.Visibility = Visibility.Collapsed;
+                        File.AppendAllText(_logFile, $"Bottom text hidden after {durationMs}ms\n");
+                    }
+                    StopBottomTextTimer();
+                });
+            };
+
+            // 启动定时器
+            _bottomTextTimer.Start();
+            File.AppendAllText(_logFile, $"Bottom text timer started with duration: {durationMs}ms\n");
+        }
+
+        /// <summary>
+        /// 停止底部文字显示定时器
+        /// </summary>
+        private void StopBottomTextTimer()
+        {
+            if (_bottomTextTimer != null)
+            {
+                _bottomTextTimer.Stop();
+                _bottomTextTimer.Dispose();
+                _bottomTextTimer = null;
+                File.AppendAllText(_logFile, "Bottom text timer stopped\n");
+            }
+        }
+
+        /// <summary>
+        /// 析构函数，用于释放资源
+        /// </summary>
+        ~MainWindow()
+        {
+            // 停止底部文字定时器
+            StopBottomTextTimer();
+        }
+
+        /// <summary>
         /// 开始播放 SHP 动画
         /// </summary>
         private void StartShpAnimation()
@@ -935,6 +1061,9 @@ namespace RA2Installer
             // 取消之前的加载任务
             CancelLoadStringsTask();
 
+            // 停止当前的底部文字定时器
+            StopBottomTextTimer();
+
             // 更新按钮状态
             UpdateNavigationButtons();
 
@@ -955,6 +1084,9 @@ namespace RA2Installer
                     AnimationImage.Margin = new Thickness(0, 75, 0, 0);
                     File.AppendAllText(_logFile, "AnimationImage margin set to (0,75,0,0) for Page 1\n");
                 }
+
+                // 显示底部文本
+                LoadBottomText();
 
                 // 加载并播放第一页的动画
                 LoadAndPlayPage1Animation();
@@ -996,6 +1128,9 @@ namespace RA2Installer
                     AgreeButtonImage.Visibility = Visibility.Collapsed;
                     File.AppendAllText(_logFile, "AgreeButtonImage visibility reset to Collapsed\n");
                 }
+
+                // 显示底部文本
+                LoadBottomText();
 
                 // 加载并播放第二页的动画
                 LoadAndPlayPage2Animation();

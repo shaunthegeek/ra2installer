@@ -27,6 +27,9 @@
         <!-- 同意条款文本（第二页特有） -->
         <TextBlock x:Name="IAgreeToTheseTermsTextBlock" Foreground="#FFEF84" FontSize="12" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="205,300,0,0" Width="130" TextAlignment="Left" Visibility="Collapsed" Text="{x:Static resx:Strings.IAgreeToTheseTerms}"/>
         
+        <!-- 底部文字显示区域（共享） -->
+        <TextBlock x:Name="BottomTextBlock" Foreground="Yellow" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,160,8" TextAlignment="Center" Visibility="Collapsed"/>
+
         <!-- 按钮容器（共享） -->
         <StackPanel x:Name="ButtonContainer" Orientation="Vertical" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,9,29">
             <!-- 导航按钮（所有页面共用） -->
