@@ -8,16 +8,29 @@
         mc:Ignorable="d"
         Title="{x:Static resx:Strings.WindowTitle}" ResizeMode="NoResize" SizeToContent="WidthAndHeight">
     <Grid Width="640" Height="480">
-        <!-- 页面容器 -->
-        <Frame x:Name="MainFrame" NavigationUIVisibility="Hidden" Width="640" Height="480"/>
+        <!-- 动画显示控件（共享） -->
+        <Image x:Name="AnimationImage" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,75,0,0" Width="470"/>
         
-        <!-- 第一页 -->
-        <Grid x:Name="Page1" Width="640" Height="480">
-            <!-- 动画显示控件 -->
-            <Image x:Name="AnimationImage" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,75,0,0" Width="470"/>
-            
-            <!-- 语言切换按钮和退出按钮 -->
-            <StackPanel Orientation="Vertical" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,9,29">
+        <!-- 雷达区：从Language.dll读取的文本显示区域（共享） -->
+        <StackPanel x:Name="LanguageTextStackPanel" Orientation="Vertical" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="483,39,0,0" Width="154"/>
+        
+        <!-- 许可证内容显示区域（第二页特有） -->
+        <Border HorizontalAlignment="Left" VerticalAlignment="Top" Margin="115,45,0,0" Width="245" Height="245" BorderThickness="1" BorderBrush="#BB080B" Visibility="Collapsed" x:Name="LicenseBorder">
+            <ScrollViewer x:Name="LicenseScrollViewer" Width="235" Height="230" VerticalScrollBarVisibility="Auto" Padding="5">
+                <TextBlock x:Name="LicenseTextBlock" Foreground="#BB080B" FontSize="12" TextWrapping="Wrap"/>
+            </ScrollViewer>
+        </Border>
+        
+        <!-- 同意按钮（动画帧，第二页特有） -->
+        <Image x:Name="AgreeButtonImage" Cursor="Hand" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="130,295,0,0" Width="210" Visibility="Collapsed" MouseLeftButtonUp="AgreeButtonImage_MouseLeftButtonUp"/>
+
+        <!-- 同意条款文本（第二页特有） -->
+        <TextBlock x:Name="IAgreeToTheseTermsTextBlock" Foreground="#FFEF84" FontSize="12" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="205,300,0,0" Width="130" TextAlignment="Left" Visibility="Collapsed"/>
+        
+        <!-- 按钮容器（共享） -->
+        <StackPanel x:Name="ButtonContainer" Orientation="Vertical" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,9,29">
+            <!-- 语言切换按钮（第一页特有） -->
+            <StackPanel x:Name="LanguageButtonsStackPanel" Orientation="Vertical">
                 <Button Width="145" Height="42" Margin="0,0,0,0" Cursor="Hand" Click="ChineseSimplifiedButton_Click">
                     <Button.Template>
                         <ControlTemplate TargetType="Button">
@@ -63,49 +76,10 @@
                         </ControlTemplate>
                     </Button.Template>
                 </Button>
-                <Button x:Name="CancelButton" Width="145" Height="42" Cursor="Hand" Click="CancelButton_Click">
-            <Button.Template>
-                <ControlTemplate TargetType="Button">
-                    <Grid>
-                        <Image Name="bgImage" Source="Assets/nav_bkg0.jpg" Stretch="Fill"/>
-                        <TextBlock Name="ButtonTextBlock" Foreground="Yellow" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="16"/>
-                    </Grid>
-                    <ControlTemplate.Triggers>
-                        <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="bgImage" Property="Source" Value="Assets/nav_bkg1.jpg"/>
-                        </Trigger>
-                    </ControlTemplate.Triggers>
-                </ControlTemplate>
-            </Button.Template>
-        </Button>
             </StackPanel>
-
-            <!-- 从Language.dll读取的文本显示区域 -->
-            <StackPanel x:Name="LanguageTextStackPanel" Orientation="Vertical" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="483,39,0,0" Width="154"/>
-        </Grid>
-        
-        <!-- 第二页 -->
-        <Grid x:Name="Page2" Width="640" Height="480" Visibility="Collapsed">
-            <!-- 动画显示控件 -->
-            <Image x:Name="Page2AnimationImage" HorizontalAlignment="Left" VerticalAlignment="Top" Width="470"/>
-
-            <!-- 从Language.dll读取的文本显示区域 -->
-            <StackPanel x:Name="Page2LanguageTextStackPanel" Orientation="Vertical" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="483,39,0,0" Width="154"/>
             
-            <!-- 许可证内容显示区域 -->
-            <Border HorizontalAlignment="Left" VerticalAlignment="Top" Margin="115,45,0,0" Width="245" Height="245" BorderThickness="1" BorderBrush="#BB080B" Visibility="Collapsed" x:Name="LicenseBorder">
-                <ScrollViewer x:Name="LicenseScrollViewer" Width="235" Height="230" VerticalScrollBarVisibility="Auto" Padding="5">
-                    <TextBlock x:Name="LicenseTextBlock" Foreground="#BB080B" FontSize="12" TextWrapping="Wrap"/>
-                </ScrollViewer>
-            </Border>
-            <!-- 同意按钮（动画帧） -->
-            <Image x:Name="AgreeButtonImage" Cursor="Hand" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="130,295,0,0" Width="210" Visibility="Collapsed" MouseLeftButtonUp="AgreeButtonImage_MouseLeftButtonUp"/>
-
-            <!-- 同意条款文本 -->
-            <TextBlock x:Name="IAgreeToTheseTermsTextBlock" Foreground="#FFEF84" FontSize="12" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="205,300,0,0" Width="130" TextAlignment="Left" Visibility="Collapsed"/>
-            
-            <!-- 按钮容器 -->
-            <StackPanel Orientation="Vertical" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,9,29">
+            <!-- 导航按钮（第二页及以后特有） -->
+            <StackPanel x:Name="NavigationButtonsStackPanel" Orientation="Vertical" Visibility="Collapsed">
                 <Button x:Name="PreviousButton" Width="145" Height="42" Margin="0,0,0,0" Cursor="Hand" Click="PreviousButton_Click">
                     <Button.Template>
                         <ControlTemplate TargetType="Button">
@@ -136,22 +110,24 @@
                         </ControlTemplate>
                     </Button.Template>
                 </Button>
-                <Button x:Name="Page2CancelButton" Width="145" Height="42" Margin="0,0,0,0" Cursor="Hand" Click="CancelButton_Click">
-                    <Button.Template>
-                        <ControlTemplate TargetType="Button">
-                            <Grid>
-                                <Image Name="bgImage" Source="Assets/nav_bkg0.jpg" Stretch="Fill"/>
-                                <TextBlock Name="CancelButtonTextBlock" Text="取消" Foreground="Yellow" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="16"/>
-                            </Grid>
-                            <ControlTemplate.Triggers>
-                                <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter TargetName="bgImage" Property="Source" Value="Assets/nav_bkg1.jpg"/>
-                                </Trigger>
-                            </ControlTemplate.Triggers>
-                        </ControlTemplate>
-                    </Button.Template>
-                </Button>
             </StackPanel>
-        </Grid>
+            
+            <!-- 取消按钮（共享） -->
+            <Button x:Name="CancelButton" Width="145" Height="42" Cursor="Hand" Click="CancelButton_Click">
+                <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                        <Grid>
+                            <Image Name="bgImage" Source="Assets/nav_bkg0.jpg" Stretch="Fill"/>
+                            <TextBlock Name="ButtonTextBlock" Foreground="Yellow" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="16"/>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bgImage" Property="Source" Value="Assets/nav_bkg1.jpg"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Button.Template>
+            </Button>
+        </StackPanel>
     </Grid>
 </Window>

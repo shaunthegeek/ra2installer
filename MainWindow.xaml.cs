@@ -24,7 +24,6 @@ namespace RA2Installer
         private string _buttonClickSoundFile;
         private string _backgroundMusicFile;
         private ShpAnimationPlayer _shpAnimationPlayer;
-        private ShpAnimationPlayer _page2ShpAnimationPlayer;
 
         // 日志文件路径
         private string _logFile;
@@ -983,10 +982,18 @@ namespace RA2Installer
         /// </summary>
         private void SwitchToPage2()
         {
-            // 隐藏第一页
-            Page1.Visibility = Visibility.Collapsed;
-            // 显示第二页
-            Page2.Visibility = Visibility.Visible;
+            // 隐藏第一页特有元素
+            LanguageButtonsStackPanel.Visibility = Visibility.Collapsed;
+            
+            // 显示第二页特有元素
+            NavigationButtonsStackPanel.Visibility = Visibility.Visible;
+
+            // 调整动画控件位置为第二页位置（紧贴顶部）
+            if (AnimationImage != null)
+            {
+                AnimationImage.Margin = new Thickness(0, 0, 0, 0);
+                File.AppendAllText(_logFile, "AnimationImage margin set to (0,0,0,0) for Page 2\n");
+            }
 
             // 确保许可证边框初始状态为隐藏
             if (LicenseBorder != null)
@@ -1009,9 +1016,6 @@ namespace RA2Installer
                 File.AppendAllText(_logFile, "AgreeButtonImage visibility reset to Collapsed\n");
             }
 
-            // 为第二页加载相同的背景图片
-            LoadBackgroundImageForPage2();
-
             // 加载并播放第二页的动画
             LoadAndPlayPage2Animation();
 
@@ -1028,10 +1032,10 @@ namespace RA2Installer
             {
                 File.AppendAllText(_logFile, "Loading and playing Page2 animation with hash: D6D75E64\n");
 
-                // 检查Page2AnimationImage是否存在
-                if (Page2AnimationImage == null)
+                // 检查AnimationImage是否存在
+                if (AnimationImage == null)
                 {
-                    File.AppendAllText(_logFile, "Page2AnimationImage control is null\n");
+                    File.AppendAllText(_logFile, "AnimationImage control is null\n");
                     return;
                 }
 
@@ -1059,13 +1063,13 @@ namespace RA2Installer
                 ShpFile shpFile = new ShpFile(shpData, palData);
 
                 // 创建动画播放器
-                _page2ShpAnimationPlayer = new ShpAnimationPlayer(shpFile, Page2AnimationImage);
+                _shpAnimationPlayer = new ShpAnimationPlayer(shpFile, AnimationImage);
 
                 // 添加动画播放完成事件处理程序
-                _page2ShpAnimationPlayer.AnimationCompleted += Page2Animation_Completed;
+                _shpAnimationPlayer.AnimationCompleted += Page2Animation_Completed;
 
                 // 开始播放动画
-                _page2ShpAnimationPlayer.Play();
+                _shpAnimationPlayer.Play();
                 File.AppendAllText(_logFile, "Page2 animation playback started\n");
 
                 // 播放第二页的音效
@@ -1093,30 +1097,7 @@ namespace RA2Installer
             }
         }
 
-        /// <summary>
-        /// 为第二页加载背景图片
-        /// </summary>
-        private void LoadBackgroundImageForPage2()
-        {
-            try
-            {
-                // 加载 Setup.mix 文件
-                MixFile mixFile = new MixFile(SetupMixPath);
 
-                // 尝试获取指定哈希值和类型的图片
-                System.Windows.Media.Imaging.BitmapImage backgroundImage = mixFile.GetImageByHash("B1D51F00");
-
-                if (backgroundImage != null)
-                {
-                    // 更新第二页 Grid 的 Background 属性
-                    Page2.Background = new ImageBrush(backgroundImage) { Stretch = Stretch.UniformToFill };
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error loading background image for Page2: {ex.Message}");
-            }
-        }
 
         /// <summary>
         /// 更新第二页的UI文本
@@ -1152,13 +1133,13 @@ namespace RA2Installer
             }
 
             // 更新取消按钮文本
-            if (Page2CancelButton != null)
+            if (CancelButton != null)
             {
-                _ = Page2CancelButton.ApplyTemplate();
-                ControlTemplate template = Page2CancelButton.Template;
+                _ = CancelButton.ApplyTemplate();
+                ControlTemplate template = CancelButton.Template;
                 if (template != null)
                 {
-                    if (template.FindName("CancelButtonTextBlock", Page2CancelButton) is TextBlock textBlock)
+                    if (template.FindName("ButtonTextBlock", CancelButton) is TextBlock textBlock)
                     {
                         textBlock.Text = Strings.CancelButton;
                     }
@@ -1185,11 +1166,25 @@ namespace RA2Installer
         {
             PlayButtonClickSound();
 
-            // 隐藏第二页
-            Page2.Visibility = Visibility.Collapsed;
-            // 显示第一页
-            Page1.Visibility = Visibility.Visible;
+            // 隐藏第二页特有元素
+            NavigationButtonsStackPanel.Visibility = Visibility.Collapsed;
+            LicenseBorder.Visibility = Visibility.Collapsed;
+            IAgreeToTheseTermsTextBlock.Visibility = Visibility.Collapsed;
+            AgreeButtonImage.Visibility = Visibility.Collapsed;
+            
+            // 显示第一页特有元素
+            LanguageButtonsStackPanel.Visibility = Visibility.Visible;
 
+            // 重置动画控件位置为第一页位置（顶部75像素）
+            if (AnimationImage != null)
+            {
+                AnimationImage.Margin = new Thickness(0, 75, 0, 0);
+                File.AppendAllText(_logFile, "AnimationImage margin set to (0,75,0,0) for Page 1\n");
+            }
+
+            // 重新加载第一页的动画数据
+            LoadShpAnimationData(SetupMixPath, "2012EC16");
+            
             // 显示第一帧，不播放动画
             if (_shpAnimationPlayer != null)
             {
@@ -1233,10 +1228,10 @@ namespace RA2Installer
             {
                 File.AppendAllText(_logFile, $"Loading first frame of animation with hash: {animationHash}\n");
 
-                // 检查Page2AnimationImage是否存在
-                if (Page2AnimationImage == null)
+                // 检查AnimationImage是否存在
+                if (AnimationImage == null)
                 {
-                    File.AppendAllText(_logFile, "Page2AnimationImage control is null\n");
+                    File.AppendAllText(_logFile, "AnimationImage control is null\n");
                     return;
                 }
 
@@ -1267,7 +1262,7 @@ namespace RA2Installer
                 var frames = shpFile.GetFrames();
                 if (frames.Count > 0)
                 {
-                    Page2AnimationImage.Source = frames[0];
+                    AnimationImage.Source = frames[0];
                     File.AppendAllText(_logFile, $"First frame of animation {animationHash} displayed\n");
                 }
                 else
@@ -1369,9 +1364,9 @@ namespace RA2Installer
                 if (!string.IsNullOrEmpty(text))
                 {
                     // 清除现有内容
-                    if (Page2LanguageTextStackPanel != null)
+                    if (LanguageTextStackPanel != null)
                     {
-                        Page2LanguageTextStackPanel.Children.Clear();
+                        LanguageTextStackPanel.Children.Clear();
 
                         // 创建TextBlock并添加到StackPanel
                         TextBlock textBlock = new TextBlock
@@ -1382,12 +1377,12 @@ namespace RA2Installer
                             TextAlignment = TextAlignment.Left,
                             TextWrapping = TextWrapping.Wrap,
                         };
-                        Page2LanguageTextStackPanel.Children.Add(textBlock);
+                        LanguageTextStackPanel.Children.Add(textBlock);
                         File.AppendAllText(_logFile, $"Added string ID {stringId}: {text}\n");
                     }
                     else
                     {
-                        File.AppendAllText(_logFile, "Page2LanguageTextStackPanel is null\n");
+                        File.AppendAllText(_logFile, "LanguageTextStackPanel is null\n");
                     }
                 }
                 else
