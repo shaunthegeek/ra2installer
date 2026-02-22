@@ -113,8 +113,21 @@ namespace RA2Installer
             // 从Language.dll读取字符串并显示
             LoadAndDisplayLanguageStrings();
 
-            // 不自动启动 SHP 动画，只显示第一帧
-            File.AppendAllText(_logFile, "Not starting SHP animation automatically, showing only first frame\n");
+            // 确保AnimationImage可见
+            if (AnimationImage != null)
+            {
+                AnimationImage.Visibility = Visibility.Visible;
+                File.AppendAllText(_logFile, "AnimationImage visibility set to Visible\n");
+            }
+
+            // 第1页启动时，自动倒放动画
+            if (_shpAnimationPlayer != null)
+            {
+                File.AppendAllText(_logFile, "MainWindow loaded, starting reverse animation for Page 1\n");
+                _shpAnimationPlayer.IsReverse = true;
+                _shpAnimationPlayer.ResetToLastFrame();
+                _shpAnimationPlayer.Play();
+            }
         }
 
         /// <summary>
@@ -951,11 +964,37 @@ namespace RA2Installer
         {
             if (_shpAnimationPlayer != null)
             {
-                // 每次点击按钮时，重置动画到第一帧并重新开始播放
+                // 每次点击按钮时，根据当前页面决定播放模式
                 File.AppendAllText(_logFile, "Starting SHP animation playback on language button click\n");
 
-                // 重置动画到第一帧
-                _shpAnimationPlayer.Reset();
+                // 先停止当前动画
+                _shpAnimationPlayer.Stop();
+
+                // 确保AnimationImage可见
+                if (AnimationImage != null)
+                {
+                    AnimationImage.Visibility = Visibility.Visible;
+                    File.AppendAllText(_logFile, "AnimationImage visibility set to Visible\n");
+                }
+
+                // 检查是否在第1页（LanguageButtonsStackPanel 可见）
+                bool isPage1 = LanguageButtonsStackPanel != null && LanguageButtonsStackPanel.Visibility == Visibility.Visible;
+
+                if (isPage1)
+                {
+                    // 第1页：正序播放动画，从第一帧开始
+                    File.AppendAllText(_logFile, "Page 1 detected, starting forward animation\n");
+                    _shpAnimationPlayer.IsReverse = false;
+                    _shpAnimationPlayer.Reset();
+                }
+                else
+                {
+                    // 其他页：正常播放
+                    File.AppendAllText(_logFile, "Other page detected, starting normal animation\n");
+                    _shpAnimationPlayer.IsReverse = false;
+                    _shpAnimationPlayer.Reset();
+                }
+
                 // 开始播放
                 _shpAnimationPlayer.Play();
                 File.AppendAllText(_logFile, "SHP animation playback started\n");
@@ -973,8 +1012,38 @@ namespace RA2Installer
         /// <param name="e">事件参数</param>
         private void ShpAnimationPlayer_AnimationCompleted(object sender, EventArgs e)
         {
-            File.AppendAllText(_logFile, "SHP animation completed, switching to Page 2\n");
-            SwitchToPage2();
+            File.AppendAllText(_logFile, "SHP animation completed\n");
+            
+            // 检查是否在第1页（LanguageButtonsStackPanel 可见）
+            bool isPage1 = LanguageButtonsStackPanel != null && LanguageButtonsStackPanel.Visibility == Visibility.Visible;
+
+            if (isPage1)
+            {
+                // 检查是否是倒放模式
+                bool isReverse = _shpAnimationPlayer != null && _shpAnimationPlayer.IsReverse;
+                
+                if (isReverse)
+                {
+                    // 倒放模式（从第2页返回或开场）：保持动画可见并停留在第一帧，不跳转页面
+                    File.AppendAllText(_logFile, "Page 1 reverse animation completed, keeping animation visible at first frame\n");
+                    if (AnimationImage != null)
+                    {
+                        AnimationImage.Visibility = Visibility.Visible;
+                        File.AppendAllText(_logFile, "AnimationImage visibility set to Visible\n");
+                    }
+                }
+                else
+                {
+                    // 正常模式（语言按钮触发）：跳转到第二页
+                    File.AppendAllText(_logFile, "Page 1 normal animation completed, switching to Page 2\n");
+                    SwitchToPage2();
+                }
+            }
+            else
+            {
+                // 非第1页：动画播放完毕后不跳转页面
+                File.AppendAllText(_logFile, "Non-Page 1 detected, animation completed without page switch\n");
+            }
         }
 
         /// <summary>
@@ -1185,13 +1254,18 @@ namespace RA2Installer
             // 重新加载第一页的动画数据
             LoadShpAnimationData(SetupMixPath, "2012EC16");
             
-            // 显示第一帧，不播放动画
+            // 从第2页返回第1页时，倒放动画
             if (_shpAnimationPlayer != null)
             {
                 // 停止动画（如果正在播放）
                 _shpAnimationPlayer.Stop();
-                // 重置到第一帧
-                _shpAnimationPlayer.Reset();
+                // 设置为倒放模式
+                _shpAnimationPlayer.IsReverse = true;
+                // 重置到最后一帧
+                _shpAnimationPlayer.ResetToLastFrame();
+                // 开始播放倒放动画
+                _shpAnimationPlayer.Play();
+                File.AppendAllText(_logFile, "Reverse animation started for Page 1 return\n");
             }
         }
 

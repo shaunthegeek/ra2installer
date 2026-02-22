@@ -454,11 +454,22 @@ namespace RA2Installer
         private System.Windows.Controls.Image _imageControl;
         private int _currentFrameIndex;
         private System.Windows.Threading.DispatcherTimer _timer;
+        private bool _isReverse = false;
+        private List<BitmapSource> _frames;
 
         /// <summary>
         /// 动画播放完成事件
         /// </summary>
         public event EventHandler AnimationCompleted;
+
+        /// <summary>
+        /// 是否倒放
+        /// </summary>
+        public bool IsReverse
+        {
+            get { return _isReverse; }
+            set { _isReverse = value; }
+        }
 
         /// <summary>
         /// 初始化 ShpAnimationPlayer 实例
@@ -471,16 +482,18 @@ namespace RA2Installer
             _imageControl = imageControl;
             _currentFrameIndex = 0;
 
+            // 缓存帧列表
+            _frames = _shpFile.GetFrames();
+
             // 初始化定时器
             _timer = new System.Windows.Threading.DispatcherTimer();
-            _timer.Interval = TimeSpan.FromMilliseconds(50); // 20 FPS
+            _timer.Interval = TimeSpan.FromMilliseconds(33); // 约30 FPS，更流畅
             _timer.Tick += Timer_Tick;
 
             // 显示第一帧
-            var frames = _shpFile.GetFrames();
-            if (frames.Count > 0)
+            if (_frames.Count > 0)
             {
-                _imageControl.Source = frames[_currentFrameIndex];
+                _imageControl.Source = _frames[_currentFrameIndex];
             }
         }
 
@@ -489,6 +502,9 @@ namespace RA2Installer
         /// </summary>
         public void Play()
         {
+            // 确保定时器已停止
+            _timer.Stop();
+            // 开始播放
             _timer.Start();
         }
 
@@ -507,10 +523,21 @@ namespace RA2Installer
         {
             _currentFrameIndex = 0;
             // 显示第一帧
-            var frames = _shpFile.GetFrames();
-            if (frames.Count > 0)
+            if (_frames.Count > 0)
             {
-                _imageControl.Source = frames[_currentFrameIndex];
+                _imageControl.Source = _frames[_currentFrameIndex];
+            }
+        }
+
+        /// <summary>
+        /// 重置动画到最后一帧
+        /// </summary>
+        public void ResetToLastFrame()
+        {
+            if (_frames.Count > 0)
+            {
+                _currentFrameIndex = _frames.Count - 1;
+                _imageControl.Source = _frames[_currentFrameIndex];
             }
         }
 
@@ -521,24 +548,42 @@ namespace RA2Installer
         /// <param name="e">事件参数</param>
         private void Timer_Tick(object sender, EventArgs e)
         {
-            var frames = _shpFile.GetFrames();
-            if (frames.Count > 0)
+            if (_frames.Count > 0)
             {
                 // 显示当前帧
-                _imageControl.Source = frames[_currentFrameIndex];
+                _imageControl.Source = _frames[_currentFrameIndex];
                 
-                // 检查是否是最后一帧
-                if (_currentFrameIndex < frames.Count - 1)
+                if (_isReverse)
                 {
-                    // 不是最后一帧，切换到下一帧
-                    _currentFrameIndex++;
+                    // 倒放逻辑
+                    if (_currentFrameIndex > 0)
+                    {
+                        // 不是第一帧，切换到上一帧
+                        _currentFrameIndex--;
+                    }
+                    else
+                    {
+                        // 是第一帧，停止播放
+                        _timer.Stop();
+                        // 触发动画播放完成事件
+                        OnAnimationCompleted(EventArgs.Empty);
+                    }
                 }
                 else
                 {
-                    // 是最后一帧，停止播放
-                    _timer.Stop();
-                    // 触发动画播放完成事件
-                    OnAnimationCompleted(EventArgs.Empty);
+                    // 正向播放逻辑
+                    if (_currentFrameIndex < _frames.Count - 1)
+                    {
+                        // 不是最后一帧，切换到下一帧
+                        _currentFrameIndex++;
+                    }
+                    else
+                    {
+                        // 是最后一帧，停止播放
+                        _timer.Stop();
+                        // 触发动画播放完成事件
+                        OnAnimationCompleted(EventArgs.Empty);
+                    }
                 }
             }
         }
