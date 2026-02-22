@@ -484,21 +484,6 @@ namespace RA2Installer
         }
 
         /// <summary>
-        /// 获取硬编码的字符串
-        /// </summary>
-        /// <param name="stringId">字符串ID</param>
-        /// <param name="languageId">语言ID</param>
-        /// <returns>硬编码的字符串</returns>
-        private string GetHardcodedString(int stringId, ushort languageId)
-        {
-            // 根据语言ID和字符串ID返回硬编码的字符串
-            // 由于我们无法从Language.dll中读取字符串，暂时使用硬编码的测试字符串
-            bool isChinese = (languageId == 0x0404); // zh-TW
-
-            return "";
-        }
-
-        /// <summary>
         /// 原生方法定义
         /// </summary>
         private static class NativeMethods
@@ -1082,7 +1067,8 @@ namespace RA2Installer
                 if (AnimationImage != null)
                 {
                     AnimationImage.Margin = new Thickness(0, 75, 0, 0);
-                    File.AppendAllText(_logFile, "AnimationImage margin set to (0,75,0,0) for Page 1\n");
+                    AnimationImage.Width = 470;
+                    File.AppendAllText(_logFile, "AnimationImage margin set to (0,75,0,0) and width set to 470 for Page 1\n");
                 }
 
                 // 显示底部文本
@@ -1105,7 +1091,8 @@ namespace RA2Installer
                 if (AnimationImage != null)
                 {
                     AnimationImage.Margin = new Thickness(0, 0, 0, 0);
-                    File.AppendAllText(_logFile, "AnimationImage margin set to (0,0,0,0) for Page 2\n");
+                    AnimationImage.Width = 472;
+                    File.AppendAllText(_logFile, "AnimationImage margin set to (0,0,0,0) and width set to 472 for Page 2\n");
                 }
 
                 // 确保许可证边框初始状态为隐藏
