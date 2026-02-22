@@ -35,13 +35,15 @@ namespace RA2Installer
         // 存储每一页的雷达文案IDs
         private readonly Dictionary<int, int[]> _pageRadarStringIds = new Dictionary<int, int[]> {
             { 1, new int[] { 250, 251, 252, 253, 254 } },
-            { 2, new int[] { 255 } }
+            { 2, new int[] { 255 } },
+            { 3, new int[] { 256, 257, 258, 259, 260, 261 } }
         };
 
         // 存储每一页的底部文字ID和显示时长（毫秒）
         private readonly Dictionary<int, (int StringId, int DisplayDurationMs)> _pageBottomTextConfig = new Dictionary<int, (int, int)> {
             { 1, (144, 1000) }, // 第一页：ID 144，显示1秒
-            { 2, (145, 1000) }  // 第二页：ID 145，显示1秒
+            { 2, (145, 1000) }, // 第二页：ID 145，显示1秒
+            { 3, (146, 1000) }  // 第三页：ID 146，显示1秒
         };
 
         // 用于控制底部文字显示时长的定时器
@@ -1062,6 +1064,8 @@ namespace RA2Installer
                 LicenseBorder.Visibility = Visibility.Collapsed;
                 IAgreeToTheseTermsTextBlock.Visibility = Visibility.Collapsed;
                 AgreeButtonImage.Visibility = Visibility.Collapsed;
+                // 隐藏第三页特有元素
+                InputFieldsStackPanel.Visibility = Visibility.Collapsed;
 
                 // 调整动画控件位置为第一页位置
                 if (AnimationImage != null)
@@ -1116,6 +1120,15 @@ namespace RA2Installer
                     File.AppendAllText(_logFile, "AgreeButtonImage visibility reset to Collapsed\n");
                 }
 
+                // 确保第三页特有元素初始状态为隐藏
+                if (LicenseStackPanel != null)
+                {
+                    LicenseStackPanel.Visibility = Visibility.Collapsed;
+                    File.AppendAllText(_logFile, "LicenseStackPanel visibility reset to Collapsed\n");
+                }
+                // 隐藏输入框区域
+                InputFieldsStackPanel.Visibility = Visibility.Collapsed;
+
                 // 显示底部文本
                 LoadBottomText();
 
@@ -1123,6 +1136,116 @@ namespace RA2Installer
                 LoadAndPlayPage2Animation();
 
 
+            }
+            else if (pageNumber == 3)
+            {
+                // 第三页
+                // 隐藏其他页面特有元素
+                if (LicenseBorder != null)
+                {
+                    LicenseBorder.Visibility = Visibility.Collapsed;
+                }
+                if (IAgreeToTheseTermsTextBlock != null)
+                {
+                    IAgreeToTheseTermsTextBlock.Visibility = Visibility.Collapsed;
+                }
+                if (AgreeButtonImage != null)
+                {
+                    AgreeButtonImage.Visibility = Visibility.Collapsed;
+                }
+
+                // 调整动画控件位置为第三页位置（紧贴顶部）
+                if (AnimationImage != null)
+                {
+                    AnimationImage.Margin = new Thickness(0, 0, 0, 0);
+                    AnimationImage.Width = 472;
+                    File.AppendAllText(_logFile, "AnimationImage margin set to (0,0,0,0) and width set to 472 for Page 3\n");
+                }
+
+                // 显示底部文本
+                LoadBottomText();
+
+                // 显示第三页特有元素（无边框许可证内容区域）
+                if (LicenseStackPanel != null)
+                {
+                    LicenseStackPanel.Visibility = Visibility.Visible;
+                    File.AppendAllText(_logFile, "LicenseStackPanel visibility set to Visible\n");
+                }
+
+                // 从Language.dll ID 210读取许可证内容并显示
+                LoadLicenseContentFromLanguageDll();
+
+                // 直接沿用第二页的动画，不再重新加载
+                File.AppendAllText(_logFile, "Using existing animation from Page 2 for Page 3\n");
+
+                // 从Language.dll读取字符串并显示
+                LoadAndDisplayRadarStrings();
+
+                // 显示输入框区域
+                InputFieldsStackPanel.Visibility = Visibility.Visible;
+                // 默认选中第一个输入框
+                InputField1.Focus();
+
+            }
+        }
+
+        /// <summary>
+        /// 输入框文本输入验证，只允许输入数字
+        /// </summary>
+        private void InputField_PreviewTextInput(object sender, System.Windows.Input.TextCompositionEventArgs e)
+        {
+            // 检查输入是否为数字
+            foreach (char c in e.Text)
+            {
+                if (!char.IsDigit(c))
+                {
+                    e.Handled = true;
+                    return;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 输入框获得焦点事件处理
+        /// </summary>
+        private void InputField_GotFocus(object sender, RoutedEventArgs e)
+        {
+        }
+
+        /// <summary>
+        /// 输入框失去焦点事件处理
+        /// </summary>
+        private void InputField_LostFocus(object sender, RoutedEventArgs e)
+        {
+        }
+
+        /// <summary>
+        /// 输入框文本变化时的处理，用于自动切换到下一个输入框
+        /// </summary>
+        private void InputField_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (sender is TextBox textBox)
+            {
+                // 检查输入框是否已满
+                if (textBox.Text.Length == textBox.MaxLength)
+                {
+                    // 根据当前输入框切换到下一个
+                    switch (textBox.Name)
+                    {
+                        case "InputField1":
+                            InputField2.Focus();
+                            break;
+                        case "InputField2":
+                            InputField3.Focus();
+                            break;
+                        case "InputField3":
+                            InputField4.Focus();
+                            break;
+                        case "InputField4":
+                            // 最后一个输入框，不需要切换
+                            break;
+                    }
+                }
             }
         }
 
@@ -1205,6 +1328,68 @@ namespace RA2Installer
 
 
         /// <summary>
+        /// 从Language.dll ID 210读取许可证内容并显示在第三页
+        /// </summary>
+        private void LoadLicenseContentFromLanguageDll()
+        {
+            try
+            {
+                File.AppendAllText(_logFile, "Starting to load license content from Language.dll ID 210\n");
+
+                // Language.dll文件路径
+                string languageDllPath = "Assets/RA1/Setup/Language.dll";
+
+                // 检查文件是否存在
+                if (!File.Exists(languageDllPath))
+                {
+                    File.AppendAllText(_logFile, "Language.dll file not found\n");
+                    return;
+                }
+
+                // 确定要使用的语言
+                ushort languageId = GetLanguageIdForCurrentLanguage();
+                File.AppendAllText(_logFile, $"Using language ID: {languageId}\n");
+
+                // 读取字符串（ID 210）
+                string text = ReadStringFromLanguageDll(languageDllPath, 210, languageId);
+                if (!string.IsNullOrEmpty(text))
+                {
+                    // 检查是否包含 %s 占位符
+                    if (text.Contains("%s"))
+                    {
+                        // 读取 ID 18 的文本用于替换 %s
+                        string replacementText = ReadStringFromLanguageDll(languageDllPath, 18, languageId);
+                        if (!string.IsNullOrEmpty(replacementText))
+                        {
+                            // 替换 %s 占位符
+                            text = text.Replace("%s", replacementText);
+                            File.AppendAllText(_logFile, "Replaced %s with text from ID 18\n");
+                        }
+                        else
+                        {
+                            File.AppendAllText(_logFile, "Failed to read string ID 18 for replacement\n");
+                        }
+                    }
+
+                    // 显示文本
+                    if (LicenseTextBlockPage3 != null)
+                    {
+                        LicenseTextBlockPage3.Text = text;
+                        File.AppendAllText(_logFile, "License content loaded and displayed from ID 210\n");
+                    }
+                }
+                else
+                {
+                    File.AppendAllText(_logFile, "Failed to read string ID 210\n");
+                }
+            }
+            catch (Exception ex)
+            {
+                File.AppendAllText(_logFile, $"Error loading license content: {ex.Message}\n");
+            }
+        }
+
+        /// <summary>
         /// 加载并播放第二页的动画
         /// </summary>
         private void LoadAndPlayPage2Animation()
@@ -1263,6 +1448,75 @@ namespace RA2Installer
         }
 
         /// <summary>
+        /// 加载并播放第三页的动画
+        /// </summary>
+        private void LoadAndPlayPage3Animation()
+        {
+            try
+            {
+                File.AppendAllText(_logFile, "Loading and playing Page3 animation with hash: D6D75E64\n");
+
+                // 检查AnimationImage是否存在
+                if (AnimationImage == null)
+                {
+                    File.AppendAllText(_logFile, "AnimationImage control is null\n");
+                    return;
+                }
+
+                // 加载Setup.mix文件
+                MixFile mixFile = new MixFile(SetupMixPath);
+
+                // 获取SHP文件数据
+                byte[] shpData = mixFile.GetShpByHash("D6D75E64");
+                if (shpData == null)
+                {
+                    File.AppendAllText(_logFile, "Failed to load SHP file for Page3 animation\n");
+                    return;
+                }
+
+                // 获取PAL文件数据
+                string palHash = "397C46E0";
+                byte[] palData = mixFile.GetPalByHash(palHash);
+                if (palData == null)
+                {
+                    File.AppendAllText(_logFile, "Failed to load PAL file for Page3 animation\n");
+                    return;
+                }
+
+                // 解析SHP文件
+                ShpFile shpFile = new ShpFile(shpData, palData);
+
+                // 创建动画播放器
+                _shpAnimationPlayer = new ShpAnimationPlayer(shpFile, AnimationImage);
+
+                // 添加动画播放完成事件处理程序
+                _shpAnimationPlayer.AnimationCompleted += Page3Animation_Completed;
+
+                // 开始播放动画
+                _shpAnimationPlayer.Play();
+                File.AppendAllText(_logFile, "Page3 animation playback started\n");
+
+                // 播放第三页的音效
+                PlayPage2Sounds();
+            }
+            catch (Exception ex)
+            {
+                File.AppendAllText(_logFile, "Error loading Page3 animation: " + ex.Message + "\n");
+            }
+        }
+
+        /// <summary>
+        /// 第三页动画播放完成事件处理
+        /// </summary>
+        /// <param name="sender">发送者</param>
+        /// <param name="e">事件参数</param>
+        private void Page3Animation_Completed(object sender, EventArgs e)
+        {
+            File.AppendAllText(_logFile, "Page3 animation completed\n");
+            // 第三页动画播放完毕后不跳转页面
+        }
+
+        /// <summary>
         /// 播放第二页的音效
         /// </summary>
         private void PlayPage2Sounds()
@@ -1310,6 +1564,11 @@ namespace RA2Installer
                 ReloadLanguageStrings();
                 // 开始播放 SHP 动画
                 StartShpAnimation();
+            }
+            else if (_currentPage == 2)
+            {
+                // 第2页：跳转到第三页
+                SwitchToPage(3);
             }
             else
             {

@@ -21,6 +21,13 @@
             </ScrollViewer>
         </Border>
         
+        <!-- 许可证内容显示区域（第三页特有，无边框） -->
+        <StackPanel HorizontalAlignment="Left" VerticalAlignment="Top" Margin="115,45,0,0" Width="245" Height="245" Visibility="Collapsed" x:Name="LicenseStackPanel">
+            <ScrollViewer x:Name="LicenseScrollViewerPage3" Width="235" Height="230" VerticalScrollBarVisibility="Auto" Padding="5">
+                <TextBlock x:Name="LicenseTextBlockPage3" Foreground="#BB080B" FontSize="12" TextWrapping="Wrap"/>
+            </ScrollViewer>
+        </StackPanel>
+        
         <!-- 同意按钮（动画帧，第二页特有） -->
         <Image x:Name="AgreeButtonImage" Cursor="Hand" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="130,295,0,0" Width="210" Visibility="Collapsed" MouseLeftButtonUp="AgreeButtonImage_MouseLeftButtonUp"/>
 
@@ -29,6 +36,14 @@
         
         <!-- 底部文字显示区域（共享） -->
         <TextBlock x:Name="BottomTextBlock" Foreground="Yellow" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,160,8" TextAlignment="Center" Visibility="Collapsed"/>
+        
+        <!-- 输入框区域（第三页特有） -->
+        <StackPanel x:Name="InputFieldsStackPanel" Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="7,0,0,3" Width="457" Visibility="Collapsed">
+            <TextBox x:Name="InputField1" Width="120" Height="20" Margin="0" BorderThickness="2,2,1,2" BorderBrush="#BB080B" Foreground="#BB080B" Background="Black" FontSize="12" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" MaxLength="6" PreviewTextInput="InputField_PreviewTextInput" GotFocus="InputField_GotFocus" LostFocus="InputField_LostFocus" TextChanged="InputField_TextChanged" TabIndex="1"/>
+            <TextBox x:Name="InputField2" Width="120" Height="20" Margin="0" BorderThickness="1,2,1,2" BorderBrush="#BB080B" Foreground="#BB080B" Background="Black" FontSize="12" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" MaxLength="6" PreviewTextInput="InputField_PreviewTextInput" GotFocus="InputField_GotFocus" LostFocus="InputField_LostFocus" TextChanged="InputField_TextChanged" TabIndex="2"/>
+            <TextBox x:Name="InputField3" Width="120" Height="20" Margin="0" BorderThickness="1,2,1,2" BorderBrush="#BB080B" Foreground="#BB080B" Background="Black" FontSize="12" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" MaxLength="6" PreviewTextInput="InputField_PreviewTextInput" GotFocus="InputField_GotFocus" LostFocus="InputField_LostFocus" TextChanged="InputField_TextChanged" TabIndex="3"/>
+            <TextBox x:Name="InputField4" Width="97" Height="20" Margin="0" BorderThickness="1,2,2,2" BorderBrush="#BB080B" Foreground="#BB080B" Background="Black" FontSize="12" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" MaxLength="4" PreviewTextInput="InputField_PreviewTextInput" GotFocus="InputField_GotFocus" LostFocus="InputField_LostFocus" TextChanged="InputField_TextChanged" TabIndex="4"/>
+        </StackPanel>
 
         <!-- 按钮容器（共享） -->
         <StackPanel x:Name="ButtonContainer" Orientation="Vertical" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,9,29">
