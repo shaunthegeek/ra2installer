@@ -12,7 +12,7 @@
         <Image x:Name="AnimationImage" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,75,0,0" Width="470"/>
         
         <!-- 雷达区：从Language.dll读取的文本显示区域（共享） -->
-        <StackPanel x:Name="LanguageTextStackPanel" Orientation="Vertical" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="483,39,0,0" Width="154"/>
+        <StackPanel x:Name="RadarTextStackPanel" Orientation="Vertical" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="483,39,0,0" Width="154"/>
         
         <!-- 许可证内容显示区域（第二页特有） -->
         <Border HorizontalAlignment="Left" VerticalAlignment="Top" Margin="115,45,0,0" Width="245" Height="245" BorderThickness="1" BorderBrush="#BB080B" Visibility="Collapsed" x:Name="LicenseBorder">

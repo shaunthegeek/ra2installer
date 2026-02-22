@@ -2,10 +2,8 @@ using System.Globalization;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Documents;
 using System.Windows.Media;
 using RA2Installer.Resources;
 
@@ -19,8 +17,8 @@ namespace RA2Installer
         // 常量：Setup.mix 文件路径
         private const string SetupMixPath = "Assets/RA1/Setup/Setup.mix";
 
-        private System.Windows.Media.MediaPlayer _backgroundMusicPlayer;
-        private System.Windows.Media.MediaPlayer _soundPlayer;
+        private MediaPlayer _backgroundMusicPlayer;
+        private MediaPlayer _soundPlayer;
         private string _buttonClickSoundFile;
         private string _backgroundMusicFile;
         private ShpAnimationPlayer _shpAnimationPlayer;
@@ -123,7 +121,7 @@ namespace RA2Installer
             PlayBackgroundMusic();
 
             // 从Language.dll读取字符串并显示
-            LoadAndDisplayLanguageStrings();
+            LoadAndDisplayRadarStrings();
 
             // 确保AnimationImage可见
             if (AnimationImage != null)
@@ -150,7 +148,7 @@ namespace RA2Installer
         /// </summary>
         /// <param name="pageNumber">页码</param>
         /// <param name="cancellationToken">取消令牌</param>
-        private async Task LoadAndDisplayLanguageStringsAsync(int pageNumber, CancellationToken cancellationToken)
+        private async Task LoadAndDisplayRadarStringsAsync(int pageNumber, CancellationToken cancellationToken)
         {
             try
             {
@@ -209,7 +207,7 @@ namespace RA2Installer
                             TextAlignment = TextAlignment.Left,
                             TextWrapping = TextWrapping.Wrap,
                         };
-                        LanguageTextStackPanel.Children.Add(textBlock);
+                        RadarTextStackPanel.Children.Add(textBlock);
                         File.AppendAllText(_logFile, $"Added string ID {id}: {text}\n");
                     }
                     else
@@ -243,7 +241,7 @@ namespace RA2Installer
         /// 从Language.dll读取字符串并显示在界面上（同步包装方法）
         /// </summary>
         /// <param name="pageNumber">页码</param>
-        private void LoadAndDisplayLanguageStrings(int pageNumber)
+        private void LoadAndDisplayRadarStrings(int pageNumber)
         {
             // 取消之前的加载任务
             CancelLoadStringsTask();
@@ -252,13 +250,13 @@ namespace RA2Installer
             _loadStringsCancellationTokenSource = new CancellationTokenSource();
 
             // 调用异步方法
-            _ = LoadAndDisplayLanguageStringsAsync(pageNumber, _loadStringsCancellationTokenSource.Token);
+            _ = LoadAndDisplayRadarStringsAsync(pageNumber, _loadStringsCancellationTokenSource.Token);
         }
 
         /// <summary>
         /// 从Language.dll读取字符串并显示在界面上（默认使用当前页码）
         /// </summary>
-        private void LoadAndDisplayLanguageStrings()
+        private void LoadAndDisplayRadarStrings()
         {
             // 取消之前的加载任务
             CancelLoadStringsTask();
@@ -267,7 +265,7 @@ namespace RA2Installer
             _loadStringsCancellationTokenSource = new CancellationTokenSource();
 
             // 调用异步方法，使用当前页码
-            _ = LoadAndDisplayLanguageStringsAsync(_currentPage, _loadStringsCancellationTokenSource.Token);
+            _ = LoadAndDisplayRadarStringsAsync(_currentPage, _loadStringsCancellationTokenSource.Token);
         }
 
         /// <summary>
@@ -954,47 +952,15 @@ namespace RA2Installer
             }
         }
 
-
-
-        private void ChineseSimplifiedButton_Click(object sender, RoutedEventArgs e)
-        {
-            PlayButtonClickSound();
-            SetLanguage("zh-CN");
-            // 重新加载并显示语言字符串
-            ReloadLanguageStrings();
-            // 开始播放 SHP 动画
-            StartShpAnimation();
-        }
-
-        private void ChineseTraditionalButton_Click(object sender, RoutedEventArgs e)
-        {
-            PlayButtonClickSound();
-            SetLanguage("zh-TW");
-            // 重新加载并显示语言字符串
-            ReloadLanguageStrings();
-            // 开始播放 SHP 动画
-            StartShpAnimation();
-        }
-
-        private void EnglishButton_Click(object sender, RoutedEventArgs e)
-        {
-            PlayButtonClickSound();
-            SetLanguage("en-US");
-            // 重新加载并显示语言字符串
-            ReloadLanguageStrings();
-            // 开始播放 SHP 动画
-            StartShpAnimation();
-        }
-
         /// <summary>
         /// 重新加载并显示语言字符串
         /// </summary>
         private void ReloadLanguageStrings()
         {
             // 清空现有的文本
-            LanguageTextStackPanel.Children.Clear();
+            RadarTextStackPanel.Children.Clear();
             // 重新加载语言字符串
-            LoadAndDisplayLanguageStrings();
+            LoadAndDisplayRadarStrings();
         }
 
         /// <summary>
@@ -1102,7 +1068,7 @@ namespace RA2Installer
             UpdateNavigationButtons();
 
             // 清空现有的文本
-            LanguageTextStackPanel.Children.Clear();
+            RadarTextStackPanel.Children.Clear();
 
             if (pageNumber == 1)
             {
@@ -1123,7 +1089,7 @@ namespace RA2Installer
                 LoadAndPlayPage1Animation();
 
                 // 从Language.dll读取字符串并显示
-                LoadAndDisplayLanguageStrings();
+                LoadAndDisplayRadarStrings();
 
 
             }
@@ -1479,8 +1445,8 @@ namespace RA2Installer
                 LoadAgreeButtonAnimation();
 
                 // 清空现有内容并加载第二页的雷达文案
-                LanguageTextStackPanel.Children.Clear();
-                LoadAndDisplayLanguageStrings(_currentPage);
+                RadarTextStackPanel.Children.Clear();
+                LoadAndDisplayRadarStrings(_currentPage);
             }
             catch (Exception ex)
             {
