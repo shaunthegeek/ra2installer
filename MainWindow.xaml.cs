@@ -345,26 +345,8 @@ namespace RA2Installer
                     {
                         File.AppendAllText(_logFile, $"LoadLibraryEx succeeded, handle: {dllHandle}\n");
 
-                        // 尝试使用LoadString读取字符串
-                        File.AppendAllText(_logFile, $"Calling LoadString for ID {stringId}...\n");
-                        StringBuilder sb = new StringBuilder(256);
-                        int result = NativeMethods.LoadString(dllHandle, stringId, sb, sb.Capacity);
-                        if (result > 0)
-                        {
-                            string text = sb.ToString();
-                            File.AppendAllText(_logFile, $"LoadString succeeded, string: '{text}'\n");
-                            File.AppendAllText(_logFile, $"=== ReadStringFromLanguageDll completed with LoadString ===\n\n");
-                            return text;
-                        }
-                        else
-                        {
-                            int errorCode = Marshal.GetLastWin32Error();
-                            File.AppendAllText(_logFile, $"LoadString failed, error code: {errorCode}\n");
-                            File.AppendAllText(_logFile, $"Error message: {new System.ComponentModel.Win32Exception(errorCode).Message}\n");
-                        }
-
-                        // 尝试使用FindResourceEx根据语言ID查找特定语言的资源
-                        File.AppendAllText(_logFile, $"Trying FindResourceEx with language ID...\n");
+                        // 使用FindResourceEx根据语言ID查找特定语言的资源
+                        File.AppendAllText(_logFile, $"Using FindResourceEx with language ID...\n");
                         IntPtr hResource = NativeMethods.FindResourceEx(dllHandle, new IntPtr(6), new IntPtr((stringId / 16) + 1), languageId);
                         if (hResource != IntPtr.Zero)
                         {
@@ -389,38 +371,6 @@ namespace RA2Installer
                         int errorCode = Marshal.GetLastWin32Error();
                         File.AppendAllText(_logFile, $"LoadLibraryEx failed, error code: {errorCode}\n");
                         File.AppendAllText(_logFile, $"Error message: {new System.ComponentModel.Win32Exception(errorCode).Message}\n");
-                        File.AppendAllText(_logFile, $"Trying LoadLibrary as fallback...\n");
-
-                        // 尝试使用LoadLibrary作为备选方案
-                        dllHandle = NativeMethods.LoadLibrary(dllPath);
-                        if (dllHandle != IntPtr.Zero)
-                        {
-                            File.AppendAllText(_logFile, $"LoadLibrary succeeded, handle: {dllHandle}\n");
-
-                            // 尝试使用LoadString读取字符串
-                            File.AppendAllText(_logFile, $"Calling LoadString for ID {stringId}...\n");
-                            StringBuilder sb = new StringBuilder(256);
-                            int result = NativeMethods.LoadString(dllHandle, stringId, sb, sb.Capacity);
-                            if (result > 0)
-                            {
-                                string text = sb.ToString();
-                                File.AppendAllText(_logFile, $"LoadString succeeded, string: '{text}'\n");
-                                File.AppendAllText(_logFile, $"=== ReadStringFromLanguageDll completed with LoadLibrary and LoadString ===\n\n");
-                                return text;
-                            }
-                            else
-                            {
-                                int errorCode2 = Marshal.GetLastWin32Error();
-                                File.AppendAllText(_logFile, $"LoadString failed, error code: {errorCode2}\n");
-                                File.AppendAllText(_logFile, $"Error message: {new System.ComponentModel.Win32Exception(errorCode2).Message}\n");
-                            }
-                        }
-                        else
-                        {
-                            int errorCode2 = Marshal.GetLastWin32Error();
-                            File.AppendAllText(_logFile, $"LoadLibrary also failed, error code: {errorCode2}\n");
-                            File.AppendAllText(_logFile, $"Error message: {new System.ComponentModel.Win32Exception(errorCode2).Message}\n");
-                        }
                     }
                 }
                 finally
@@ -433,52 +383,9 @@ namespace RA2Installer
                     }
                 }
 
-                // 尝试使用替代方法：使用System.Reflection.Assembly加载DLL并读取资源
-                File.AppendAllText(_logFile, $"Trying to read with Assembly.LoadFrom...\n");
-                try
-                {
-                    // 加载DLL作为程序集
-                    var assembly = System.Reflection.Assembly.LoadFrom(dllPath);
-                    File.AppendAllText(_logFile, $"Assembly loaded successfully: {assembly.FullName}\n");
-
-                    // 尝试读取资源
-                    var resourceNames = assembly.GetManifestResourceNames();
-                    File.AppendAllText(_logFile, $"Found {resourceNames.Length} manifest resources\n");
-
-                    foreach (var resourceName in resourceNames)
-                    {
-                        File.AppendAllText(_logFile, $"Manifest resource found: {resourceName}\n");
-                    }
-
-                    // 尝试使用ResourceManager读取字符串资源
-                    var resourceManager = new System.Resources.ResourceManager("Language", assembly);
-                    File.AppendAllText(_logFile, $"ResourceManager created successfully\n");
-
-                    // 尝试获取字符串
-                    string text = resourceManager.GetString(stringId.ToString());
-                    if (!string.IsNullOrEmpty(text))
-                    {
-                        File.AppendAllText(_logFile, $"Found string for ID {stringId}: '{text}'\n");
-                        File.AppendAllText(_logFile, $"=== ReadStringFromLanguageDll completed with Assembly ===\n\n");
-                        return text;
-                    }
-                    else
-                    {
-                        File.AppendAllText(_logFile, $"No string found for ID {stringId}\n");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    File.AppendAllText(_logFile, $"Exception with Assembly.LoadFrom: {ex.Message}\n");
-                    File.AppendAllText(_logFile, $"Stack trace: {ex.StackTrace}\n");
-                }
-
-                // 如果所有方法都失败，使用硬编码的字符串映射
-                File.AppendAllText(_logFile, $"All methods failed, using hardcoded string mapping\n");
-                string hardcodedString = GetHardcodedString(stringId, languageId);
-                File.AppendAllText(_logFile, $"Returning hardcoded string: '{hardcodedString}'\n");
-                File.AppendAllText(_logFile, $"=== ReadStringFromLanguageDll completed with hardcoded string ===\n\n");
-                return hardcodedString;
+                File.AppendAllText(_logFile, $"FindResourceEx method failed\n");
+                File.AppendAllText(_logFile, $"=== ReadStringFromLanguageDll completed ===\n\n");
+                return null;
             }
             catch (Exception ex)
             {
@@ -537,11 +444,7 @@ namespace RA2Installer
                     // 读取字符串长度
                     short length = Marshal.ReadInt16(currentPtr);
                     File.AppendAllText(_logFile, $"String {i} length: {length}\n");
-                    if (length == 0)
-                    {
-                        File.AppendAllText(_logFile, $"Found empty string, breaking loop\n");
-                        break;
-                    }
+                    // 即使是空字符串也要继续移动指针
                     // 移动到下一个字符串
                     currentPtr = currentPtr + 2 + length * 2;
                     File.AppendAllText(_logFile, $"Moved to next string address: {currentPtr}\n");
@@ -586,21 +489,7 @@ namespace RA2Installer
             // 由于我们无法从Language.dll中读取字符串，暂时使用硬编码的测试字符串
             bool isChinese = (languageId == 0x0404); // zh-TW
 
-            switch (stringId)
-            {
-                case 250:
-                    return isChinese ? "测试字符串 250 (中文)" : "Test string 250 (English)";
-                case 251:
-                    return isChinese ? "测试字符串 251 (中文)" : "Test string 251 (English)";
-                case 252:
-                    return isChinese ? "测试字符串 252 (中文)" : "Test string 252 (English)";
-                case 253:
-                    return isChinese ? "测试字符串 253 (中文)" : "Test string 253 (English)";
-                case 254:
-                    return isChinese ? "测试字符串 254 (中文)" : "Test string 254 (English)";
-                default:
-                    return isChinese ? $"测试字符串 {stringId} (中文)" : $"Test string {stringId} (English)";
-            }
+            return "";
         }
 
         /// <summary>
@@ -609,13 +498,7 @@ namespace RA2Installer
         private static class NativeMethods
         {
             [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-            public static extern IntPtr LoadLibrary(string lpFileName);
-
-            [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
             public static extern IntPtr LoadLibraryEx(string lpFileName, IntPtr hFile, uint dwFlags);
-
-            [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-            public static extern int LoadString(IntPtr hInstance, int uID, StringBuilder lpBuffer, int nBufferMax);
 
             [DllImport("kernel32.dll", SetLastError = true)]
             public static extern IntPtr FindResourceEx(IntPtr hModule, IntPtr lpType, IntPtr lpName, ushort wLanguage);
@@ -951,6 +834,8 @@ namespace RA2Installer
                 }
             }
         }
+
+
 
         /// <summary>
         /// 重新加载并显示语言字符串
