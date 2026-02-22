@@ -34,6 +34,15 @@ namespace RA2Installer
         // 当前页码
         private int _currentPage = 1;
 
+        // 存储每一页的雷达文案IDs
+        private readonly Dictionary<int, int[]> _pageRadarStringIds = new Dictionary<int, int[]> {
+            { 1, new int[] { 250, 251, 252, 253, 254 } },
+            { 2, new int[] { 255 } }
+        };
+
+        // 用于取消异步加载任务的令牌源
+        private CancellationTokenSource? _loadStringsCancellationTokenSource;
+
         public MainWindow()
         {
             try
@@ -139,11 +148,13 @@ namespace RA2Installer
         /// <summary>
         /// 从Language.dll读取字符串并显示在界面上
         /// </summary>
-        private async Task LoadAndDisplayLanguageStringsAsync()
+        /// <param name="pageNumber">页码</param>
+        /// <param name="cancellationToken">取消令牌</param>
+        private async Task LoadAndDisplayLanguageStringsAsync(int pageNumber, CancellationToken cancellationToken)
         {
             try
             {
-                File.AppendAllText(_logFile, "Starting to load language strings from Language.dll\n");
+                File.AppendAllText(_logFile, $"Starting to load language strings from Language.dll for page {pageNumber}\n");
 
                 // Language.dll文件路径
                 string languageDllPath = "Assets/RA1/Setup/Language.dll";
@@ -161,14 +172,34 @@ namespace RA2Installer
                 ushort languageId = GetLanguageIdForCurrentLanguage();
                 File.AppendAllText(_logFile, $"Using language ID: {languageId}\n");
 
-                // 读取字符串ID 250-254
-                int[] stringIds = { 250, 251, 252, 253, 254 };
+                // 根据页码获取对应的字符串IDs
+                if (!_pageRadarStringIds.TryGetValue(pageNumber, out int[] stringIds))
+                {
+                    File.AppendAllText(_logFile, $"No string IDs defined for page {pageNumber}\n");
+                    return;
+                }
+
+                File.AppendAllText(_logFile, $"Loading string IDs: {string.Join(", ", stringIds)}\n");
 
                 foreach (int id in stringIds)
                 {
+                    // 检查是否取消
+                    if (cancellationToken.IsCancellationRequested)
+                    {
+                        File.AppendAllText(_logFile, "Loading cancelled\n");
+                        return;
+                    }
+
                     string text = ReadStringFromLanguageDll(languageDllPath, id, languageId);
                     if (!string.IsNullOrEmpty(text))
                     {
+                        // 检查是否取消
+                        if (cancellationToken.IsCancellationRequested)
+                        {
+                            File.AppendAllText(_logFile, "Loading cancelled\n");
+                            return;
+                        }
+
                         // 创建TextBlock并添加到StackPanel
                         TextBlock textBlock = new TextBlock
                         {
@@ -186,10 +217,21 @@ namespace RA2Installer
                         File.AppendAllText(_logFile, $"Failed to read string ID {id}\n");
                     }
 
-                    await Task.Delay(1000);
+                    // 检查是否取消
+                    if (cancellationToken.IsCancellationRequested)
+                    {
+                        File.AppendAllText(_logFile, "Loading cancelled\n");
+                        return;
+                    }
+
+                    await Task.Delay(1000, cancellationToken);
                 }
 
                 File.AppendAllText(_logFile, "Language strings loaded and displayed\n");
+            }
+            catch (OperationCanceledException)
+            {
+                File.AppendAllText(_logFile, "Loading operation cancelled\n");
             }
             catch (Exception ex)
             {
@@ -200,10 +242,46 @@ namespace RA2Installer
         /// <summary>
         /// 从Language.dll读取字符串并显示在界面上（同步包装方法）
         /// </summary>
+        /// <param name="pageNumber">页码</param>
+        private void LoadAndDisplayLanguageStrings(int pageNumber)
+        {
+            // 取消之前的加载任务
+            CancelLoadStringsTask();
+
+            // 创建新的令牌源
+            _loadStringsCancellationTokenSource = new CancellationTokenSource();
+
+            // 调用异步方法
+            _ = LoadAndDisplayLanguageStringsAsync(pageNumber, _loadStringsCancellationTokenSource.Token);
+        }
+
+        /// <summary>
+        /// 从Language.dll读取字符串并显示在界面上（默认使用当前页码）
+        /// </summary>
         private void LoadAndDisplayLanguageStrings()
         {
-            // 调用异步方法
-            _ = LoadAndDisplayLanguageStringsAsync();
+            // 取消之前的加载任务
+            CancelLoadStringsTask();
+
+            // 创建新的令牌源
+            _loadStringsCancellationTokenSource = new CancellationTokenSource();
+
+            // 调用异步方法，使用当前页码
+            _ = LoadAndDisplayLanguageStringsAsync(_currentPage, _loadStringsCancellationTokenSource.Token);
+        }
+
+        /// <summary>
+        /// 取消当前的字符串加载任务
+        /// </summary>
+        private void CancelLoadStringsTask()
+        {
+            if (_loadStringsCancellationTokenSource != null)
+            {
+                _loadStringsCancellationTokenSource.Cancel();
+                _loadStringsCancellationTokenSource.Dispose();
+                _loadStringsCancellationTokenSource = null;
+                File.AppendAllText(_logFile, "Cancelled previous string loading task\n");
+            }
         }
 
         /// <summary>
@@ -1061,8 +1139,14 @@ namespace RA2Installer
             _currentPage = pageNumber;
             File.AppendAllText(_logFile, $"Switching to page {pageNumber}\n");
 
+            // 取消之前的加载任务
+            CancelLoadStringsTask();
+
             // 更新按钮状态
             UpdateNavigationButtons();
+
+            // 清空现有的文本
+            LanguageTextStackPanel.Children.Clear();
 
             if (pageNumber == 1)
             {
@@ -1082,7 +1166,7 @@ namespace RA2Installer
                 // 加载并播放第一页的动画
                 LoadAndPlayPage1Animation();
 
-                // 更新第一页的UI文本
+                // 更新第一页的UI文本（包含加载雷达文案）
                 UpdatePage1UIText();
             }
             else if (pageNumber == 2)
@@ -1499,8 +1583,9 @@ namespace RA2Installer
                 // 加载并显示同意按钮动画的第一帧
                 LoadAgreeButtonAnimation();
 
-                // 加载并显示language.dll中ID 255的内容
-                LoadAndDisplayLanguageStringId255();
+                // 清空现有内容并加载第二页的雷达文案
+                LanguageTextStackPanel.Children.Clear();
+                LoadAndDisplayLanguageStrings(_currentPage);
             }
             catch (Exception ex)
             {
@@ -1508,70 +1593,7 @@ namespace RA2Installer
             }
         }
 
-        /// <summary>
-        /// 加载并显示language.dll中ID 255的内容
-        /// </summary>
-        private void LoadAndDisplayLanguageStringId255()
-        {
-            try
-            {
-                File.AppendAllText(_logFile, "Starting to load language string ID 255 from Language.dll\n");
 
-                // Language.dll文件路径
-                string languageDllPath = "Assets/RA1/Setup/Language.dll";
-
-                // 检查文件是否存在
-                if (!File.Exists(languageDllPath))
-                {
-                    File.AppendAllText(_logFile, "Language.dll file not found\n");
-                    return;
-                }
-
-                File.AppendAllText(_logFile, "Language.dll file found, loading string ID 255\n");
-
-                // 确定要使用的语言
-                ushort languageId = GetLanguageIdForCurrentLanguage();
-                File.AppendAllText(_logFile, $"Using language ID: {languageId}\n");
-
-                // 读取字符串ID 255
-                int stringId = 255;
-                string text = ReadStringFromLanguageDll(languageDllPath, stringId, languageId);
-                if (!string.IsNullOrEmpty(text))
-                {
-                    // 清除现有内容
-                    if (LanguageTextStackPanel != null)
-                    {
-                        LanguageTextStackPanel.Children.Clear();
-
-                        // 创建TextBlock并添加到StackPanel
-                        TextBlock textBlock = new TextBlock
-                        {
-                            Text = text,
-                            Foreground = Brushes.Yellow,
-                            FontSize = 10,
-                            TextAlignment = TextAlignment.Left,
-                            TextWrapping = TextWrapping.Wrap,
-                        };
-                        LanguageTextStackPanel.Children.Add(textBlock);
-                        File.AppendAllText(_logFile, $"Added string ID {stringId}: {text}\n");
-                    }
-                    else
-                    {
-                        File.AppendAllText(_logFile, "LanguageTextStackPanel is null\n");
-                    }
-                }
-                else
-                {
-                    File.AppendAllText(_logFile, $"Failed to read string ID {stringId}\n");
-                }
-
-                File.AppendAllText(_logFile, "Language string ID 255 loaded and displayed\n");
-            }
-            catch (Exception ex)
-            {
-                File.AppendAllText(_logFile, $"Error loading language string ID 255: {ex.Message}\n");
-            }
-        }
 
         /// <summary>
         /// 加载同意按钮的动画帧
