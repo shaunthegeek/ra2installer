@@ -17,7 +17,7 @@
         <!-- 许可证内容显示区域（第二页特有） -->
         <Border HorizontalAlignment="Left" VerticalAlignment="Top" Margin="115,45,0,0" Width="245" Height="245" BorderThickness="1" BorderBrush="#BB080B" Visibility="Collapsed" x:Name="LicenseBorder">
             <ScrollViewer x:Name="LicenseScrollViewer" Width="235" Height="230" VerticalScrollBarVisibility="Auto" Padding="5">
-                <TextBlock x:Name="LicenseTextBlock" Foreground="#BB080B" FontSize="12" TextWrapping="Wrap"/>
+                <TextBlock x:Name="LicenseTextBlock" Foreground="#BB080B" FontSize="12" TextWrapping="Wrap" Text="{x:Static resx:Strings.LicenseContent}"/>
             </ScrollViewer>
         </Border>
         
@@ -25,18 +25,18 @@
         <Image x:Name="AgreeButtonImage" Cursor="Hand" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="130,295,0,0" Width="210" Visibility="Collapsed" MouseLeftButtonUp="AgreeButtonImage_MouseLeftButtonUp"/>
 
         <!-- 同意条款文本（第二页特有） -->
-        <TextBlock x:Name="IAgreeToTheseTermsTextBlock" Foreground="#FFEF84" FontSize="12" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="205,300,0,0" Width="130" TextAlignment="Left" Visibility="Collapsed"/>
+        <TextBlock x:Name="IAgreeToTheseTermsTextBlock" Foreground="#FFEF84" FontSize="12" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="205,300,0,0" Width="130" TextAlignment="Left" Visibility="Collapsed" Text="{x:Static resx:Strings.IAgreeToTheseTerms}"/>
         
         <!-- 按钮容器（共享） -->
         <StackPanel x:Name="ButtonContainer" Orientation="Vertical" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,9,29">
             <!-- 导航按钮（所有页面共用） -->
             <StackPanel x:Name="NavigationButtonsStackPanel" Orientation="Vertical">
-                <Button x:Name="PreviousButton" Width="145" Height="42" Margin="0,0,0,0" Cursor="Hand" Click="PreviousButton_Click">
+                <Button x:Name="BackButton" Width="145" Height="42" Margin="0,0,0,0" Cursor="Hand" Click="BackButton_Click">
                     <Button.Template>
                         <ControlTemplate TargetType="Button">
                             <Grid>
                                 <Image Name="bgImage" Source="Assets/nav_bkg0.jpg" Stretch="Fill"/>
-                                <TextBlock Name="PreviousButtonTextBlock" Text="上一步" Foreground="Yellow" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="16"/>
+                                <TextBlock Name="BackButtonTextBlock" Text="{x:Static resx:Strings.BackButton}" Foreground="Yellow" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="16"/>
                             </Grid>
                             <ControlTemplate.Triggers>
                                 <Trigger Property="IsMouseOver" Value="True">
@@ -51,7 +51,7 @@
                         <ControlTemplate TargetType="Button">
                             <Grid>
                                 <Image Name="bgImage" Source="Assets/nav_bkg0.jpg" Stretch="Fill"/>
-                                <TextBlock Name="NextButtonTextBlock" Text="下一步" Foreground="Yellow" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="16"/>
+                                <TextBlock Name="NextButtonTextBlock" Text="{x:Static resx:Strings.NextButton}" Foreground="Yellow" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="16"/>
                             </Grid>
                             <ControlTemplate.Triggers>
                                 <Trigger Property="IsMouseOver" Value="True">
@@ -69,7 +69,7 @@
                     <ControlTemplate TargetType="Button">
                         <Grid>
                             <Image Name="bgImage" Source="Assets/nav_bkg0.jpg" Stretch="Fill"/>
-                            <TextBlock Name="ButtonTextBlock" Foreground="Yellow" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="16"/>
+                            <TextBlock Name="ButtonTextBlock" Text="{x:Static resx:Strings.CancelButton}" Foreground="Yellow" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="16"/>
                         </Grid>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">

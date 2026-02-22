@@ -80,9 +80,9 @@ namespace RA2Installer.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Previous.
         /// </summary>
-        public static string PreviousButton {
+        public static string BackButton {
             get {
-                return ResourceManager.GetString("PreviousButton", resourceCulture);
+                return ResourceManager.GetString("BackButton", resourceCulture);
             }
         }
         

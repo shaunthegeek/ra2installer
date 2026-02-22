@@ -64,7 +64,7 @@
   <data name="ExitButton" xml:space="preserve">
     <value>退出</value>
   </data>
-  <data name="PreviousButton" xml:space="preserve">
+  <data name="BackButton" xml:space="preserve">
     <value>上一步</value>
   </data>
   <data name="NextButton" xml:space="preserve">

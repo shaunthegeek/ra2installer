@@ -64,8 +64,8 @@
   <data name="ExitButton" xml:space="preserve">
     <value>Exit</value>
   </data>
-  <data name="PreviousButton" xml:space="preserve">
-    <value>Previous</value>
+  <data name="BackButton" xml:space="preserve">
+    <value>Back</value>
   </data>
   <data name="NextButton" xml:space="preserve">
     <value>Next</value>

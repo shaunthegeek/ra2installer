@@ -812,50 +812,6 @@ namespace RA2Installer
 
             // 保存当前选择的语言
             _currentLanguage = cultureName;
-
-            // 更新UI文本
-            UpdateUIText();
-        }
-
-        private void UpdateUIText()
-        {
-            // 更新窗口标题
-            Title = Strings.WindowTitle;
-
-            // 手动更新按钮文本
-            UpdateButtonTexts();
-        }
-
-        private void UpdateButtonTexts()
-        {
-            // 直接通过Name找到取消按钮
-            if (CancelButton != null)
-            {
-                _ = CancelButton.ApplyTemplate();
-
-                // 通过ControlTemplate.FindName方法找到ButtonTextBlock
-                ControlTemplate template = CancelButton.Template;
-                if (template != null)
-                {
-                    if (template.FindName("ButtonTextBlock", CancelButton) is TextBlock textBlock)
-                    {
-                        // 清除Inlines，因为我们要直接设置Text
-                        textBlock.Inlines.Clear();
-                        // 更新文本
-                        textBlock.Text = Strings.CancelButton;
-                    }
-                }
-
-                // 同时使用视觉树查找作为备用方法
-                TextBlock visualTextBlock = FindVisualChild<TextBlock>(CancelButton);
-                if (visualTextBlock != null)
-                {
-                    // 清除Inlines，因为我们要直接设置Text
-                    visualTextBlock.Inlines.Clear();
-                    // 更新文本
-                    visualTextBlock.Text = Strings.CancelButton;
-                }
-            }
         }
 
         /// <summary>
@@ -1166,8 +1122,10 @@ namespace RA2Installer
                 // 加载并播放第一页的动画
                 LoadAndPlayPage1Animation();
 
-                // 更新第一页的UI文本（包含加载雷达文案）
-                UpdatePage1UIText();
+                // 从Language.dll读取字符串并显示
+                LoadAndDisplayLanguageStrings();
+
+
             }
             else if (pageNumber == 2)
             {
@@ -1205,8 +1163,7 @@ namespace RA2Installer
                 // 加载并播放第二页的动画
                 LoadAndPlayPage2Animation();
 
-                // 更新第二页的UI文本，使用当前选择的语言
-                UpdatePage2UIText();
+
             }
         }
 
@@ -1219,10 +1176,10 @@ namespace RA2Installer
             NavigationButtonsStackPanel.Visibility = Visibility.Visible;
 
             // 第一页隐藏后退按钮
-            if (PreviousButton != null)
+            if (BackButton != null)
             {
-                PreviousButton.Visibility = _currentPage == 1 ? Visibility.Collapsed : Visibility.Visible;
-                File.AppendAllText(_logFile, $"PreviousButton visibility set to {(PreviousButton.Visibility == Visibility.Visible ? "Visible" : "Collapsed")} for Page {_currentPage}\n");
+                BackButton.Visibility = _currentPage == 1 ? Visibility.Collapsed : Visibility.Visible;
+                File.AppendAllText(_logFile, $"BackButton visibility set to {(BackButton.Visibility == Visibility.Visible ? "Visible" : "Collapsed")} for Page {_currentPage}\n");
             }
         }
 
@@ -1286,11 +1243,7 @@ namespace RA2Installer
         /// <summary>
         /// 更新第一页的UI文本
         /// </summary>
-        private void UpdatePage1UIText()
-        {
-            // 从Language.dll读取字符串并显示
-            LoadAndDisplayLanguageStrings();
-        }
+
 
         /// <summary>
         /// 加载并播放第二页的动画
@@ -1368,70 +1321,12 @@ namespace RA2Installer
 
 
 
-        /// <summary>
-        /// 更新第二页的UI文本
-        /// </summary>
-        private void UpdatePage2UIText()
-        {
-            // 更新上一步按钮文本
-            if (PreviousButton != null)
-            {
-                _ = PreviousButton.ApplyTemplate();
-                ControlTemplate template = PreviousButton.Template;
-                if (template != null)
-                {
-                    if (template.FindName("PreviousButtonTextBlock", PreviousButton) is TextBlock textBlock)
-                    {
-                        textBlock.Text = Strings.PreviousButton;
-                    }
-                }
-            }
 
-            // 更新下一步按钮文本
-            if (NextButton != null)
-            {
-                _ = NextButton.ApplyTemplate();
-                ControlTemplate template = NextButton.Template;
-                if (template != null)
-                {
-                    if (template.FindName("NextButtonTextBlock", NextButton) is TextBlock textBlock)
-                    {
-                        textBlock.Text = Strings.NextButton;
-                    }
-                }
-            }
-
-            // 更新取消按钮文本
-            if (CancelButton != null)
-            {
-                _ = CancelButton.ApplyTemplate();
-                ControlTemplate template = CancelButton.Template;
-                if (template != null)
-                {
-                    if (template.FindName("ButtonTextBlock", CancelButton) is TextBlock textBlock)
-                    {
-                        textBlock.Text = Strings.CancelButton;
-                    }
-                }
-            }
-
-            // 更新许可证内容文本
-            if (LicenseTextBlock != null)
-            {
-                LicenseTextBlock.Text = Strings.LicenseContent;
-            }
-
-            // 更新同意条款文本
-            if (IAgreeToTheseTermsTextBlock != null)
-            {
-                IAgreeToTheseTermsTextBlock.Text = Strings.IAgreeToTheseTerms;
-            }
-        }
 
         /// <summary>
         /// 上一步按钮点击事件
         /// </summary>
-        private void PreviousButton_Click(object sender, RoutedEventArgs e)
+        private void BackButton_Click(object sender, RoutedEventArgs e)
         {
             PlayButtonClickSound();
 
