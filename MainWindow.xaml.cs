@@ -114,9 +114,6 @@ namespace RA2Installer
 
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
-            // 初始化语言为系统默认语言
-            InitializeLanguage();
-
             // 播放背景音乐
             PlayBackgroundMusic();
 
@@ -288,20 +285,17 @@ namespace RA2Installer
         /// <returns>语言ID</returns>
         private ushort GetLanguageIdForCurrentLanguage()
         {
-            // 默认使用英文
-            if (string.IsNullOrEmpty(_currentLanguage))
-            {
-                return 0x0409; // en-US
-            }
+            // 使用当前的 UI 文化来确定语言 ID
+            string currentLanguageName = CultureInfo.CurrentUICulture.Name;
 
             // 根据当前语言选择对应的语言ID
-            switch (_currentLanguage)
+            if (currentLanguageName.StartsWith("zh"))
             {
-                case "zh-CN":
-                case "zh-TW":
-                    return 0x0404; // zh-TW
-                default:
-                    return 0x0409; // en-US
+                return 0x0404; // zh-TW
+            }
+            else
+            {
+                return 0x0409; // en-US
             }
         }
 
@@ -667,15 +661,7 @@ namespace RA2Installer
             CultureInfo systemLanguage = CultureInfo.CurrentUICulture;
 
             // 根据系统语言设置UI语言
-            if (systemLanguage.Name.StartsWith("zh-CN"))
-            {
-                SetLanguage("zh-CN");
-            }
-            else if (systemLanguage.Name.StartsWith("zh-TW"))
-            {
-                SetLanguage("zh-TW");
-            }
-            else if (systemLanguage.Name.StartsWith("zh"))
+            if (systemLanguage.Name.StartsWith("zh"))
             {
                 SetLanguage("zh-TW");
             }
