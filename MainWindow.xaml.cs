@@ -1525,6 +1525,9 @@ namespace RA2Installer
                 {
                     AgreeButtonImage.Visibility = Visibility.Collapsed;
                 }
+                // 隐藏第四页特有元素
+                CheckBoxesStackPanel.Visibility = Visibility.Collapsed;
+                File.AppendAllText(_logFile, "CheckBoxesStackPanel visibility set to Collapsed for Page 3\n");
 
                 // 调整动画控件位置为第三页位置（紧贴顶部）
                 if (AnimationImage != null)
@@ -1547,8 +1550,9 @@ namespace RA2Installer
                 // 从Language.dll ID 210读取许可证内容并显示
                 LoadLicenseContentFromLanguageDll();
 
-                // 直接沿用第二页的动画，不再重新加载
-                File.AppendAllText(_logFile, "Using existing animation from Page 2 for Page 3\n");
+                // 加载并播放第三页的动画
+                PlayPageAnimations(_currentPage, true);
+                File.AppendAllText(_logFile, "Playing Page 3 intro animations\n");
 
                 // 从Language.dll读取字符串并显示
                 LoadAndDisplayRadarStrings();
