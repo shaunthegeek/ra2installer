@@ -826,10 +826,6 @@ namespace RA2Installer
                 // 创建动画播放器但不开始播放（将在 Loaded 事件中播放）
                 File.AppendAllText(_logFile, "Creating animation player\n");
                 _shpAnimationPlayer = new ShpAnimationPlayer(shpFile, AnimationImage);
-                // 订阅动画完成事件
-                _shpAnimationPlayer.AnimationCompleted += ShpAnimationPlayer_AnimationCompleted;
-                File.AppendAllText(_logFile, "Animation player created, will start playback in Loaded event\n");
-                File.AppendAllText(_logFile, "AnimationCompleted event subscribed\n");
             }
             catch (Exception ex)
             {
@@ -927,10 +923,6 @@ namespace RA2Installer
                 // 创建雷达区动画播放器但不开始播放
                 File.AppendAllText(_logFile, "Creating radar animation player\n");
                 _radarShpAnimationPlayer = new ShpAnimationPlayer(shpFile, RadarAnimationImage);
-                // 订阅动画完成事件
-                _radarShpAnimationPlayer.AnimationCompleted += RadarShpAnimationPlayer_AnimationCompleted;
-                File.AppendAllText(_logFile, "Radar animation player created\n");
-                File.AppendAllText(_logFile, "AnimationCompleted event subscribed\n");
             }
             catch (Exception ex)
             {
@@ -940,8 +932,6 @@ namespace RA2Installer
                 File.AppendAllText(_logFile, "Stack trace: " + ex.StackTrace + "\n");
             }
         }
-
-
 
         /// <summary>
         /// 从 Setup.mix 文件加载音频并保存到临时文件
@@ -1400,19 +1390,6 @@ namespace RA2Installer
             }
         }
 
-
-
-        /// <summary>
-        /// 重新加载并显示语言字符串
-        /// </summary>
-        private void ReloadLanguageStrings()
-        {
-            // 清空现有的文本
-            RadarTextStackPanel.Children.Clear();
-            // 重新加载语言字符串
-            LoadAndDisplayRadarStrings();
-        }
-
         /// <summary>
         /// 加载并显示底部文本（根据当前页码从配置中获取）
         /// </summary>
@@ -1528,49 +1505,12 @@ namespace RA2Installer
         }
 
         /// <summary>
-        /// 开始播放 SHP 动画
-        /// </summary>
-        private void StartShpAnimation()
-        {
-            // 播放第1页的退出动画，然后跳转到第二页
-            PlayPageAnimations(_currentPage, false, () => SwitchToPage(2));
-        }
-
-        /// <summary>
-        /// 动画播放完成事件处理
-        /// </summary>
-        /// <param name="sender">发送者</param>
-        /// <param name="e">事件参数</param>
-        private void ShpAnimationPlayer_AnimationCompleted(object? sender, EventArgs e)
-        {
-            // 此方法已被PlayAnimations中的事件处理程序替代
-            // 保留此方法以确保兼容性
-            File.AppendAllText(_logFile, "Legacy SHP animation completed event handler called\n");
-        }
-
-        private void RadarShpAnimationPlayer_AnimationCompleted(object? sender, EventArgs e)
-        {
-            // 此方法已被PlayAnimations中的事件处理程序替代
-            // 保留此方法以确保兼容性
-            File.AppendAllText(_logFile, "Legacy radar SHP animation completed event handler called\n");
-        }
-
-        /// <summary>
-        /// 根据页码更新所有元素的可见性
-        /// </summary>
-        /// <param name="pageNumber">当前页码</param>
-        private void UpdateElementsVisibility(int pageNumber)
-        {
-            // 遍历所有子元素并更新可见性
-            UpdateElementVisibility(LayoutRoot, pageNumber);
-        }
-
-        /// <summary>
         /// 递归更新元素及其子元素的可见性
         /// </summary>
         /// <param name="element">要更新的元素</param>
         /// <param name="pageNumber">当前页码</param>
-        private void UpdateElementVisibility(DependencyObject element, int pageNumber)
+        /// <param name="showMatching">是否显示匹配的元素（true）或隐藏不匹配的元素（false）</param>
+        private void UpdateElementsVisibility(DependencyObject element, int pageNumber, bool showMatching)
         {
             if (element == null)
                 return;
@@ -1581,12 +1521,15 @@ namespace RA2Installer
             {
                 List<int> pageNumbers = PageProperties.GetPageNumbersList(element);
                 bool shouldBeVisible = pageNumbers.Contains(pageNumber);
+                bool shouldUpdateVisibility = showMatching ? shouldBeVisible : !shouldBeVisible;
+                Visibility visibility = showMatching ? Visibility.Visible : Visibility.Collapsed;
+                string visibilityStr = showMatching ? "Visible" : "Collapsed";
 
                 // 只处理具有Visibility属性的元素
-                if (element is UIElement uiElement)
+                if (element is UIElement uiElement && shouldUpdateVisibility)
                 {
-                    uiElement.Visibility = shouldBeVisible ? Visibility.Visible : Visibility.Collapsed;
-                    File.AppendAllText(_logFile, $"Element {element.GetType().Name} (Name: {(element is FrameworkElement fe ? fe.Name : "N/A")}) visibility set to {(shouldBeVisible ? "Visible" : "Collapsed")} for Page {pageNumber}\n");
+                    uiElement.Visibility = visibility;
+                    File.AppendAllText(_logFile, $"Element {element.GetType().Name} (Name: {(element is FrameworkElement fe ? fe.Name : "N/A")}) visibility set to {visibilityStr} for Page {pageNumber}\n");
                 }
             }
 
@@ -1595,8 +1538,28 @@ namespace RA2Installer
             for (int i = 0; i < childCount; i++)
             {
                 DependencyObject child = VisualTreeHelper.GetChild(element, i);
-                UpdateElementVisibility(child, pageNumber);
+                UpdateElementsVisibility(child, pageNumber, showMatching);
             }
+        }
+
+        /// <summary>
+        /// 隐藏所有不匹配的元素
+        /// </summary>
+        /// <param name="pageNumber">当前页码</param>
+        private void HideNonMatchingElements(int pageNumber)
+        {
+            // 遍历所有子元素并更新可见性
+            UpdateElementsVisibility(LayoutRoot, pageNumber, false);
+        }
+
+        /// <summary>
+        /// 显示所有匹配的元素
+        /// </summary>
+        /// <param name="pageNumber">当前页码</param>
+        private void ShowMatchingElements(int pageNumber)
+        {
+            // 遍历所有子元素并更新可见性
+            UpdateElementsVisibility(LayoutRoot, pageNumber, true);
         }
 
         /// <summary>
@@ -1617,10 +1580,10 @@ namespace RA2Installer
             // 更新按钮状态
             UpdateNavigationButtons();
 
-            // 清空现有的文本
+            // 清空雷达文本
             RadarTextStackPanel.Children.Clear();
 
-            // 调整动画控件位置
+            // 调整主区域动画控件位置
             if (AnimationImage != null)
             {
                 if (pageNumber == 1)
@@ -1637,19 +1600,18 @@ namespace RA2Installer
                 }
             }
 
-            // 根据页码更新所有元素的可见性
-            UpdateElementsVisibility(pageNumber);
-
-            // 显示底部文本
-            LoadBottomText();
+            // 隐藏不匹配的元素
+            HideNonMatchingElements(pageNumber);
 
             if (pageNumber == 1)
             {
                 // 加载并播放第一页的动画
-                LoadAndPlayPage1Animation();
-
-                // 从Language.dll读取字符串并显示
-                LoadAndDisplayRadarStrings();
+                PlayPageAnimations(pageNumber, true, () =>
+                {
+                    // 显示匹配的元素
+                    ShowMatchingElements(pageNumber);
+                    LoadAndDisplayRadarStrings(_currentPage);
+                });
             }
             else if (pageNumber == 2)
             {
@@ -1659,21 +1621,27 @@ namespace RA2Installer
                     // 加载并显示同意按钮动画的第一帧
                     LoadAgreeButtonAnimation();
 
+                    // 显示匹配的元素
+                    ShowMatchingElements(pageNumber);
                     // 加载第二页的雷达文案
                     LoadAndDisplayRadarStrings(_currentPage);
                 });
             }
             else if (pageNumber == 3)
             {
-                // 从Language.dll ID 210读取许可证内容并显示
-                LoadLicenseContentFromLanguageDll();
 
                 // 加载并播放第三页的动画
-                PlayPageAnimations(_currentPage, true);
-                File.AppendAllText(_logFile, "Playing Page 3 intro animations\n");
+                PlayPageAnimations(_currentPage, true, () =>
+                {
+                    // 读取许可证内容
+                    LoadLicenseContentFromLanguageDll();
 
-                // 从Language.dll读取字符串并显示
-                LoadAndDisplayRadarStrings();
+                    // 加载同意按钮动画的第一帧
+                    LoadAgreeButtonAnimation();
+                    // 显示匹配的元素
+                    ShowMatchingElements(pageNumber);
+                    LoadAndDisplayRadarStrings(_currentPage);
+                });
 
                 // 默认选中第一个输入框
                 InputField1.Focus();
@@ -1683,9 +1651,7 @@ namespace RA2Installer
                 // 加载并播放第四页的动画
                 PlayPageAnimations(pageNumber, true, () =>
                 {
-                    // 动画完成后可以添加额外逻辑
-                    File.AppendAllText(_logFile, "Page 4 animation completed\n");
-                    
+
                     // 加载并初始化多选框图片
                     LoadCheckBoxImages();
 
@@ -1694,10 +1660,10 @@ namespace RA2Installer
 
                     // 加载多选框选项文本
                     LoadCheckBoxesItems();
-                });
 
-                // 显示底部文本
-                LoadBottomText();
+                    // 显示匹配的元素
+                    ShowMatchingElements(pageNumber);
+                });
             }
         }
 
@@ -1778,20 +1744,6 @@ namespace RA2Installer
         }
 
         /// <summary>
-        /// 加载并播放第一页的动画
-        /// </summary>
-        private void LoadAndPlayPage1Animation()
-        {
-            // 使用新的动画播放方法
-            PlayPageAnimations(_currentPage, true);
-        }
-
-        /// <summary>
-        /// 更新第一页的UI文本
-        /// </summary>
-
-
-        /// <summary>
         /// 从Language.dll ID 210读取许可证内容并显示在第三页
         /// </summary>
         private void LoadLicenseContentFromLanguageDll()
@@ -1837,37 +1789,6 @@ namespace RA2Installer
         }
 
         /// <summary>
-        /// 加载并播放第二页的动画
-        /// </summary>
-        private void LoadAndPlayPage2Animation()
-        {
-            // 使用新的动画播放方法
-            PlayPageAnimations(_currentPage, true);
-        }
-
-        /// <summary>
-        /// 加载并播放第三页的动画
-        /// </summary>
-        private void LoadAndPlayPage3Animation()
-        {
-            // 使用新的动画播放方法
-            PlayPageAnimations(_currentPage, true);
-        }
-
-        /// <summary>
-        /// 第三页动画播放完成事件处理
-        /// </summary>
-        /// <param name="sender">发送者</param>
-        /// <param name="e">事件参数</param>
-        private void Page3Animation_Completed(object? sender, EventArgs e)
-        {
-            // 此方法已被PlayAnimations中的事件处理程序替代
-            // 保留此方法以确保兼容性
-            File.AppendAllText(_logFile, "Legacy Page3 animation completed event handler called\n");
-        }
-
-
-        /// <summary>
         /// 上一步按钮点击事件
         /// </summary>
         private void BackButton_Click(object sender, RoutedEventArgs e)
@@ -1892,9 +1813,7 @@ namespace RA2Installer
             {
                 // 第1页：执行与原来语言按钮相同的逻辑，只是不需要切换语言
                 // 重新加载并显示语言字符串
-                ReloadLanguageStrings();
-                // 开始播放 SHP 动画
-                StartShpAnimation();
+                PlayPageAnimations(_currentPage, false, () => SwitchToPage(2));
             }
             else if (_currentPage == 2)
             {
@@ -1905,28 +1824,9 @@ namespace RA2Installer
             {
                 // 第3页：获取并存储序列号
                 _serialNumber = InputField1.Text + InputField2.Text + InputField3.Text + InputField4.Text;
-                File.AppendAllText(_logFile, $"Serial number stored: {_serialNumber}\n");
                 
                 // 第3页：播放退出动画，然后跳转到第四页
                 PlayPageAnimations(_currentPage, false, () => SwitchToPage(4));
-            }
-            else if (_currentPage == 4)
-            {
-                // 第4页：执行原来的逻辑
-                // 隐藏许可证内容和同意条款文本
-                if (LicenseBorder != null)
-                {
-                    LicenseBorder.Visibility = Visibility.Collapsed;
-                    File.AppendAllText(_logFile, "LicenseBorder visibility set to Collapsed\n");
-                }
-                if (IAgreeToTheseTermsTextBlock != null)
-                {
-                    IAgreeToTheseTermsTextBlock.Visibility = Visibility.Collapsed;
-                    File.AppendAllText(_logFile, "IAgreeToTheseTermsTextBlock visibility set to Collapsed\n");
-                }
-
-                // 显示动画 hash 134B6332 的第一帧
-                ShowAnimationFirstFrame("134B6332");
             }
         }
 

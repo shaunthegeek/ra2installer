@@ -71,11 +71,14 @@
             </ScrollViewer>
         </StackPanel>
         
-        <!-- 同意按钮（动画帧，第二页特有） -->
-        <Image x:Name="AgreeButtonImage" Cursor="Hand" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="130,295,0,0" Width="210" Visibility="Collapsed" MouseLeftButtonUp="AgreeButtonImage_MouseLeftButtonUp" local:PageProperties.PageNumbers="2"/>
+        <!-- 同意按钮和文本容器（第二页特有） -->
+        <Grid x:Name="AgreeContainer" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="130,295,0,0" Width="210" Visibility="Collapsed" local:PageProperties.PageNumbers="2">
+            <!-- 同意按钮（背景图片） -->
+            <Image x:Name="AgreeButtonImage" Cursor="Hand" Width="210" MouseLeftButtonUp="AgreeButtonImage_MouseLeftButtonUp"/>
 
-        <!-- 同意条款文本（第二页特有） -->
-        <TextBlock x:Name="IAgreeToTheseTermsTextBlock" Foreground="#FFEF84" FontSize="12" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="205,300,0,0" Width="130" TextAlignment="Left" Visibility="Collapsed" Text="{x:Static resx:Strings.IAgreeToTheseTerms}" local:PageProperties.PageNumbers="2"/>
+            <!-- 同意条款文本（前景） -->
+            <TextBlock x:Name="IAgreeToTheseTermsTextBlock" Foreground="#FFEF84" FontSize="12" Width="130" TextAlignment="Left" Text="{x:Static resx:Strings.IAgreeToTheseTerms}" Margin="75,5,0,0" VerticalAlignment="Top"/>
+        </Grid>
         
         <!-- 底部文字显示区域（共享） -->
         <TextBlock x:Name="BottomTextBlock" Foreground="Yellow" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,160,8" TextAlignment="Center" Visibility="Collapsed" local:PageProperties.PageNumbers="1,2,3,4"/>
