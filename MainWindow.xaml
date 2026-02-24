@@ -116,7 +116,7 @@
         <StackPanel x:Name="ButtonContainer" Orientation="Vertical" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,9,29" local:PageProperties.PageNumbers="1,2,3,4">
             <!-- 导航按钮（所有页面共用） -->
             <StackPanel x:Name="NavigationButtonsStackPanel" Orientation="Vertical" local:PageProperties.PageNumbers="1,2,3,4">
-                <Button x:Name="BackButton" Width="145" Height="42" Margin="0,0,0,0" Cursor="Hand" Click="BackButton_Click" local:PageProperties.PageNumbers="1,2,3,4">
+                <Button x:Name="BackButton" Width="145" Height="42" Margin="0,0,0,0" Cursor="Hand" Click="BackButton_Click" local:PageProperties.PageNumbers="2,3,4">
                     <Button.Template>
                         <ControlTemplate TargetType="Button">
                             <Grid>
