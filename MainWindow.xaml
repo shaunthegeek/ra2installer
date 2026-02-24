@@ -6,7 +6,8 @@
         xmlns:local="clr-namespace:RA2Installer"
         xmlns:resx="clr-namespace:RA2Installer.Resources"
         mc:Ignorable="d"
-        Title="{x:Static resx:Strings.WindowTitle}" ResizeMode="NoResize" SizeToContent="WidthAndHeight">
+        Title="{x:Static resx:Strings.WindowTitle}" ResizeMode="NoResize" SizeToContent="WidthAndHeight"
+        Icon="Assets/RA2.ico">
     <Window.Resources>
         <Style TargetType="TextBox">
             <Setter Property="BorderThickness" Value="1"/>
