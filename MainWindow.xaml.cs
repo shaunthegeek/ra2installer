@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Globalization;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -37,6 +37,29 @@ namespace RA2Installer
         // 当前页码
         private int _currentPage = 1;
 
+        // 动画播放完成后的行为枚举
+        private enum AnimationEndBehavior
+        {
+            Disappear,
+            StayAtLastFrame,
+            StayAtFirstFrame
+        }
+
+        // 单个动画配置
+        private class AnimationConfig
+        {
+            public string ShpHash { get; set; } = string.Empty;
+            public bool IsReverse { get; set; }
+            public AnimationEndBehavior EndBehavior { get; set; }
+        }
+
+        // 页面动画配置
+        private class PageAnimationConfig
+        {
+            public List<AnimationConfig> IntroAnimations { get; set; } = new List<AnimationConfig>();
+            public List<AnimationConfig> ExitAnimations { get; set; } = new List<AnimationConfig>();
+        }
+
         // 存储每一页的雷达文案IDs
         private readonly Dictionary<int, int[]> _pageRadarStringIds = new Dictionary<int, int[]> {
             { 1, new int[] { 250, 251, 252, 253, 254 } },
@@ -51,6 +74,60 @@ namespace RA2Installer
             { 3, (146, 1000) }  // 第三页：ID 146，显示1秒
         };
 
+        // 存储每一页的动画配置
+        private readonly Dictionary<int, PageAnimationConfig> _pageAnimationConfigs = new Dictionary<int, PageAnimationConfig> {
+            {
+                1,
+                new PageAnimationConfig {
+                    IntroAnimations = new List<AnimationConfig> {
+                        new AnimationConfig {
+                            ShpHash = "2012EC16",
+                            IsReverse = true,
+                            EndBehavior = AnimationEndBehavior.StayAtFirstFrame
+                        }
+                    },
+                    ExitAnimations = new List<AnimationConfig> {
+                        new AnimationConfig {
+                            ShpHash = "2012EC16",
+                            IsReverse = false,
+                            EndBehavior = AnimationEndBehavior.Disappear
+                        }
+                    }
+                }
+            },
+            {
+                2,
+                new PageAnimationConfig {
+                    IntroAnimations = new List<AnimationConfig> {
+                        new AnimationConfig {
+                            ShpHash = "D6D75E64",
+                            IsReverse = false,
+                            EndBehavior = AnimationEndBehavior.StayAtLastFrame
+                        }
+                    }
+                }
+            },
+            {
+                3,
+                new PageAnimationConfig {
+                    IntroAnimations = new List<AnimationConfig> {
+                        new AnimationConfig {
+                            ShpHash = "D6D75E64",
+                            IsReverse = false,
+                            EndBehavior = AnimationEndBehavior.StayAtLastFrame
+                        }
+                    },
+                    ExitAnimations = new List<AnimationConfig> {
+                        new AnimationConfig {
+                            ShpHash = "D6D75E64",
+                            IsReverse = false,
+                            EndBehavior = AnimationEndBehavior.Disappear
+                        }
+                    }
+                }
+            }
+        };
+
         // 用于控制底部文字显示时长的定时器
         private System.Timers.Timer? _bottomTextTimer;
 
@@ -59,8 +136,6 @@ namespace RA2Installer
 
         // 存储用户输入的序列号
         private string _serialNumber = string.Empty;
-
-
 
         public MainWindow()
         {
@@ -952,47 +1027,8 @@ namespace RA2Installer
         /// </summary>
         private void StartShpAnimation()
         {
-            if (_shpAnimationPlayer != null)
-            {
-                // 每次点击按钮时，根据当前页面决定播放模式
-                File.AppendAllText(_logFile, "Starting SHP animation playback on language button click\n");
-
-                // 先停止当前动画
-                _shpAnimationPlayer.Stop();
-
-                // 确保AnimationImage可见
-                if (AnimationImage != null)
-                {
-                    AnimationImage.Visibility = Visibility.Visible;
-                    File.AppendAllText(_logFile, "AnimationImage visibility set to Visible\n");
-                }
-
-                // 检查是否在第1页（使用当前页码变量）
-                bool isPage1 = _currentPage == 1;
-
-                if (isPage1)
-                {
-                    // 第1页：正序播放动画，从第一帧开始
-                    File.AppendAllText(_logFile, "Page 1 detected, starting forward animation\n");
-                    _shpAnimationPlayer.IsReverse = false;
-                    _shpAnimationPlayer.Reset();
-                }
-                else
-                {
-                    // 其他页：正常播放
-                    File.AppendAllText(_logFile, "Other page detected, starting normal animation\n");
-                    _shpAnimationPlayer.IsReverse = false;
-                    _shpAnimationPlayer.Reset();
-                }
-
-                // 开始播放
-                _shpAnimationPlayer.Play();
-                File.AppendAllText(_logFile, "SHP animation playback started\n");
-            }
-            else
-            {
-                File.AppendAllText(_logFile, "_shpAnimationPlayer is null, cannot start playback\n");
-            }
+            // 播放第1页的退出动画，然后跳转到第二页
+            PlayPageAnimations(_currentPage, false, () => SwitchToPage(2));
         }
 
         /// <summary>
@@ -1002,38 +1038,9 @@ namespace RA2Installer
         /// <param name="e">事件参数</param>
         private void ShpAnimationPlayer_AnimationCompleted(object? sender, EventArgs e)
         {
-            File.AppendAllText(_logFile, "SHP animation completed\n");
-            
-            // 检查是否在第1页（使用当前页码变量）
-            bool isPage1 = _currentPage == 1;
-
-            if (isPage1)
-            {
-                // 检查是否是倒放模式
-                bool isReverse = _shpAnimationPlayer != null && _shpAnimationPlayer.IsReverse;
-                
-                if (isReverse)
-                {
-                    // 倒放模式（从第2页返回或开场）：保持动画可见并停留在第一帧，不跳转页面
-                    File.AppendAllText(_logFile, "Page 1 reverse animation completed, keeping animation visible at first frame\n");
-                    if (AnimationImage != null)
-                    {
-                        AnimationImage.Visibility = Visibility.Visible;
-                        File.AppendAllText(_logFile, "AnimationImage visibility set to Visible\n");
-                    }
-                }
-                else
-                {
-                    // 正常模式（下一步按钮触发）：跳转到第二页
-                    File.AppendAllText(_logFile, "Page 1 normal animation completed, switching to Page 2\n");
-                    SwitchToPage(2);
-                }
-            }
-            else
-            {
-                // 非第1页：动画播放完毕后不跳转页面
-                File.AppendAllText(_logFile, "Non-Page 1 detected, animation completed without page switch\n");
-            }
+            // 此方法已被PlayAnimationsSequentially中的事件处理程序替代
+            // 保留此方法以确保兼容性
+            File.AppendAllText(_logFile, "Legacy SHP animation completed event handler called\n");
         }
 
         /// <summary>
@@ -1132,8 +1139,32 @@ namespace RA2Installer
                 // 显示底部文本
                 LoadBottomText();
 
-                // 加载并播放第二页的动画
-                LoadAndPlayPage2Animation();
+                // 清空现有内容
+                RadarTextStackPanel.Children.Clear();
+
+                // 加载并播放第二页的动画，动画完成后显示许可证内容
+                PlayPageAnimations(pageNumber, true, () =>
+                {
+                    // 显示许可证内容
+                    if (LicenseBorder != null)
+                    {
+                        LicenseBorder.Visibility = Visibility.Visible;
+                        File.AppendAllText(_logFile, "LicenseBorder visibility set to Visible\n");
+                    }
+
+                    // 显示同意条款文本
+                    if (IAgreeToTheseTermsTextBlock != null)
+                    {
+                        IAgreeToTheseTermsTextBlock.Visibility = Visibility.Visible;
+                        File.AppendAllText(_logFile, "IAgreeToTheseTermsTextBlock visibility set to Visible\n");
+                    }
+
+                    // 加载并显示同意按钮动画的第一帧
+                    LoadAgreeButtonAnimation();
+
+                    // 加载第二页的雷达文案
+                    LoadAndDisplayRadarStrings(_currentPage);
+                });
 
 
             }
@@ -1270,56 +1301,8 @@ namespace RA2Installer
         /// </summary>
         private void LoadAndPlayPage1Animation()
         {
-            try
-            {
-                File.AppendAllText(_logFile, "Loading and playing Page1 animation with hash: 2012EC16\n");
-
-                // 检查AnimationImage是否存在
-                if (AnimationImage == null)
-                {
-                    File.AppendAllText(_logFile, "AnimationImage control is null\n");
-                    return;
-                }
-
-                // 加载Setup.mix文件
-                MixFile mixFile = new MixFile(SetupMixPath);
-
-                // 获取SHP文件数据
-                byte[]? shpData = mixFile.GetShpByHash("2012EC16");
-                if (shpData == null)
-                {
-                    File.AppendAllText(_logFile, "Failed to load SHP file for Page1 animation\n");
-                    return;
-                }
-
-                // 获取PAL文件数据
-                string palHash = "397C46E0";
-                byte[]? palData = mixFile.GetPalByHash(palHash);
-                if (palData == null)
-                {
-                    File.AppendAllText(_logFile, "Failed to load PAL file for Page1 animation\n");
-                    return;
-                }
-
-                // 解析SHP文件
-                ShpFile shpFile = new ShpFile(shpData, palData);
-
-                // 创建动画播放器
-                _shpAnimationPlayer = new ShpAnimationPlayer(shpFile, AnimationImage);
-
-                // 添加动画播放完成事件处理程序
-                _shpAnimationPlayer.AnimationCompleted += ShpAnimationPlayer_AnimationCompleted;
-
-                // 第1页启动时，自动倒放动画
-                _shpAnimationPlayer.IsReverse = true;
-                _shpAnimationPlayer.ResetToLastFrame();
-                _shpAnimationPlayer.Play();
-                File.AppendAllText(_logFile, "Page1 animation playback started in reverse\n");
-            }
-            catch (Exception ex)
-            {
-                File.AppendAllText(_logFile, "Error loading Page1 animation: " + ex.Message + "\n");
-            }
+            // 使用新的动画播放方法
+            PlayPageAnimations(_currentPage, true);
         }
 
         /// <summary>
@@ -1394,57 +1377,11 @@ namespace RA2Installer
         /// </summary>
         private void LoadAndPlayPage2Animation()
         {
-            try
-            {
-                File.AppendAllText(_logFile, "Loading and playing Page2 animation with hash: D6D75E64\n");
+            // 使用新的动画播放方法
+            PlayPageAnimations(_currentPage, true);
 
-                // 检查AnimationImage是否存在
-                if (AnimationImage == null)
-                {
-                    File.AppendAllText(_logFile, "AnimationImage control is null\n");
-                    return;
-                }
-
-                // 加载Setup.mix文件
-                MixFile mixFile = new MixFile(SetupMixPath);
-
-                // 获取SHP文件数据
-                byte[]? shpData = mixFile.GetShpByHash("D6D75E64");
-                if (shpData == null)
-                {
-                    File.AppendAllText(_logFile, "Failed to load SHP file for Page2 animation\n");
-                    return;
-                }
-
-                // 获取PAL文件数据
-                string palHash = "397C46E0";
-                byte[]? palData = mixFile.GetPalByHash(palHash);
-                if (palData == null)
-                {
-                    File.AppendAllText(_logFile, "Failed to load PAL file for Page2 animation\n");
-                    return;
-                }
-
-                // 解析SHP文件
-                ShpFile shpFile = new ShpFile(shpData, palData);
-
-                // 创建动画播放器
-                _shpAnimationPlayer = new ShpAnimationPlayer(shpFile, AnimationImage);
-
-                // 添加动画播放完成事件处理程序
-                _shpAnimationPlayer.AnimationCompleted += Page2Animation_Completed;
-
-                // 开始播放动画
-                _shpAnimationPlayer.Play();
-                File.AppendAllText(_logFile, "Page2 animation playback started\n");
-
-                // 播放第二页的音效
-                PlayPage2Sounds();
-            }
-            catch (Exception ex)
-            {
-                File.AppendAllText(_logFile, "Error loading Page2 animation: " + ex.Message + "\n");
-            }
+            // 播放第二页的音效
+            PlayPage2Sounds();
         }
 
         /// <summary>
@@ -1452,57 +1389,11 @@ namespace RA2Installer
         /// </summary>
         private void LoadAndPlayPage3Animation()
         {
-            try
-            {
-                File.AppendAllText(_logFile, "Loading and playing Page3 animation with hash: D6D75E64\n");
-
-                // 检查AnimationImage是否存在
-                if (AnimationImage == null)
-                {
-                    File.AppendAllText(_logFile, "AnimationImage control is null\n");
-                    return;
-                }
-
-                // 加载Setup.mix文件
-                MixFile mixFile = new MixFile(SetupMixPath);
-
-                // 获取SHP文件数据
-                byte[]? shpData = mixFile.GetShpByHash("D6D75E64");
-                if (shpData == null)
-                {
-                    File.AppendAllText(_logFile, "Failed to load SHP file for Page3 animation\n");
-                    return;
-                }
-
-                // 获取PAL文件数据
-                string palHash = "397C46E0";
-                byte[]? palData = mixFile.GetPalByHash(palHash);
-                if (palData == null)
-                {
-                    File.AppendAllText(_logFile, "Failed to load PAL file for Page3 animation\n");
-                    return;
-                }
-
-                // 解析SHP文件
-                ShpFile shpFile = new ShpFile(shpData, palData);
-
-                // 创建动画播放器
-                _shpAnimationPlayer = new ShpAnimationPlayer(shpFile, AnimationImage);
-
-                // 添加动画播放完成事件处理程序
-                _shpAnimationPlayer.AnimationCompleted += Page3Animation_Completed;
-
-                // 开始播放动画
-                _shpAnimationPlayer.Play();
-                File.AppendAllText(_logFile, "Page3 animation playback started\n");
-
-                // 播放第三页的音效
-                PlayPage2Sounds();
-            }
-            catch (Exception ex)
-            {
-                File.AppendAllText(_logFile, "Error loading Page3 animation: " + ex.Message + "\n");
-            }
+            // 使用新的动画播放方法
+            PlayPageAnimations(_currentPage, true);
+            
+            // 播放第三页的音效
+            PlayPage2Sounds();
         }
 
         /// <summary>
@@ -1512,8 +1403,9 @@ namespace RA2Installer
         /// <param name="e">事件参数</param>
         private void Page3Animation_Completed(object? sender, EventArgs e)
         {
-            File.AppendAllText(_logFile, "Page3 animation completed\n");
-            // 第三页动画播放完毕后不跳转页面
+            // 此方法已被PlayAnimationsSequentially中的事件处理程序替代
+            // 保留此方法以确保兼容性
+            File.AppendAllText(_logFile, "Legacy Page3 animation completed event handler called\n");
         }
 
         /// <summary>
@@ -1567,8 +1459,8 @@ namespace RA2Installer
             }
             else if (_currentPage == 2)
             {
-                // 第2页：跳转到第三页
-                SwitchToPage(3);
+                // 第2页：播放退出动画，然后跳转到第三页
+                PlayPageAnimations(_currentPage, false, () => SwitchToPage(3));
             }
             else if (_currentPage == 3)
             {
@@ -1609,6 +1501,179 @@ namespace RA2Installer
 
                 // 显示动画 hash 134B6332 的第一帧
                 ShowAnimationFirstFrame("134B6332");
+            }
+        }
+
+        /// <summary>
+        /// 播放页面的动画
+        /// </summary>
+        /// <param name="pageNumber">页面编号</param>
+        /// <param name="isIntro">是否是开场动画（true表示开场动画，false表示退出动画）</param>
+        /// <param name="callback">动画播放完成后的回调函数</param>
+        private void PlayPageAnimations(int pageNumber, bool isIntro, Action? callback = null)
+        {
+            try
+            {
+                File.AppendAllText(_logFile, $"Starting to play {((isIntro) ? "intro" : "exit")} animations for page {pageNumber}\n");
+
+                // 检查AnimationImage是否存在
+                if (AnimationImage == null)
+                {
+                    File.AppendAllText(_logFile, "AnimationImage control is null\n");
+                    callback?.Invoke();
+                    return;
+                }
+
+                // 获取页面的动画配置
+                if (!_pageAnimationConfigs.TryGetValue(pageNumber, out var pageConfig))
+                {
+                    File.AppendAllText(_logFile, $"No animation config defined for page {pageNumber}\n");
+                    callback?.Invoke();
+                    return;
+                }
+
+                // 选择要播放的动画列表
+                var animations = isIntro ? pageConfig.IntroAnimations : pageConfig.ExitAnimations;
+                if (animations == null || animations.Count == 0)
+                {
+                    File.AppendAllText(_logFile, $"No {((isIntro) ? "intro" : "exit")} animations defined for page {pageNumber}\n");
+                    callback?.Invoke();
+                    return;
+                }
+
+                // 开始顺序播放动画
+                PlayAnimationsSequentially(animations, 0, callback);
+            }
+            catch (Exception ex)
+            {
+                File.AppendAllText(_logFile, $"Error playing page animations: {ex.Message}\n");
+                callback?.Invoke();
+            }
+        }
+
+        /// <summary>
+        /// 顺序播放多个动画
+        /// </summary>
+        /// <param name="animations">动画配置列表</param>
+        /// <param name="index">当前要播放的动画索引</param>
+        /// <param name="callback">所有动画播放完成后的回调函数</param>
+        private void PlayAnimationsSequentially(List<AnimationConfig> animations, int index, Action? callback = null)
+        {
+            try
+            {
+                // 检查是否所有动画都已播放完成
+                if (index >= animations.Count)
+                {
+                    File.AppendAllText(_logFile, "All animations played sequentially\n");
+                    callback?.Invoke();
+                    return;
+                }
+
+                var currentAnimation = animations[index];
+                File.AppendAllText(_logFile, $"Playing animation {index + 1}/{animations.Count} with hash: {currentAnimation.ShpHash}, reverse: {currentAnimation.IsReverse}, end behavior: {currentAnimation.EndBehavior}\n");
+
+                // 加载Setup.mix文件
+                MixFile mixFile = new MixFile(SetupMixPath);
+
+                // 获取SHP文件数据
+                byte[]? shpData = mixFile.GetShpByHash(currentAnimation.ShpHash);
+                if (shpData == null)
+                {
+                    File.AppendAllText(_logFile, $"Failed to load SHP file for animation {currentAnimation.ShpHash}\n");
+                    // 继续播放下一个动画
+                    PlayAnimationsSequentially(animations, index + 1, callback);
+                    return;
+                }
+
+                // 获取PAL文件数据
+                string palHash = "397C46E0";
+                byte[]? palData = mixFile.GetPalByHash(palHash);
+                if (palData == null)
+                {
+                    File.AppendAllText(_logFile, "Failed to load PAL file for animation\n");
+                    // 继续播放下一个动画
+                    PlayAnimationsSequentially(animations, index + 1, callback);
+                    return;
+                }
+
+                // 解析SHP文件
+                ShpFile shpFile = new ShpFile(shpData, palData);
+
+                // 创建动画播放器
+                _shpAnimationPlayer = new ShpAnimationPlayer(shpFile, AnimationImage);
+
+                // 设置是否倒序播放
+                _shpAnimationPlayer.IsReverse = currentAnimation.IsReverse;
+
+                // 根据是否倒序，设置初始帧
+                if (currentAnimation.IsReverse)
+                {
+                    _shpAnimationPlayer.ResetToLastFrame();
+                }
+                else
+                {
+                    _shpAnimationPlayer.Reset();
+                }
+
+                // 确保AnimationImage可见
+                AnimationImage.Visibility = Visibility.Visible;
+
+                // 保存当前动画的配置和索引
+                int currentIndex = index;
+                AnimationConfig config = currentAnimation;
+
+                // 添加动画播放完成事件处理程序
+                _shpAnimationPlayer.AnimationCompleted += (sender, e) =>
+                {
+                    try
+                    {
+                        File.AppendAllText(_logFile, $"Animation {currentIndex + 1}/{animations.Count} completed\n");
+
+                        // 根据结束行为处理
+                        switch (config.EndBehavior)
+                        {
+                            case AnimationEndBehavior.Disappear:
+                                // 隐藏动画
+                                if (AnimationImage != null)
+                                {
+                                    AnimationImage.Visibility = Visibility.Collapsed;
+                                    File.AppendAllText(_logFile, "Animation disappeared as per end behavior\n");
+                                }
+                                break;
+                            case AnimationEndBehavior.StayAtLastFrame:
+                                // 停留在最后一帧（不需要额外操作，动画播放完成后会自动停留在最后一帧）
+                                File.AppendAllText(_logFile, "Animation stayed at last frame as per end behavior\n");
+                                break;
+                            case AnimationEndBehavior.StayAtFirstFrame:
+                                // 停留在第一帧
+                                if (_shpAnimationPlayer != null)
+                                {
+                                    _shpAnimationPlayer.Reset();
+                                    File.AppendAllText(_logFile, "Animation stayed at first frame as per end behavior\n");
+                                }
+                                break;
+                        }
+
+                        // 播放下一个动画
+                        PlayAnimationsSequentially(animations, currentIndex + 1, callback);
+                    }
+                    catch (Exception ex)
+                    {
+                        File.AppendAllText(_logFile, $"Error in animation completed handler: {ex.Message}\n");
+                        // 继续播放下一个动画
+                        PlayAnimationsSequentially(animations, currentIndex + 1, callback);
+                    }
+                };
+
+                // 开始播放动画
+                _shpAnimationPlayer.Play();
+                File.AppendAllText(_logFile, $"Animation {currentIndex + 1}/{animations.Count} started\n");
+            }
+            catch (Exception ex)
+            {
+                File.AppendAllText(_logFile, $"Error playing animations sequentially: {ex.Message}\n");
+                // 继续播放下一个动画
+                PlayAnimationsSequentially(animations, index + 1, callback);
             }
         }
 
@@ -1689,43 +1754,9 @@ namespace RA2Installer
         /// <param name="e">事件参数</param>
         private void Page2Animation_Completed(object? sender, EventArgs e)
         {
-            try
-            {
-                File.AppendAllText(_logFile, "Page2 animation completed, showing license agreement\n");
-
-                // 显示许可证内容
-                if (LicenseBorder != null)
-                {
-                    LicenseBorder.Visibility = Visibility.Visible;
-                    File.AppendAllText(_logFile, "LicenseBorder visibility set to Visible\n");
-                }
-                else
-                {
-                    File.AppendAllText(_logFile, "LicenseBorder is null\n");
-                }
-
-                // 显示同意条款文本
-                if (IAgreeToTheseTermsTextBlock != null)
-                {
-                    IAgreeToTheseTermsTextBlock.Visibility = Visibility.Visible;
-                    File.AppendAllText(_logFile, "IAgreeToTheseTermsTextBlock visibility set to Visible\n");
-                }
-                else
-                {
-                    File.AppendAllText(_logFile, "IAgreeToTheseTermsTextBlock is null\n");
-                }
-
-                // 加载并显示同意按钮动画的第一帧
-                LoadAgreeButtonAnimation();
-
-                // 清空现有内容并加载第二页的雷达文案
-                RadarTextStackPanel.Children.Clear();
-                LoadAndDisplayRadarStrings(_currentPage);
-            }
-            catch (Exception ex)
-            {
-                File.AppendAllText(_logFile, "Error in Page2Animation_Completed: " + ex.Message + "\n");
-            }
+            // 此方法已被PlayAnimationsSequentially中的事件处理程序替代
+            // 保留此方法以确保兼容性
+            File.AppendAllText(_logFile, "Legacy Page2 animation completed event handler called\n");
         }
 
 
