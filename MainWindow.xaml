@@ -47,73 +47,73 @@
         </Style>
     </Window.Resources>
 
-    <Grid Width="640" Height="480">
+    <Grid x:Name="LayoutRoot" Width="640" Height="480">
         <!-- 主要区域：动画显示控件（共享） -->
-        <Image x:Name="AnimationImage" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,75,0,0" Width="470"/>
+        <Image x:Name="AnimationImage" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,75,0,0" Width="470" local:PageProperties.PageNumbers="1,2,3,4"/>
         
         <!-- 雷达区：动画显示控件（共享） -->
-        <Image x:Name="RadarAnimationImage" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="472,0,0,0" Width="168" Height="177"/>
+        <Image x:Name="RadarAnimationImage" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="472,0,0,0" Width="168" Height="177" local:PageProperties.PageNumbers="4"/>
 
         <!-- 雷达区：从Language.dll读取的文本显示区域（共享） -->
-        <StackPanel x:Name="RadarTextStackPanel" Orientation="Vertical" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="483,39,0,0" Width="154"/>
+        <StackPanel x:Name="RadarTextStackPanel" Orientation="Vertical" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="483,39,0,0" Width="154" local:PageProperties.PageNumbers="1,2,3"/>
         
         <!-- 许可证内容显示区域（第二页特有） -->
-        <Border HorizontalAlignment="Left" VerticalAlignment="Top" Margin="115,45,0,0" Width="245" Height="245" BorderThickness="1" BorderBrush="#BB080B" Visibility="Collapsed" x:Name="LicenseBorder">
-            <ScrollViewer x:Name="LicenseScrollViewer" Width="235" Height="230" VerticalScrollBarVisibility="Auto" Padding="5">
-                <TextBlock x:Name="LicenseTextBlock" Foreground="#BB080B" FontSize="12" TextWrapping="Wrap" Text="{x:Static resx:Strings.LicenseContent}"/>
+        <Border HorizontalAlignment="Left" VerticalAlignment="Top" Margin="115,45,0,0" Width="245" Height="245" BorderThickness="1" BorderBrush="#BB080B" Visibility="Collapsed" x:Name="LicenseBorder" local:PageProperties.PageNumbers="2">
+            <ScrollViewer x:Name="LicenseScrollViewer" Width="235" Height="230" VerticalScrollBarVisibility="Auto" Padding="5" local:PageProperties.PageNumbers="2">
+                <TextBlock x:Name="LicenseTextBlock" Foreground="#BB080B" FontSize="12" TextWrapping="Wrap" Text="{x:Static resx:Strings.LicenseContent}" local:PageProperties.PageNumbers="2"/>
             </ScrollViewer>
         </Border>
         
         <!-- 许可证内容显示区域（第三页特有，无边框） -->
-        <StackPanel HorizontalAlignment="Left" VerticalAlignment="Top" Margin="115,45,0,0" Width="245" Height="245" Visibility="Collapsed" x:Name="LicenseStackPanel">
-            <ScrollViewer x:Name="LicenseScrollViewerPage3" Width="235" Height="230" VerticalScrollBarVisibility="Auto" Padding="5">
-                <TextBlock x:Name="LicenseTextBlockPage3" Foreground="#BB080B" FontSize="12" TextWrapping="Wrap"/>
+        <StackPanel HorizontalAlignment="Left" VerticalAlignment="Top" Margin="115,45,0,0" Width="245" Height="245" Visibility="Collapsed" x:Name="LicenseStackPanel" local:PageProperties.PageNumbers="3">
+            <ScrollViewer x:Name="LicenseScrollViewerPage3" Width="235" Height="230" VerticalScrollBarVisibility="Auto" Padding="5" local:PageProperties.PageNumbers="3">
+                <TextBlock x:Name="LicenseTextBlockPage3" Foreground="#BB080B" FontSize="12" TextWrapping="Wrap" local:PageProperties.PageNumbers="3"/>
             </ScrollViewer>
         </StackPanel>
         
         <!-- 同意按钮（动画帧，第二页特有） -->
-        <Image x:Name="AgreeButtonImage" Cursor="Hand" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="130,295,0,0" Width="210" Visibility="Collapsed" MouseLeftButtonUp="AgreeButtonImage_MouseLeftButtonUp"/>
+        <Image x:Name="AgreeButtonImage" Cursor="Hand" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="130,295,0,0" Width="210" Visibility="Collapsed" MouseLeftButtonUp="AgreeButtonImage_MouseLeftButtonUp" local:PageProperties.PageNumbers="2"/>
 
         <!-- 同意条款文本（第二页特有） -->
-        <TextBlock x:Name="IAgreeToTheseTermsTextBlock" Foreground="#FFEF84" FontSize="12" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="205,300,0,0" Width="130" TextAlignment="Left" Visibility="Collapsed" Text="{x:Static resx:Strings.IAgreeToTheseTerms}"/>
+        <TextBlock x:Name="IAgreeToTheseTermsTextBlock" Foreground="#FFEF84" FontSize="12" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="205,300,0,0" Width="130" TextAlignment="Left" Visibility="Collapsed" Text="{x:Static resx:Strings.IAgreeToTheseTerms}" local:PageProperties.PageNumbers="2"/>
         
         <!-- 底部文字显示区域（共享） -->
-        <TextBlock x:Name="BottomTextBlock" Foreground="Yellow" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,160,8" TextAlignment="Center" Visibility="Collapsed"/>
+        <TextBlock x:Name="BottomTextBlock" Foreground="Yellow" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,160,8" TextAlignment="Center" Visibility="Collapsed" local:PageProperties.PageNumbers="1,2,3,4"/>
         
         <!-- 输入框区域（第三页特有） -->
-        <StackPanel x:Name="InputFieldsStackPanel" Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="7,0,0,3" Width="457" Visibility="Collapsed">
-            <TextBox x:Name="InputField1" Width="120" Height="20" Margin="0" BorderThickness="2,2,1,2" MaxLength="6" PreviewTextInput="InputField_PreviewTextInput" GotFocus="InputField_GotFocus" LostFocus="InputField_LostFocus" TextChanged="InputField_TextChanged" TabIndex="1"/>
-            <TextBox x:Name="InputField2" Width="120" Height="20" Margin="0" BorderThickness="1,2,1,2" MaxLength="6" PreviewTextInput="InputField_PreviewTextInput" GotFocus="InputField_GotFocus" LostFocus="InputField_LostFocus" TextChanged="InputField_TextChanged" TabIndex="2"/>
-            <TextBox x:Name="InputField3" Width="120" Height="20" Margin="0" BorderThickness="1,2,1,2" MaxLength="6" PreviewTextInput="InputField_PreviewTextInput" GotFocus="InputField_GotFocus" LostFocus="InputField_LostFocus" TextChanged="InputField_TextChanged" TabIndex="3"/>
-            <TextBox x:Name="InputField4" Width="97" Height="20" Margin="0" BorderThickness="1,2,2,2" MaxLength="4" PreviewTextInput="InputField_PreviewTextInput" GotFocus="InputField_GotFocus" LostFocus="InputField_LostFocus" TextChanged="InputField_TextChanged" TabIndex="4"/>
+        <StackPanel x:Name="InputFieldsStackPanel" Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="7,0,0,3" Width="457" Visibility="Collapsed" local:PageProperties.PageNumbers="3">
+            <TextBox x:Name="InputField1" Width="120" Height="20" Margin="0" BorderThickness="2,2,1,2" MaxLength="6" PreviewTextInput="InputField_PreviewTextInput" GotFocus="InputField_GotFocus" LostFocus="InputField_LostFocus" TextChanged="InputField_TextChanged" TabIndex="1" local:PageProperties.PageNumbers="3"/>
+            <TextBox x:Name="InputField2" Width="120" Height="20" Margin="0" BorderThickness="1,2,1,2" MaxLength="6" PreviewTextInput="InputField_PreviewTextInput" GotFocus="InputField_GotFocus" LostFocus="InputField_LostFocus" TextChanged="InputField_TextChanged" TabIndex="2" local:PageProperties.PageNumbers="3"/>
+            <TextBox x:Name="InputField3" Width="120" Height="20" Margin="0" BorderThickness="1,2,1,2" MaxLength="6" PreviewTextInput="InputField_PreviewTextInput" GotFocus="InputField_GotFocus" LostFocus="InputField_LostFocus" TextChanged="InputField_TextChanged" TabIndex="3" local:PageProperties.PageNumbers="3"/>
+            <TextBox x:Name="InputField4" Width="97" Height="20" Margin="0" BorderThickness="1,2,2,2" MaxLength="4" PreviewTextInput="InputField_PreviewTextInput" GotFocus="InputField_GotFocus" LostFocus="InputField_LostFocus" TextChanged="InputField_TextChanged" TabIndex="4" local:PageProperties.PageNumbers="3"/>
         </StackPanel>
         
         <!-- 多选框区域（第四页特有） -->
-        <StackPanel x:Name="CheckBoxesStackPanel" Orientation="Vertical" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="30,80,0,0" Visibility="Collapsed">
-            <TextBlock x:Name="CheckBoxesTitleTextBlock" Foreground="Yellow" FontSize="16" Margin="0,0,0,30"/>
-            <StackPanel Orientation="Horizontal" Margin="10,5,0,20" x:Name="CheckBoxItem1">
-                <Image x:Name="CheckBox1" Width="18" Height="18" Cursor="Hand" MouseLeftButtonUp="CheckBox_MouseLeftButtonUp" Tag="1"/>
-                <TextBlock x:Name="CheckBoxText1" Foreground="Yellow" FontSize="16" Margin="5,0,0,0" VerticalAlignment="Center"/>
+        <StackPanel x:Name="CheckBoxesStackPanel" Orientation="Vertical" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="30,80,0,0" Visibility="Collapsed" local:PageProperties.PageNumbers="4">
+            <TextBlock x:Name="CheckBoxesTitleTextBlock" Foreground="Yellow" FontSize="16" Margin="0,0,0,30" local:PageProperties.PageNumbers="4"/>
+            <StackPanel Orientation="Horizontal" Margin="10,5,0,20" x:Name="CheckBoxItem1" local:PageProperties.PageNumbers="4">
+                <Image x:Name="CheckBox1" Width="18" Height="18" Cursor="Hand" MouseLeftButtonUp="CheckBox_MouseLeftButtonUp" Tag="1" local:PageProperties.PageNumbers="4"/>
+                <TextBlock x:Name="CheckBoxText1" Foreground="Yellow" FontSize="16" Margin="5,0,0,0" VerticalAlignment="Center" local:PageProperties.PageNumbers="4"/>
             </StackPanel>
-            <StackPanel Orientation="Horizontal" Margin="10,5,0,20" x:Name="CheckBoxItem2">
-                <Image x:Name="CheckBox2" Width="18" Height="18" Cursor="Hand" MouseLeftButtonUp="CheckBox_MouseLeftButtonUp" Tag="2"/>
-                <TextBlock x:Name="CheckBoxText2" Foreground="Yellow" FontSize="16" Margin="5,0,0,0" VerticalAlignment="Center"/>
+            <StackPanel Orientation="Horizontal" Margin="10,5,0,20" x:Name="CheckBoxItem2" local:PageProperties.PageNumbers="4">
+                <Image x:Name="CheckBox2" Width="18" Height="18" Cursor="Hand" MouseLeftButtonUp="CheckBox_MouseLeftButtonUp" Tag="2" local:PageProperties.PageNumbers="4"/>
+                <TextBlock x:Name="CheckBoxText2" Foreground="Yellow" FontSize="16" Margin="5,0,0,0" VerticalAlignment="Center" local:PageProperties.PageNumbers="4"/>
             </StackPanel>
-            <StackPanel Orientation="Horizontal" Margin="10,5,0,20" x:Name="CheckBoxItem3">
-                <Image x:Name="CheckBox3" Width="18" Height="18" Cursor="Hand" MouseLeftButtonUp="CheckBox_MouseLeftButtonUp" Tag="3"/>
-                <TextBlock x:Name="CheckBoxText3" Foreground="Yellow" FontSize="16" Margin="5,0,0,0" VerticalAlignment="Center"/>
+            <StackPanel Orientation="Horizontal" Margin="10,5,0,20" x:Name="CheckBoxItem3" local:PageProperties.PageNumbers="4">
+                <Image x:Name="CheckBox3" Width="18" Height="18" Cursor="Hand" MouseLeftButtonUp="CheckBox_MouseLeftButtonUp" Tag="3" local:PageProperties.PageNumbers="4"/>
+                <TextBlock x:Name="CheckBoxText3" Foreground="Yellow" FontSize="16" Margin="5,0,0,0" VerticalAlignment="Center" local:PageProperties.PageNumbers="4"/>
             </StackPanel>
-            <StackPanel Orientation="Horizontal" Margin="10,5,0,20" x:Name="CheckBoxItem4">
-                <Image x:Name="CheckBox4" Width="18" Height="18" Cursor="Hand" MouseLeftButtonUp="CheckBox_MouseLeftButtonUp" Tag="4"/>
-                <TextBlock x:Name="CheckBoxText4" Foreground="Yellow" FontSize="16" Margin="5,0,0,0" VerticalAlignment="Center"/>
+            <StackPanel Orientation="Horizontal" Margin="10,5,0,20" x:Name="CheckBoxItem4" local:PageProperties.PageNumbers="4">
+                <Image x:Name="CheckBox4" Width="18" Height="18" Cursor="Hand" MouseLeftButtonUp="CheckBox_MouseLeftButtonUp" Tag="4" local:PageProperties.PageNumbers="4"/>
+                <TextBlock x:Name="CheckBoxText4" Foreground="Yellow" FontSize="16" Margin="5,0,0,0" VerticalAlignment="Center" local:PageProperties.PageNumbers="4"/>
             </StackPanel>
         </StackPanel>
 
         <!-- 按钮容器（共享） -->
-        <StackPanel x:Name="ButtonContainer" Orientation="Vertical" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,9,29">
+        <StackPanel x:Name="ButtonContainer" Orientation="Vertical" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,9,29" local:PageProperties.PageNumbers="1,2,3,4">
             <!-- 导航按钮（所有页面共用） -->
-            <StackPanel x:Name="NavigationButtonsStackPanel" Orientation="Vertical">
-                <Button x:Name="BackButton" Width="145" Height="42" Margin="0,0,0,0" Cursor="Hand" Click="BackButton_Click">
+            <StackPanel x:Name="NavigationButtonsStackPanel" Orientation="Vertical" local:PageProperties.PageNumbers="1,2,3,4">
+                <Button x:Name="BackButton" Width="145" Height="42" Margin="0,0,0,0" Cursor="Hand" Click="BackButton_Click" local:PageProperties.PageNumbers="1,2,3,4">
                     <Button.Template>
                         <ControlTemplate TargetType="Button">
                             <Grid>
@@ -128,7 +128,7 @@
                         </ControlTemplate>
                     </Button.Template>
                 </Button>
-                <Button x:Name="NextButton" Width="145" Height="42" Margin="0,0,0,0" Cursor="Hand" Click="NextButton_Click">
+                <Button x:Name="NextButton" Width="145" Height="42" Margin="0,0,0,0" Cursor="Hand" Click="NextButton_Click" local:PageProperties.PageNumbers="1,2,3,4">
                     <Button.Template>
                         <ControlTemplate TargetType="Button">
                             <Grid>
@@ -146,7 +146,7 @@
             </StackPanel>
             
             <!-- 取消按钮（共享） -->
-            <Button x:Name="CancelButton" Width="145" Height="42" Cursor="Hand" Click="CancelButton_Click">
+            <Button x:Name="CancelButton" Width="145" Height="42" Cursor="Hand" Click="CancelButton_Click" local:PageProperties.PageNumbers="1,2,3,4">
                 <Button.Template>
                     <ControlTemplate TargetType="Button">
                         <Grid>

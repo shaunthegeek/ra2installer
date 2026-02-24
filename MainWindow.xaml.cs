@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows;
@@ -10,6 +12,53 @@ using RA2Installer.Resources;
 
 namespace RA2Installer
 {
+    /// <summary>
+    /// 页面属性类，用于定义元素的页码属性
+    /// </summary>
+    public static class PageProperties
+    {
+        /// <summary>
+        /// PageNumbers附加属性
+        /// </summary>
+        public static readonly DependencyProperty PageNumbersProperty = DependencyProperty.RegisterAttached(
+            "PageNumbers",
+            typeof(string),
+            typeof(PageProperties),
+            new PropertyMetadata(string.Empty)
+        );
+
+        /// <summary>
+        /// 设置PageNumbers属性
+        /// </summary>
+        public static void SetPageNumbers(DependencyObject element, string value)
+        {
+            element.SetValue(PageNumbersProperty, value);
+        }
+
+        /// <summary>
+        /// 获取PageNumbers属性
+        /// </summary>
+        public static string GetPageNumbers(DependencyObject element)
+        {
+            return (string)element.GetValue(PageNumbersProperty);
+        }
+
+        /// <summary>
+        /// 获取元素的页码列表
+        /// </summary>
+        public static List<int> GetPageNumbersList(DependencyObject element)
+        {
+            string pageNumbersStr = GetPageNumbers(element);
+            if (string.IsNullOrEmpty(pageNumbersStr))
+                return new List<int>();
+
+            return pageNumbersStr.Split(',')
+                .Select(s => int.TryParse(s.Trim(), out int page) ? page : -1)
+                .Where(page => page > 0)
+                .ToList();
+        }
+    }
+
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
@@ -1443,7 +1492,7 @@ namespace RA2Installer
                 {
                     if (BottomTextBlock != null)
                     {
-                        BottomTextBlock.Visibility = Visibility.Collapsed;
+                        BottomTextBlock.Text = "";
                         File.AppendAllText(_logFile, $"Bottom text hidden after {durationMs}ms\n");
                     }
                     StopBottomTextTimer();
@@ -1507,6 +1556,50 @@ namespace RA2Installer
         }
 
         /// <summary>
+        /// 根据页码更新所有元素的可见性
+        /// </summary>
+        /// <param name="pageNumber">当前页码</param>
+        private void UpdateElementsVisibility(int pageNumber)
+        {
+            // 遍历所有子元素并更新可见性
+            UpdateElementVisibility(LayoutRoot, pageNumber);
+        }
+
+        /// <summary>
+        /// 递归更新元素及其子元素的可见性
+        /// </summary>
+        /// <param name="element">要更新的元素</param>
+        /// <param name="pageNumber">当前页码</param>
+        private void UpdateElementVisibility(DependencyObject element, int pageNumber)
+        {
+            if (element == null)
+                return;
+
+            // 检查元素是否有PageNumbers属性
+            string pageNumbersStr = PageProperties.GetPageNumbers(element);
+            if (!string.IsNullOrEmpty(pageNumbersStr))
+            {
+                List<int> pageNumbers = PageProperties.GetPageNumbersList(element);
+                bool shouldBeVisible = pageNumbers.Contains(pageNumber);
+
+                // 只处理具有Visibility属性的元素
+                if (element is UIElement uiElement)
+                {
+                    uiElement.Visibility = shouldBeVisible ? Visibility.Visible : Visibility.Collapsed;
+                    File.AppendAllText(_logFile, $"Element {element.GetType().Name} (Name: {(element is FrameworkElement fe ? fe.Name : "N/A")}) visibility set to {(shouldBeVisible ? "Visible" : "Collapsed")} for Page {pageNumber}\n");
+                }
+            }
+
+            // 递归处理子元素
+            int childCount = VisualTreeHelper.GetChildrenCount(element);
+            for (int i = 0; i < childCount; i++)
+            {
+                DependencyObject child = VisualTreeHelper.GetChild(element, i);
+                UpdateElementVisibility(child, pageNumber);
+            }
+        }
+
+        /// <summary>
         /// 切换到指定页码
         /// </summary>
         /// <param name="pageNumber">目标页码</param>
@@ -1527,148 +1620,51 @@ namespace RA2Installer
             // 清空现有的文本
             RadarTextStackPanel.Children.Clear();
 
-            if (pageNumber == 1)
+            // 调整动画控件位置
+            if (AnimationImage != null)
             {
-                // 第一页
-                // 隐藏第二页特有元素
-                LicenseBorder.Visibility = Visibility.Collapsed;
-                IAgreeToTheseTermsTextBlock.Visibility = Visibility.Collapsed;
-                AgreeButtonImage.Visibility = Visibility.Collapsed;
-                // 隐藏第三页特有元素
-                InputFieldsStackPanel.Visibility = Visibility.Collapsed;
-
-                // 调整动画控件位置为第一页位置
-                if (AnimationImage != null)
+                if (pageNumber == 1)
                 {
                     AnimationImage.Margin = new Thickness(0, 75, 0, 0);
                     AnimationImage.Width = 470;
                     File.AppendAllText(_logFile, "AnimationImage margin set to (0,75,0,0) and width set to 470 for Page 1\n");
                 }
+                else
+                {
+                    AnimationImage.Margin = new Thickness(0, 0, 0, 0);
+                    AnimationImage.Width = 472;
+                    File.AppendAllText(_logFile, $"AnimationImage margin set to (0,0,0,0) and width set to 472 for Page {pageNumber}\n");
+                }
+            }
 
-                // 显示底部文本
-                LoadBottomText();
+            // 根据页码更新所有元素的可见性
+            UpdateElementsVisibility(pageNumber);
 
+            // 显示底部文本
+            LoadBottomText();
+
+            if (pageNumber == 1)
+            {
                 // 加载并播放第一页的动画
                 LoadAndPlayPage1Animation();
 
                 // 从Language.dll读取字符串并显示
                 LoadAndDisplayRadarStrings();
-
-
             }
             else if (pageNumber == 2)
             {
-                // 第二页
-                // 隐藏第一页特有元素
-                
-                // 调整动画控件位置为第二页位置（紧贴顶部）
-                if (AnimationImage != null)
-                {
-                    AnimationImage.Margin = new Thickness(0, 0, 0, 0);
-                    AnimationImage.Width = 472;
-                    File.AppendAllText(_logFile, "AnimationImage margin set to (0,0,0,0) and width set to 472 for Page 2\n");
-                }
-
-                // 确保许可证边框初始状态为隐藏
-                if (LicenseBorder != null)
-                {
-                    LicenseBorder.Visibility = Visibility.Collapsed;
-                    File.AppendAllText(_logFile, "LicenseBorder visibility reset to Collapsed\n");
-                }
-
-                // 确保同意条款文本初始状态为隐藏
-                if (IAgreeToTheseTermsTextBlock != null)
-                {
-                    IAgreeToTheseTermsTextBlock.Visibility = Visibility.Collapsed;
-                    File.AppendAllText(_logFile, "IAgreeToTheseTermsTextBlock visibility reset to Collapsed\n");
-                }
-
-                // 确保同意按钮初始状态为隐藏
-                if (AgreeButtonImage != null)
-                {
-                    AgreeButtonImage.Visibility = Visibility.Collapsed;
-                    File.AppendAllText(_logFile, "AgreeButtonImage visibility reset to Collapsed\n");
-                }
-
-                // 确保第三页特有元素初始状态为隐藏
-                if (LicenseStackPanel != null)
-                {
-                    LicenseStackPanel.Visibility = Visibility.Collapsed;
-                    File.AppendAllText(_logFile, "LicenseStackPanel visibility reset to Collapsed\n");
-                }
-                // 隐藏输入框区域
-                InputFieldsStackPanel.Visibility = Visibility.Collapsed;
-
-                // 显示底部文本
-                LoadBottomText();
-
-                // 清空现有内容
-                RadarTextStackPanel.Children.Clear();
-
                 // 加载并播放第二页的动画，动画完成后显示许可证内容
                 PlayPageAnimations(pageNumber, true, () =>
                 {
-                    // 显示许可证内容
-                    if (LicenseBorder != null)
-                    {
-                        LicenseBorder.Visibility = Visibility.Visible;
-                        File.AppendAllText(_logFile, "LicenseBorder visibility set to Visible\n");
-                    }
-
-                    // 显示同意条款文本
-                    if (IAgreeToTheseTermsTextBlock != null)
-                    {
-                        IAgreeToTheseTermsTextBlock.Visibility = Visibility.Visible;
-                        File.AppendAllText(_logFile, "IAgreeToTheseTermsTextBlock visibility set to Visible\n");
-                    }
-
                     // 加载并显示同意按钮动画的第一帧
                     LoadAgreeButtonAnimation();
 
                     // 加载第二页的雷达文案
                     LoadAndDisplayRadarStrings(_currentPage);
                 });
-
-
             }
             else if (pageNumber == 3)
             {
-                // 第三页
-                // 隐藏其他页面特有元素
-                if (LicenseBorder != null)
-                {
-                    LicenseBorder.Visibility = Visibility.Collapsed;
-                }
-                if (IAgreeToTheseTermsTextBlock != null)
-                {
-                    IAgreeToTheseTermsTextBlock.Visibility = Visibility.Collapsed;
-                }
-                if (AgreeButtonImage != null)
-                {
-                    AgreeButtonImage.Visibility = Visibility.Collapsed;
-                }
-                // 隐藏第四页特有元素
-                CheckBoxesStackPanel.Visibility = Visibility.Collapsed;
-                File.AppendAllText(_logFile, "CheckBoxesStackPanel visibility set to Collapsed for Page 3\n");
-
-                // 调整动画控件位置为第三页位置（紧贴顶部）
-                if (AnimationImage != null)
-                {
-                    AnimationImage.Margin = new Thickness(0, 0, 0, 0);
-                    AnimationImage.Width = 472;
-                    File.AppendAllText(_logFile, "AnimationImage margin set to (0,0,0,0) and width set to 472 for Page 3\n");
-                }
-
-                // 显示底部文本
-                LoadBottomText();
-
-                // 显示第三页特有元素（无边框许可证内容区域）
-                if (LicenseStackPanel != null)
-                {
-                    LicenseStackPanel.Visibility = Visibility.Visible;
-                    File.AppendAllText(_logFile, "LicenseStackPanel visibility set to Visible\n");
-                }
-
                 // 从Language.dll ID 210读取许可证内容并显示
                 LoadLicenseContentFromLanguageDll();
 
@@ -1679,40 +1675,11 @@ namespace RA2Installer
                 // 从Language.dll读取字符串并显示
                 LoadAndDisplayRadarStrings();
 
-                // 显示输入框区域
-                InputFieldsStackPanel.Visibility = Visibility.Visible;
                 // 默认选中第一个输入框
                 InputField1.Focus();
-
             }
             else if (pageNumber == 4)
             {
-                // 第四页
-                // 隐藏其他页面特有元素
-                if (LicenseBorder != null)
-                {
-                    LicenseBorder.Visibility = Visibility.Collapsed;
-                }
-                if (IAgreeToTheseTermsTextBlock != null)
-                {
-                    IAgreeToTheseTermsTextBlock.Visibility = Visibility.Collapsed;
-                }
-                if (AgreeButtonImage != null)
-                {
-                    AgreeButtonImage.Visibility = Visibility.Collapsed;
-                }
-
-                LicenseStackPanel.Visibility = Visibility.Collapsed;
-                InputFieldsStackPanel.Visibility = Visibility.Collapsed;
-
-                // 调整动画控件位置为第四页位置（紧贴顶部）
-                if (AnimationImage != null)
-                {
-                    AnimationImage.Margin = new Thickness(0, 0, 0, 0);
-                    AnimationImage.Width = 472;
-                    File.AppendAllText(_logFile, "AnimationImage margin set to (0,0,0,0) and width set to 472 for Page 4\n");
-                }
-
                 // 加载并播放第四页的动画
                 PlayPageAnimations(pageNumber, true, () =>
                 {
@@ -1727,10 +1694,6 @@ namespace RA2Installer
 
                     // 加载多选框选项文本
                     LoadCheckBoxesItems();
-
-                    // 显示第四页特有元素（多选框区域）
-                    CheckBoxesStackPanel.Visibility = Visibility.Visible;
-                    File.AppendAllText(_logFile, "CheckBoxesStackPanel visibility set to Visible for Page 4\n");
                 });
 
                 // 显示底部文本
