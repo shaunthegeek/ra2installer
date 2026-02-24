@@ -7,6 +7,46 @@
         xmlns:resx="clr-namespace:RA2Installer.Resources"
         mc:Ignorable="d"
         Title="{x:Static resx:Strings.WindowTitle}" ResizeMode="NoResize" SizeToContent="WidthAndHeight">
+    <Window.Resources>
+        <Style TargetType="TextBox">
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="#BB080B"/>
+            <Setter Property="Foreground" Value="#BB080B"/>
+            <Setter Property="Background" Value="Black"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border
+                            x:Name="border"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            Background="{TemplateBinding Background}"
+                            SnapsToDevicePixels="True">
+                            <ScrollViewer
+                                x:Name="PART_ContentHost"
+                                Focusable="False"
+                                HorizontalScrollBarVisibility="Hidden"
+                                VerticalScrollBarVisibility="Hidden"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="border" Property="Opacity" Value="0.56"/>
+                            </Trigger>
+                            <Trigger Property="IsFocused" Value="True">
+                                <Setter TargetName="border" Property="BorderBrush" Value="Red"/>
+                                <Setter TargetName="border" Property="BorderThickness" Value="2"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
     <Grid Width="640" Height="480">
         <!-- 动画显示控件（共享） -->
         <Image x:Name="AnimationImage" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,75,0,0" Width="470"/>
@@ -39,10 +79,10 @@
         
         <!-- 输入框区域（第三页特有） -->
         <StackPanel x:Name="InputFieldsStackPanel" Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="7,0,0,3" Width="457" Visibility="Collapsed">
-            <TextBox x:Name="InputField1" Width="120" Height="20" Margin="0" BorderThickness="2,2,1,2" BorderBrush="#BB080B" Foreground="#BB080B" Background="Black" FontSize="12" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" MaxLength="6" PreviewTextInput="InputField_PreviewTextInput" GotFocus="InputField_GotFocus" LostFocus="InputField_LostFocus" TextChanged="InputField_TextChanged" TabIndex="1"/>
-            <TextBox x:Name="InputField2" Width="120" Height="20" Margin="0" BorderThickness="1,2,1,2" BorderBrush="#BB080B" Foreground="#BB080B" Background="Black" FontSize="12" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" MaxLength="6" PreviewTextInput="InputField_PreviewTextInput" GotFocus="InputField_GotFocus" LostFocus="InputField_LostFocus" TextChanged="InputField_TextChanged" TabIndex="2"/>
-            <TextBox x:Name="InputField3" Width="120" Height="20" Margin="0" BorderThickness="1,2,1,2" BorderBrush="#BB080B" Foreground="#BB080B" Background="Black" FontSize="12" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" MaxLength="6" PreviewTextInput="InputField_PreviewTextInput" GotFocus="InputField_GotFocus" LostFocus="InputField_LostFocus" TextChanged="InputField_TextChanged" TabIndex="3"/>
-            <TextBox x:Name="InputField4" Width="97" Height="20" Margin="0" BorderThickness="1,2,2,2" BorderBrush="#BB080B" Foreground="#BB080B" Background="Black" FontSize="12" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" MaxLength="4" PreviewTextInput="InputField_PreviewTextInput" GotFocus="InputField_GotFocus" LostFocus="InputField_LostFocus" TextChanged="InputField_TextChanged" TabIndex="4"/>
+            <TextBox x:Name="InputField1" Width="120" Height="20" Margin="0" BorderThickness="2,2,1,2" MaxLength="6" PreviewTextInput="InputField_PreviewTextInput" GotFocus="InputField_GotFocus" LostFocus="InputField_LostFocus" TextChanged="InputField_TextChanged" TabIndex="1"/>
+            <TextBox x:Name="InputField2" Width="120" Height="20" Margin="0" BorderThickness="1,2,1,2" MaxLength="6" PreviewTextInput="InputField_PreviewTextInput" GotFocus="InputField_GotFocus" LostFocus="InputField_LostFocus" TextChanged="InputField_TextChanged" TabIndex="2"/>
+            <TextBox x:Name="InputField3" Width="120" Height="20" Margin="0" BorderThickness="1,2,1,2" MaxLength="6" PreviewTextInput="InputField_PreviewTextInput" GotFocus="InputField_GotFocus" LostFocus="InputField_LostFocus" TextChanged="InputField_TextChanged" TabIndex="3"/>
+            <TextBox x:Name="InputField4" Width="97" Height="20" Margin="0" BorderThickness="1,2,2,2" MaxLength="4" PreviewTextInput="InputField_PreviewTextInput" GotFocus="InputField_GotFocus" LostFocus="InputField_LostFocus" TextChanged="InputField_TextChanged" TabIndex="4"/>
         </StackPanel>
 
         <!-- 按钮容器（共享） -->
