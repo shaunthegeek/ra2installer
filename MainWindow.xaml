@@ -75,7 +75,7 @@
         <!-- 同意按钮和文本容器（第二页特有） -->
         <Grid x:Name="AgreeContainer" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="130,295,0,0" Width="210" Visibility="Collapsed" local:PageProperties.PageNumbers="2">
             <!-- 同意按钮（背景图片） -->
-            <Image x:Name="AgreeButtonImage" Cursor="Hand" Width="210" MouseLeftButtonUp="AgreeButtonImage_MouseLeftButtonUp"/>
+            <Image x:Name="AgreeButtonImage" Width="210" MouseLeftButtonUp="AgreeButtonImage_MouseLeftButtonUp"/>
 
             <!-- 同意条款文本（前景） -->
             <TextBlock x:Name="IAgreeToTheseTermsTextBlock" Foreground="#FFEF84" FontSize="12" Width="130" TextAlignment="Left" Text="{x:Static resx:Strings.IAgreeToTheseTerms}" Margin="75,5,0,0" VerticalAlignment="Top"/>
@@ -96,19 +96,19 @@
         <StackPanel x:Name="CheckBoxesStackPanel" Orientation="Vertical" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="30,80,0,0" Visibility="Collapsed" local:PageProperties.PageNumbers="4">
             <TextBlock x:Name="CheckBoxesTitleTextBlock" Foreground="Yellow" FontSize="16" Margin="0,0,0,30" local:PageProperties.PageNumbers="4"/>
             <StackPanel Orientation="Horizontal" Margin="10,5,0,20" x:Name="CheckBoxItem1" local:PageProperties.PageNumbers="4">
-                <Image x:Name="CheckBox1" Width="18" Height="18" Cursor="Hand" MouseLeftButtonUp="CheckBox_MouseLeftButtonUp" Tag="1" local:PageProperties.PageNumbers="4"/>
+                <Image x:Name="CheckBox1" Width="18" Height="18" MouseLeftButtonUp="CheckBox_MouseLeftButtonUp" Tag="1" local:PageProperties.PageNumbers="4"/>
                 <TextBlock x:Name="CheckBoxText1" Foreground="Yellow" FontSize="16" Margin="5,0,0,0" VerticalAlignment="Center" local:PageProperties.PageNumbers="4"/>
             </StackPanel>
             <StackPanel Orientation="Horizontal" Margin="10,5,0,20" x:Name="CheckBoxItem2" local:PageProperties.PageNumbers="4">
-                <Image x:Name="CheckBox2" Width="18" Height="18" Cursor="Hand" MouseLeftButtonUp="CheckBox_MouseLeftButtonUp" Tag="2" local:PageProperties.PageNumbers="4"/>
+                <Image x:Name="CheckBox2" Width="18" Height="18" MouseLeftButtonUp="CheckBox_MouseLeftButtonUp" Tag="2" local:PageProperties.PageNumbers="4"/>
                 <TextBlock x:Name="CheckBoxText2" Foreground="Yellow" FontSize="16" Margin="5,0,0,0" VerticalAlignment="Center" local:PageProperties.PageNumbers="4"/>
             </StackPanel>
             <StackPanel Orientation="Horizontal" Margin="10,5,0,20" x:Name="CheckBoxItem3" local:PageProperties.PageNumbers="4">
-                <Image x:Name="CheckBox3" Width="18" Height="18" Cursor="Hand" MouseLeftButtonUp="CheckBox_MouseLeftButtonUp" Tag="3" local:PageProperties.PageNumbers="4"/>
+                <Image x:Name="CheckBox3" Width="18" Height="18" MouseLeftButtonUp="CheckBox_MouseLeftButtonUp" Tag="3" local:PageProperties.PageNumbers="4"/>
                 <TextBlock x:Name="CheckBoxText3" Foreground="Yellow" FontSize="16" Margin="5,0,0,0" VerticalAlignment="Center" local:PageProperties.PageNumbers="4"/>
             </StackPanel>
             <StackPanel Orientation="Horizontal" Margin="10,5,0,20" x:Name="CheckBoxItem4" local:PageProperties.PageNumbers="4">
-                <Image x:Name="CheckBox4" Width="18" Height="18" Cursor="Hand" MouseLeftButtonUp="CheckBox_MouseLeftButtonUp" Tag="4" local:PageProperties.PageNumbers="4"/>
+                <Image x:Name="CheckBox4" Width="18" Height="18" MouseLeftButtonUp="CheckBox_MouseLeftButtonUp" Tag="4" local:PageProperties.PageNumbers="4"/>
                 <TextBlock x:Name="CheckBoxText4" Foreground="Yellow" FontSize="16" Margin="5,0,0,0" VerticalAlignment="Center" local:PageProperties.PageNumbers="4"/>
             </StackPanel>
         </StackPanel>
@@ -117,7 +117,7 @@
         <StackPanel x:Name="ButtonContainer" Orientation="Vertical" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,9,29" local:PageProperties.PageNumbers="1,2,3,4">
             <!-- 导航按钮（所有页面共用） -->
             <StackPanel x:Name="NavigationButtonsStackPanel" Orientation="Vertical" local:PageProperties.PageNumbers="1,2,3,4">
-                <Button x:Name="BackButton" Width="145" Height="42" Margin="0,0,0,0" Cursor="Hand" Click="BackButton_Click" local:PageProperties.PageNumbers="2,3,4">
+                <Button x:Name="BackButton" Width="145" Height="42" Margin="0,0,0,0" Click="BackButton_Click" local:PageProperties.PageNumbers="2,3,4">
                     <Button.Template>
                         <ControlTemplate TargetType="Button">
                             <Grid>
@@ -132,7 +132,7 @@
                         </ControlTemplate>
                     </Button.Template>
                 </Button>
-                <Button x:Name="NextButton" Width="145" Height="42" Margin="0,0,0,0" Cursor="Hand" Click="NextButton_Click" local:PageProperties.PageNumbers="1,2,3,4">
+                <Button x:Name="NextButton" Width="145" Height="42" Margin="0,0,0,0" Click="NextButton_Click" local:PageProperties.PageNumbers="1,2,3,4">
                     <Button.Template>
                         <ControlTemplate TargetType="Button">
                             <Grid>
@@ -150,7 +150,7 @@
             </StackPanel>
             
             <!-- 取消按钮（共享） -->
-            <Button x:Name="CancelButton" Width="145" Height="42" Cursor="Hand" Click="CancelButton_Click" local:PageProperties.PageNumbers="1,2,3,4">
+            <Button x:Name="CancelButton" Width="145" Height="42" Click="CancelButton_Click" local:PageProperties.PageNumbers="1,2,3,4">
                 <Button.Template>
                     <ControlTemplate TargetType="Button">
                         <Grid>

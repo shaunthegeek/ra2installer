@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -247,6 +247,9 @@ namespace RA2Installer
 
                 // 首先初始化组件，这样 Grid 控件就会被创建
                 InitializeComponent();
+
+                string cursorPath = "Assets/3D_red_normalselect.cur";
+                this.Cursor = new System.Windows.Input.Cursor(cursorPath);
 
                 File.AppendAllText(_logFile, "Components initialized, checking AnimationImage\n");
 
