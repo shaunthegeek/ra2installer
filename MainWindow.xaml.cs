@@ -1730,27 +1730,10 @@ namespace RA2Installer
                 ushort languageId = GetLanguageIdForCurrentLanguage();
                 File.AppendAllText(_logFile, $"Using language ID: {languageId}\n");
 
-                // 读取字符串（ID 210）
-                string? text = ReadStringFromLanguageDll(languageDllPath, 210, languageId);
+                // 读取字符串（ID 210），使用ID 18作为替换文本
+                string? text = GetStringWithReplacement(210, 18);
                 if (!string.IsNullOrEmpty(text))
                 {
-                    // 检查是否包含 %s 占位符
-                    if (text.Contains("%s"))
-                    {
-                        // 读取 ID 18 的文本用于替换 %s
-                        string? replacementText = ReadStringFromLanguageDll(languageDllPath, 18, languageId);
-                        if (!string.IsNullOrEmpty(replacementText))
-                        {
-                            // 替换 %s 占位符
-                            text = text.Replace("%s", replacementText);
-                            File.AppendAllText(_logFile, "Replaced %s with text from ID 18\n");
-                        }
-                        else
-                        {
-                            File.AppendAllText(_logFile, "Failed to read string ID 18 for replacement\n");
-                        }
-                    }
-
                     // 显示文本
                     if (LicenseTextBlockPage3 != null)
                     {
