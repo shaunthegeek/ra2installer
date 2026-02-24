@@ -61,9 +61,6 @@
   <data name="WindowTitle" xml:space="preserve">
     <value>紅色警戒 2 安裝程式</value>
   </data>
-  <data name="ExitButton" xml:space="preserve">
-    <value>退出</value>
-  </data>
   <data name="BackButton" xml:space="preserve">
     <value>上一步</value>
   </data>

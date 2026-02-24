@@ -61,9 +61,6 @@
   <data name="WindowTitle" xml:space="preserve">
     <value>Red Alert 2 Setup</value>
   </data>
-  <data name="ExitButton" xml:space="preserve">
-    <value>Exit</value>
-  </data>
   <data name="BackButton" xml:space="preserve">
     <value>Back</value>
   </data>
