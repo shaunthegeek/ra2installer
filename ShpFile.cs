@@ -340,7 +340,7 @@ namespace RA2Installer
             {
                 string logFile = Path.Combine(Path.GetTempPath(), "ra2installer.log");
                 File.AppendAllText(logFile, "Error decoding frame: " + ex.Message + "\n");
-                return null;
+                return Array.Empty<byte>();
             }
         }
 
@@ -357,7 +357,7 @@ namespace RA2Installer
             {
                 if (width <= 0 || height <= 0)
                 {
-                    return null;
+                    return BitmapSource.Create(1, 1, 96, 96, PixelFormats.Bgra32, null, new int[] { 0x00000000 }, 4);
                 }
                 
                 // 创建一个 32 位的像素数组
@@ -407,7 +407,7 @@ namespace RA2Installer
             {
                 string logFile = Path.Combine(Path.GetTempPath(), "ra2installer.log");
                 File.AppendAllText(logFile, "Error converting frame data to bitmap: " + ex.Message + "\n");
-                return null;
+                return BitmapSource.Create(1, 1, 96, 96, PixelFormats.Bgra32, null, new int[] { 0x00000000 }, 4);
             }
         }
 
@@ -460,7 +460,7 @@ namespace RA2Installer
         /// <summary>
         /// 动画播放完成事件
         /// </summary>
-        public event EventHandler AnimationCompleted;
+        public event EventHandler? AnimationCompleted;
 
         /// <summary>
         /// 是否倒放
@@ -546,7 +546,7 @@ namespace RA2Installer
         /// </summary>
         /// <param name="sender">发送者</param>
         /// <param name="e">事件参数</param>
-        private void Timer_Tick(object sender, EventArgs e)
+        private void Timer_Tick(object? sender, EventArgs e)
         {
             if (_frames.Count > 0)
             {

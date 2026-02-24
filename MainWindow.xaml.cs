@@ -27,12 +27,12 @@ namespace RA2Installer
 
         private MediaPlayer _backgroundMusicPlayer;
         private MediaPlayer _soundPlayer;
-        private string _buttonClickSoundFile;
-        private string _backgroundMusicFile;
-        private ShpAnimationPlayer _shpAnimationPlayer;
+        private string? _buttonClickSoundFile;
+        private string? _backgroundMusicFile;
+        private ShpAnimationPlayer? _shpAnimationPlayer;
 
         // 日志文件路径
-        private string _logFile;
+        private string _logFile = string.Empty;
 
         // 当前页码
         private int _currentPage = 1;
@@ -56,6 +56,8 @@ namespace RA2Installer
 
         // 用于取消异步加载任务的令牌源
         private CancellationTokenSource? _loadStringsCancellationTokenSource;
+
+
 
         public MainWindow()
         {
@@ -187,7 +189,7 @@ namespace RA2Installer
                 File.AppendAllText(_logFile, $"Using language ID: {languageId}\n");
 
                 // 根据页码获取对应的字符串IDs
-                if (!_pageRadarStringIds.TryGetValue(pageNumber, out int[] stringIds))
+                if (!_pageRadarStringIds.TryGetValue(pageNumber, out int[]? stringIds) || stringIds == null)
                 {
                     File.AppendAllText(_logFile, $"No string IDs defined for page {pageNumber}\n");
                     return;
@@ -204,7 +206,7 @@ namespace RA2Installer
                         return;
                     }
 
-                    string text = ReadStringFromLanguageDll(languageDllPath, id, languageId);
+                    string? text = ReadStringFromLanguageDll(languageDllPath, id, languageId);
                     if (!string.IsNullOrEmpty(text))
                     {
                         // 检查是否取消
@@ -324,8 +326,8 @@ namespace RA2Installer
         /// <param name="dllPath">Language.dll文件路径</param>
         /// <param name="stringId">字符串ID</param>
         /// <param name="languageId">语言ID</param>
-        /// <returns>读取到的字符串</returns>
-        private string ReadStringFromLanguageDll(string dllPath, int stringId, ushort languageId)
+        /// <returns>读取到的字符串或 null</returns>
+        private string? ReadStringFromLanguageDll(string dllPath, int stringId, ushort languageId)
         {
             try
             {
@@ -364,7 +366,7 @@ namespace RA2Installer
                         if (hResource != IntPtr.Zero)
                         {
                             File.AppendAllText(_logFile, $"FindResourceEx succeeded, resource handle: {hResource}\n");
-                            string text = ReadStringFromResource(dllHandle, hResource, stringId);
+                            string? text = ReadStringFromResource(dllHandle, hResource, stringId);
                             if (!string.IsNullOrEmpty(text))
                             {
                                 File.AppendAllText(_logFile, $"ReadStringFromResource succeeded, string: '{text}'\n");
@@ -415,8 +417,8 @@ namespace RA2Installer
         /// <param name="dllHandle">DLL句柄</param>
         /// <param name="hResource">资源句柄</param>
         /// <param name="stringId">字符串ID</param>
-        /// <returns>读取到的字符串</returns>
-        private string ReadStringFromResource(IntPtr dllHandle, IntPtr hResource, int stringId)
+        /// <returns>读取到的字符串或 null</returns>
+        private string? ReadStringFromResource(IntPtr dllHandle, IntPtr hResource, int stringId)
         {
             try
             {
@@ -528,7 +530,7 @@ namespace RA2Installer
                 MixFile mixFile = new MixFile(setupMixPath);
 
                 // 尝试获取指定哈希值和类型的图片
-                System.Windows.Media.Imaging.BitmapImage backgroundImage = mixFile.GetImageByHash(fileNameHash);
+                System.Windows.Media.Imaging.BitmapImage? backgroundImage = mixFile.GetImageByHash(fileNameHash);
 
                 if (backgroundImage == null)
                 {
@@ -541,12 +543,13 @@ namespace RA2Installer
                 if (Content is not Grid grid)
                 {
                     // 如果直接获取失败，尝试使用 FindVisualChild 方法
-                    grid = FindVisualChild<Grid>(this);
-                    if (grid == null)
+                    Grid? foundGrid = FindVisualChild<Grid>(this);
+                    if (foundGrid == null)
                     {
 
                         return;
                     }
+                    grid = foundGrid;
                 }
 
                 grid.Background = new ImageBrush(backgroundImage) { Stretch = Stretch.UniformToFill };
@@ -603,7 +606,7 @@ namespace RA2Installer
 
                 // 尝试获取指定哈希值和类型的 SHP 文件
                 File.AppendAllText(_logFile, "Attempting to get SHP file\n");
-                byte[] shpData = mixFile.GetShpByHash(fileNameHash);
+                byte[]? shpData = mixFile.GetShpByHash(fileNameHash);
 
                 if (shpData == null)
                 {
@@ -619,7 +622,7 @@ namespace RA2Installer
                 ShpFile shpFile;
 
                 // 使用用户指定的 PAL 文件
-                byte[] palData = null;
+                byte[]? palData = null;
                 string userSpecifiedPalHash = "397C46E0";
                 palData = mixFile.GetPalByHash(userSpecifiedPalHash);
                 if (palData != null)
@@ -665,8 +668,8 @@ namespace RA2Installer
         /// 从 Setup.mix 文件加载音频并保存到临时文件
         /// </summary>
         /// <param name="hashValue">音频文件的哈希值</param>
-        /// <returns>临时文件路径</returns>
-        private static string LoadAudioFromMix(string hashValue)
+        /// <returns>临时文件路径或 null</returns>
+        private static string? LoadAudioFromMix(string hashValue)
         {
             try
             {
@@ -674,7 +677,7 @@ namespace RA2Installer
                 MixFile mixFile = new(SetupMixPath);
 
                 // 尝试获取指定哈希值和类型的音频
-                byte[] audioData = mixFile.GetAudioByHash(hashValue);
+                byte[]? audioData = mixFile.GetAudioByHash(hashValue);
 
                 if (audioData != null)
                 {
@@ -714,7 +717,7 @@ namespace RA2Installer
         /// </summary>
         /// <param name="player">MediaPlayer 实例</param>
         /// <param name="audioFile">音频文件路径</param>
-        private void PlayAudio(System.Windows.Media.MediaPlayer player, string audioFile)
+        private void PlayAudio(System.Windows.Media.MediaPlayer player, string? audioFile)
         {
             try
             {
@@ -766,6 +769,11 @@ namespace RA2Installer
 
         private static T? FindVisualChild<T>(DependencyObject parent) where T : DependencyObject
         {
+            if (parent == null)
+            {
+                return null;
+            }
+            
             for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
             {
                 DependencyObject child = VisualTreeHelper.GetChild(parent, i);
@@ -773,9 +781,9 @@ namespace RA2Installer
                 {
                     return (T)child;
                 }
-                else
+                else if (child != null)
                 {
-                    T childOfChild = FindVisualChild<T>(child);
+                    T? childOfChild = FindVisualChild<T>(child);
                     if (childOfChild != null)
                     {
                         return childOfChild;
@@ -787,6 +795,11 @@ namespace RA2Installer
 
         private static IEnumerable<T> FindVisualChildren<T>(DependencyObject parent) where T : DependencyObject
         {
+            if (parent == null)
+            {
+                yield break;
+            }
+            
             for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
             {
                 DependencyObject child = VisualTreeHelper.GetChild(parent, i);
@@ -794,9 +807,12 @@ namespace RA2Installer
                 {
                     yield return (T)child;
                 }
-                foreach (T childOfChild in FindVisualChildren<T>(child))
+                if (child != null)
                 {
-                    yield return childOfChild;
+                    foreach (T childOfChild in FindVisualChildren<T>(child))
+                    {
+                        yield return childOfChild;
+                    }
                 }
             }
         }
@@ -849,7 +865,7 @@ namespace RA2Installer
                 File.AppendAllText(_logFile, $"Using language ID: {languageId}\n");
 
                 // 读取字符串
-                string text = ReadStringFromLanguageDll(languageDllPath, stringId, languageId);
+                string? text = ReadStringFromLanguageDll(languageDllPath, stringId, languageId);
                 if (!string.IsNullOrEmpty(text))
                 {
                     // 显示文本
@@ -981,7 +997,7 @@ namespace RA2Installer
         /// </summary>
         /// <param name="sender">发送者</param>
         /// <param name="e">事件参数</param>
-        private void ShpAnimationPlayer_AnimationCompleted(object sender, EventArgs e)
+        private void ShpAnimationPlayer_AnimationCompleted(object? sender, EventArgs e)
         {
             File.AppendAllText(_logFile, "SHP animation completed\n");
             
@@ -1266,7 +1282,7 @@ namespace RA2Installer
                 MixFile mixFile = new MixFile(SetupMixPath);
 
                 // 获取SHP文件数据
-                byte[] shpData = mixFile.GetShpByHash("2012EC16");
+                byte[]? shpData = mixFile.GetShpByHash("2012EC16");
                 if (shpData == null)
                 {
                     File.AppendAllText(_logFile, "Failed to load SHP file for Page1 animation\n");
@@ -1275,7 +1291,7 @@ namespace RA2Installer
 
                 // 获取PAL文件数据
                 string palHash = "397C46E0";
-                byte[] palData = mixFile.GetPalByHash(palHash);
+                byte[]? palData = mixFile.GetPalByHash(palHash);
                 if (palData == null)
                 {
                     File.AppendAllText(_logFile, "Failed to load PAL file for Page1 animation\n");
@@ -1332,14 +1348,14 @@ namespace RA2Installer
                 File.AppendAllText(_logFile, $"Using language ID: {languageId}\n");
 
                 // 读取字符串（ID 210）
-                string text = ReadStringFromLanguageDll(languageDllPath, 210, languageId);
+                string? text = ReadStringFromLanguageDll(languageDllPath, 210, languageId);
                 if (!string.IsNullOrEmpty(text))
                 {
                     // 检查是否包含 %s 占位符
                     if (text.Contains("%s"))
                     {
                         // 读取 ID 18 的文本用于替换 %s
-                        string replacementText = ReadStringFromLanguageDll(languageDllPath, 18, languageId);
+                        string? replacementText = ReadStringFromLanguageDll(languageDllPath, 18, languageId);
                         if (!string.IsNullOrEmpty(replacementText))
                         {
                             // 替换 %s 占位符
@@ -1390,7 +1406,7 @@ namespace RA2Installer
                 MixFile mixFile = new MixFile(SetupMixPath);
 
                 // 获取SHP文件数据
-                byte[] shpData = mixFile.GetShpByHash("D6D75E64");
+                byte[]? shpData = mixFile.GetShpByHash("D6D75E64");
                 if (shpData == null)
                 {
                     File.AppendAllText(_logFile, "Failed to load SHP file for Page2 animation\n");
@@ -1399,7 +1415,7 @@ namespace RA2Installer
 
                 // 获取PAL文件数据
                 string palHash = "397C46E0";
-                byte[] palData = mixFile.GetPalByHash(palHash);
+                byte[]? palData = mixFile.GetPalByHash(palHash);
                 if (palData == null)
                 {
                     File.AppendAllText(_logFile, "Failed to load PAL file for Page2 animation\n");
@@ -1448,7 +1464,7 @@ namespace RA2Installer
                 MixFile mixFile = new MixFile(SetupMixPath);
 
                 // 获取SHP文件数据
-                byte[] shpData = mixFile.GetShpByHash("D6D75E64");
+                byte[]? shpData = mixFile.GetShpByHash("D6D75E64");
                 if (shpData == null)
                 {
                     File.AppendAllText(_logFile, "Failed to load SHP file for Page3 animation\n");
@@ -1457,7 +1473,7 @@ namespace RA2Installer
 
                 // 获取PAL文件数据
                 string palHash = "397C46E0";
-                byte[] palData = mixFile.GetPalByHash(palHash);
+                byte[]? palData = mixFile.GetPalByHash(palHash);
                 if (palData == null)
                 {
                     File.AppendAllText(_logFile, "Failed to load PAL file for Page3 animation\n");
@@ -1491,7 +1507,7 @@ namespace RA2Installer
         /// </summary>
         /// <param name="sender">发送者</param>
         /// <param name="e">事件参数</param>
-        private void Page3Animation_Completed(object sender, EventArgs e)
+        private void Page3Animation_Completed(object? sender, EventArgs e)
         {
             File.AppendAllText(_logFile, "Page3 animation completed\n");
             // 第三页动画播放完毕后不跳转页面
@@ -1504,7 +1520,7 @@ namespace RA2Installer
         {
             try
             {
-                string soundFile1 = LoadAudioFromMix("B1C914DD");
+                string? soundFile1 = LoadAudioFromMix("B1C914DD");
                 PlayAudio(_soundPlayer, soundFile1);
             }
             catch (Exception ex)
@@ -1592,7 +1608,7 @@ namespace RA2Installer
                 MixFile mixFile = new MixFile(SetupMixPath);
 
                 // 获取SHP文件数据
-                byte[] shpData = mixFile.GetShpByHash(animationHash);
+                byte[]? shpData = mixFile.GetShpByHash(animationHash);
                 if (shpData == null)
                 {
                     File.AppendAllText(_logFile, $"Failed to load SHP file for animation {animationHash}\n");
@@ -1601,7 +1617,7 @@ namespace RA2Installer
 
                 // 获取PAL文件数据（使用与第二页相同的调色板）
                 string palHash = "397C46E0";
-                byte[] palData = mixFile.GetPalByHash(palHash);
+                byte[]? palData = mixFile.GetPalByHash(palHash);
                 if (palData == null)
                 {
                     File.AppendAllText(_logFile, "Failed to load PAL file for animation\n");
@@ -1639,14 +1655,14 @@ namespace RA2Installer
         }
 
         // 存储动画帧用于同意按钮
-        private List<System.Windows.Media.Imaging.BitmapSource> _agreeButtonAnimationFrames;
+        private List<System.Windows.Media.Imaging.BitmapSource>? _agreeButtonAnimationFrames;
 
         /// <summary>
         /// 第二页动画播放完成事件处理程序
         /// </summary>
         /// <param name="sender">发送者</param>
         /// <param name="e">事件参数</param>
-        private void Page2Animation_Completed(object sender, EventArgs e)
+        private void Page2Animation_Completed(object? sender, EventArgs e)
         {
             try
             {
@@ -1709,7 +1725,7 @@ namespace RA2Installer
                 MixFile mixFile = new MixFile(SetupMixPath);
 
                 // 获取SHP文件数据
-                byte[] shpData = mixFile.GetShpByHash("134B6332");
+                byte[]? shpData = mixFile.GetShpByHash("134B6332");
                 if (shpData == null)
                 {
                     File.AppendAllText(_logFile, "Failed to load SHP file for agree button animation\n");
@@ -1718,7 +1734,7 @@ namespace RA2Installer
 
                 // 获取PAL文件数据（使用指定的调色板 hash 297C46E0）
                 string palHash = "297C46E0";
-                byte[] palData = mixFile.GetPalByHash(palHash);
+                byte[]? palData = mixFile.GetPalByHash(palHash);
                 if (palData == null)
                 {
                     File.AppendAllText(_logFile, "Failed to load PAL file for agree button animation\n");

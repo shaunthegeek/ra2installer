@@ -9,7 +9,7 @@ namespace RA2Installer
     public class MixFile
     {
         private string _filePath;
-        private Dictionary<string, byte[]> _fileEntries;
+        private Dictionary<string, byte[]?> _fileEntries;
 
         /// <summary>
         /// 初始化 MixFile 实例
@@ -18,7 +18,7 @@ namespace RA2Installer
         public MixFile(string filePath)
         {
             _filePath = filePath;
-            _fileEntries = new Dictionary<string, byte[]>();
+            _fileEntries = new Dictionary<string, byte[]?>();
             LoadMixFile();
         }
 
@@ -280,8 +280,8 @@ namespace RA2Installer
         /// 根据哈希值读取文件内容
         /// </summary>
         /// <param name="fileNameHash">文件名哈希值</param>
-        /// <returns>文件内容</returns>
-        private byte[] ReadFileByHash(int fileNameHash)
+        /// <returns>文件内容或 null</returns>
+        private byte[]? ReadFileByHash(int fileNameHash)
         {
             try
             {
@@ -358,7 +358,7 @@ namespace RA2Installer
         /// <param name="fileName">文件名</param>
         /// <param name="fileContent">文件内容</param>
         /// <returns>是否找到文件</returns>
-        public bool TryGetFile(string fileName, out byte[] fileContent)
+        public bool TryGetFile(string fileName, out byte[]? fileContent)
         {
             return _fileEntries.TryGetValue(fileName, out fileContent);
         }
@@ -367,7 +367,7 @@ namespace RA2Installer
         /// 获取所有文件条目
         /// </summary>
         /// <returns>文件条目字典</returns>
-        public Dictionary<string, byte[]> GetAllFiles()
+        public Dictionary<string, byte[]?> GetAllFiles()
         {
             return _fileEntries;
         }
@@ -376,10 +376,10 @@ namespace RA2Installer
         /// 从 mix 文件中提取图片并转换为 BitmapImage
         /// </summary>
         /// <param name="fileName">图片文件名</param>
-        /// <returns>BitmapImage 实例</returns>
-        public BitmapImage GetImage(string fileName)
+        /// <returns>BitmapImage 实例或 null</returns>
+        public BitmapImage? GetImage(string fileName)
         {
-            if (TryGetFile(fileName, out var fileContent))
+            if (TryGetFile(fileName, out var fileContent) && fileContent != null)
             {
                 using (var stream = new MemoryStream(fileContent))
                 {
@@ -398,23 +398,26 @@ namespace RA2Installer
         /// <summary>
         /// 尝试从 mix 文件中查找背景图片
         /// </summary>
-        /// <returns>背景图片的 BitmapImage 实例</returns>
-        public BitmapImage GetBackgroundImage()
+        /// <returns>背景图片的 BitmapImage 实例或 null</returns>
+        public BitmapImage? GetBackgroundImage()
         {
             // 尝试查找可能的背景图片文件
             foreach (var entry in _fileEntries)
             {
                 try
                 {
-                    using (var stream = new MemoryStream(entry.Value))
+                    if (entry.Value != null)
                     {
-                        var bitmap = new BitmapImage();
-                        bitmap.BeginInit();
-                        bitmap.StreamSource = stream;
-                        bitmap.CacheOption = BitmapCacheOption.OnLoad;
-                        bitmap.EndInit();
-                        bitmap.Freeze();
-                        return bitmap;
+                        using (var stream = new MemoryStream(entry.Value))
+                        {
+                            var bitmap = new BitmapImage();
+                            bitmap.BeginInit();
+                            bitmap.StreamSource = stream;
+                            bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                            bitmap.EndInit();
+                            bitmap.Freeze();
+                            return bitmap;
+                        }
                     }
                 }
                 catch
@@ -429,8 +432,8 @@ namespace RA2Installer
         /// 根据文件名哈希值从 mix 文件中查找图片
         /// </summary>
         /// <param name="fileNameHash">文件名哈希值</param>
-        /// <returns>找到的图片的 BitmapImage 实例</returns>
-        public BitmapImage GetImageByHash(string fileNameHash)
+        /// <returns>找到的图片的 BitmapImage 实例或 null</returns>
+        public BitmapImage? GetImageByHash(string fileNameHash)
         {
             try
             {
@@ -493,8 +496,8 @@ namespace RA2Installer
         /// 根据文件名哈希值从 mix 文件中获取音频文件
         /// </summary>
         /// <param name="fileNameHash">文件名哈希值</param>
-        /// <returns>音频文件的字节数组</returns>
-        public byte[] GetAudioByHash(string fileNameHash)
+        /// <returns>音频文件的字节数组或 null</returns>
+        public byte[]? GetAudioByHash(string fileNameHash)
         {
             try
             {
@@ -536,8 +539,8 @@ namespace RA2Installer
         /// 根据文件名哈希值从 mix 文件中获取 SHP 文件
         /// </summary>
         /// <param name="fileNameHash">文件名哈希值</param>
-        /// <returns>SHP 文件的字节数组</returns>
-        public byte[] GetShpByHash(string fileNameHash)
+        /// <returns>SHP 文件的字节数组或 null</returns>
+        public byte[]? GetShpByHash(string fileNameHash)
         {
             try
             {
@@ -610,8 +613,8 @@ namespace RA2Installer
         /// 根据哈希值获取 PAL 文件
         /// </summary>
         /// <param name="fileNameHash">文件名哈希值</param>
-        /// <returns>PAL 文件的字节数组</returns>
-        public byte[] GetPalByHash(string fileNameHash)
+        /// <returns>PAL 文件的字节数组或 null</returns>
+        public byte[]? GetPalByHash(string fileNameHash)
         {
             try
             {
@@ -672,7 +675,7 @@ namespace RA2Installer.Helpers
         /// <summary>
         /// 查找 Setup.mix 文件
         /// </summary>
-        /// <returns>Setup.mix 文件的路径，如果未找到则返回 null</returns>
+        /// <returns>Setup.mix 文件的路径，如果未找到则返回空字符串</returns>
         public static string FindSetupMixFile()
         {
             // 首先检查当前目录
@@ -710,7 +713,7 @@ namespace RA2Installer.Helpers
                 }
             }
 
-            return null;
+            return string.Empty;
         }
     }
 }
