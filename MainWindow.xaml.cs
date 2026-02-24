@@ -57,6 +57,9 @@ namespace RA2Installer
         // 用于取消异步加载任务的令牌源
         private CancellationTokenSource? _loadStringsCancellationTokenSource;
 
+        // 存储用户输入的序列号
+        private string _serialNumber = string.Empty;
+
 
 
         public MainWindow()
@@ -1566,6 +1569,28 @@ namespace RA2Installer
             {
                 // 第2页：跳转到第三页
                 SwitchToPage(3);
+            }
+            else if (_currentPage == 3)
+            {
+                // 第3页：获取并存储序列号
+                _serialNumber = InputField1.Text + InputField2.Text + InputField3.Text + InputField4.Text;
+                File.AppendAllText(_logFile, $"Serial number stored: {_serialNumber}\n");
+                
+                // 执行原来的逻辑
+                // 隐藏许可证内容和同意条款文本
+                if (LicenseBorder != null)
+                {
+                    LicenseBorder.Visibility = Visibility.Collapsed;
+                    File.AppendAllText(_logFile, "LicenseBorder visibility set to Collapsed\n");
+                }
+                if (IAgreeToTheseTermsTextBlock != null)
+                {
+                    IAgreeToTheseTermsTextBlock.Visibility = Visibility.Collapsed;
+                    File.AppendAllText(_logFile, "IAgreeToTheseTermsTextBlock visibility set to Collapsed\n");
+                }
+
+                // 显示动画 hash 134B6332 的第一帧
+                ShowAnimationFirstFrame("134B6332");
             }
             else
             {
