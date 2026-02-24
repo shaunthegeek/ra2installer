@@ -66,16 +66,12 @@ namespace RA2Installer
         private readonly Dictionary<int, int[]> _pageRadarStringIds = new Dictionary<int, int[]> {
             { 1, new int[] { 250, 251, 252, 253, 254 } },
             { 2, new int[] { 255 } },
-            { 3, new int[] { 256, 257, 258, 259, 260, 261 } },
-            { 4, new int[] { 262, 263, 264, 265, 266 } }
+            { 3, new int[] { 256, 257, 258, 259, 260, 261 } }
         };
 
         // 存储每一页的底部文字ID和显示时长（毫秒）
         private readonly Dictionary<int, (int StringId, int DisplayDurationMs)> _pageBottomTextConfig = new Dictionary<int, (int, int)> {
-            { 1, (144, 1000) }, // 第一页：ID 144，显示1秒
-            { 2, (145, 1000) }, // 第二页：ID 145，显示1秒
-            { 3, (146, 1000) }, // 第三页：ID 146，显示1秒
-            { 4, (147, 1000) }  // 第四页：ID 147，显示1秒
+            { 1, (144, 1000) } // 第一页：ID 144，显示1秒
         };
 
         // 存储每一页的动画配置
@@ -139,7 +135,8 @@ namespace RA2Installer
                             ShpHash = "EA92E578",
                             IsReverse = false,
                             EndBehavior = AnimationEndBehavior.StayAtLastFrame,
-                            SoundHash = "C7918F4A"
+                            SoundHash = "C7918F4A",
+                            SoundDelay = 1000
                         }
                     },
                     ExitAnimations = new List<AnimationConfig> {
@@ -1580,6 +1577,9 @@ namespace RA2Installer
                     AgreeButtonImage.Visibility = Visibility.Collapsed;
                 }
 
+                LicenseStackPanel.Visibility = Visibility.Collapsed;
+                InputFieldsStackPanel.Visibility = Visibility.Collapsed;
+
                 // 调整动画控件位置为第四页位置（紧贴顶部）
                 if (AnimationImage != null)
                 {
@@ -1588,36 +1588,28 @@ namespace RA2Installer
                     File.AppendAllText(_logFile, "AnimationImage margin set to (0,0,0,0) and width set to 472 for Page 4\n");
                 }
 
-                // 显示底部文本
-                LoadBottomText();
-
-                // 隐藏其他页面特有元素
-                LicenseStackPanel.Visibility = Visibility.Collapsed;
-                InputFieldsStackPanel.Visibility = Visibility.Collapsed;
-
-                // 显示第四页特有元素（多选框区域）
-                CheckBoxesStackPanel.Visibility = Visibility.Visible;
-                File.AppendAllText(_logFile, "CheckBoxesStackPanel visibility set to Visible for Page 4\n");
-
-                // 加载并初始化多选框图片
-                LoadCheckBoxImages();
-                
-                // 加载多选框标题文本
-                LoadCheckBoxesTitle();
-                
-                // 加载多选框选项文本
-                LoadCheckBoxesItems();
-
                 // 加载并播放第四页的动画
                 PlayPageAnimations(pageNumber, true, () =>
                 {
                     // 动画完成后可以添加额外逻辑
                     File.AppendAllText(_logFile, "Page 4 animation completed\n");
+                    
+                    // 加载并初始化多选框图片
+                    LoadCheckBoxImages();
+
+                    // 加载多选框标题文本
+                    LoadCheckBoxesTitle();
+
+                    // 加载多选框选项文本
+                    LoadCheckBoxesItems();
+
+                    // 显示第四页特有元素（多选框区域）
+                    CheckBoxesStackPanel.Visibility = Visibility.Visible;
+                    File.AppendAllText(_logFile, "CheckBoxesStackPanel visibility set to Visible for Page 4\n");
                 });
 
-                // 从Language.dll读取字符串并显示
-                LoadAndDisplayRadarStrings();
-
+                // 显示底部文本
+                LoadBottomText();
             }
         }
 
