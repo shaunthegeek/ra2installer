@@ -66,14 +66,16 @@ namespace RA2Installer
         private readonly Dictionary<int, int[]> _pageRadarStringIds = new Dictionary<int, int[]> {
             { 1, new int[] { 250, 251, 252, 253, 254 } },
             { 2, new int[] { 255 } },
-            { 3, new int[] { 256, 257, 258, 259, 260, 261 } }
+            { 3, new int[] { 256, 257, 258, 259, 260, 261 } },
+            { 4, new int[] { 262, 263, 264, 265, 266 } }
         };
 
         // 存储每一页的底部文字ID和显示时长（毫秒）
         private readonly Dictionary<int, (int StringId, int DisplayDurationMs)> _pageBottomTextConfig = new Dictionary<int, (int, int)> {
             { 1, (144, 1000) }, // 第一页：ID 144，显示1秒
             { 2, (145, 1000) }, // 第二页：ID 145，显示1秒
-            { 3, (146, 1000) }  // 第三页：ID 146，显示1秒
+            { 3, (146, 1000) }, // 第三页：ID 146，显示1秒
+            { 4, (147, 1000) }  // 第四页：ID 147，显示1秒
         };
 
         // 存储每一页的动画配置
@@ -123,7 +125,26 @@ namespace RA2Installer
                     ExitAnimations = new List<AnimationConfig> {
                         new AnimationConfig {
                             ShpHash = "D6D75E64",
+                            IsReverse = true,
+                            EndBehavior = AnimationEndBehavior.Disappear
+                        }
+                    }
+                }
+            },
+            {
+                4,
+                new PageAnimationConfig {
+                    IntroAnimations = new List<AnimationConfig> {
+                        new AnimationConfig {
+                            ShpHash = "EA92E578",
                             IsReverse = false,
+                            EndBehavior = AnimationEndBehavior.StayAtLastFrame
+                        }
+                    },
+                    ExitAnimations = new List<AnimationConfig> {
+                        new AnimationConfig {
+                            ShpHash = "EA92E578",
+                            IsReverse = true,
                             EndBehavior = AnimationEndBehavior.Disappear
                         }
                     }
@@ -1235,6 +1256,60 @@ namespace RA2Installer
                 InputField1.Focus();
 
             }
+            else if (pageNumber == 4)
+            {
+                // 第四页
+                // 隐藏其他页面特有元素
+                if (LicenseBorder != null)
+                {
+                    LicenseBorder.Visibility = Visibility.Collapsed;
+                }
+                if (IAgreeToTheseTermsTextBlock != null)
+                {
+                    IAgreeToTheseTermsTextBlock.Visibility = Visibility.Collapsed;
+                }
+                if (AgreeButtonImage != null)
+                {
+                    AgreeButtonImage.Visibility = Visibility.Collapsed;
+                }
+
+                // 调整动画控件位置为第四页位置（紧贴顶部）
+                if (AnimationImage != null)
+                {
+                    AnimationImage.Margin = new Thickness(0, 0, 0, 0);
+                    AnimationImage.Width = 472;
+                    File.AppendAllText(_logFile, "AnimationImage margin set to (0,0,0,0) and width set to 472 for Page 4\n");
+                }
+
+                // 显示底部文本
+                LoadBottomText();
+
+                // 显示第四页特有元素（无边框许可证内容区域）
+                if (LicenseStackPanel != null)
+                {
+                    LicenseStackPanel.Visibility = Visibility.Visible;
+                    File.AppendAllText(_logFile, "LicenseStackPanel visibility set to Visible for Page 4\n");
+                }
+
+                // 从Language.dll ID 210读取许可证内容并显示
+                LoadLicenseContentFromLanguageDll();
+
+                // 加载并播放第四页的动画
+                PlayPageAnimations(pageNumber, true, () =>
+                {
+                    // 动画完成后可以添加额外逻辑
+                    File.AppendAllText(_logFile, "Page 4 animation completed\n");
+                });
+
+                // 从Language.dll读取字符串并显示
+                LoadAndDisplayRadarStrings();
+
+                // 显示输入框区域
+                InputFieldsStackPanel.Visibility = Visibility.Visible;
+                // 默认选中第一个输入框
+                InputField1.Focus();
+
+            }
         }
 
         /// <summary>
@@ -1460,25 +1535,12 @@ namespace RA2Installer
                 _serialNumber = InputField1.Text + InputField2.Text + InputField3.Text + InputField4.Text;
                 File.AppendAllText(_logFile, $"Serial number stored: {_serialNumber}\n");
                 
-                // 执行原来的逻辑
-                // 隐藏许可证内容和同意条款文本
-                if (LicenseBorder != null)
-                {
-                    LicenseBorder.Visibility = Visibility.Collapsed;
-                    File.AppendAllText(_logFile, "LicenseBorder visibility set to Collapsed\n");
-                }
-                if (IAgreeToTheseTermsTextBlock != null)
-                {
-                    IAgreeToTheseTermsTextBlock.Visibility = Visibility.Collapsed;
-                    File.AppendAllText(_logFile, "IAgreeToTheseTermsTextBlock visibility set to Collapsed\n");
-                }
-
-                // 显示动画 hash 134B6332 的第一帧
-                ShowAnimationFirstFrame("134B6332");
+                // 第3页：播放退出动画，然后跳转到第四页
+                PlayPageAnimations(_currentPage, false, () => SwitchToPage(4));
             }
-            else
+            else if (_currentPage == 4)
             {
-                // 其他页：执行原来的逻辑
+                // 第4页：执行原来的逻辑
                 // 隐藏许可证内容和同意条款文本
                 if (LicenseBorder != null)
                 {
