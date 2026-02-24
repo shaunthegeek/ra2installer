@@ -1,3 +1,4 @@
+using System;
 using System.Globalization;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -14,6 +15,13 @@ namespace RA2Installer
     /// </summary>
     public partial class MainWindow : Window
     {
+        [STAThread]
+        public static void Main()
+        {
+            Application app = new Application();
+            app.Run(new MainWindow());
+        }
+
         // 常量：Setup.mix 文件路径
         private const string SetupMixPath = "Assets/RA1/Setup/Setup.mix";
 
@@ -25,9 +33,6 @@ namespace RA2Installer
 
         // 日志文件路径
         private string _logFile;
-
-        // 当前选择的语言
-        private string _currentLanguage;
 
         // 当前页码
         private int _currentPage = 1;
@@ -654,31 +659,7 @@ namespace RA2Installer
             }
         }
 
-        private void InitializeLanguage()
-        {
-            // 获取系统默认语言
-            CultureInfo systemLanguage = CultureInfo.CurrentUICulture;
 
-            // 根据系统语言设置UI语言
-            if (systemLanguage.Name.StartsWith("zh"))
-            {
-                SetLanguage("zh-TW");
-            }
-            else
-            {
-                SetLanguage("en-US");
-            }
-        }
-
-        public void SetLanguage(string cultureName)
-        {
-            CultureInfo culture = new CultureInfo(cultureName);
-            CultureInfo.CurrentUICulture = culture;
-            Strings.Culture = culture;
-
-            // 保存当前选择的语言
-            _currentLanguage = cultureName;
-        }
 
         /// <summary>
         /// 从 Setup.mix 文件加载音频并保存到临时文件
