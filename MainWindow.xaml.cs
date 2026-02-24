@@ -51,6 +51,8 @@ namespace RA2Installer
             public string ShpHash { get; set; } = string.Empty;
             public bool IsReverse { get; set; }
             public AnimationEndBehavior EndBehavior { get; set; }
+            public string SoundHash { get; set; } = string.Empty;
+            public int SoundDelay { get; set; } = 0;
         }
 
         // 页面动画配置
@@ -102,7 +104,8 @@ namespace RA2Installer
                         new AnimationConfig {
                             ShpHash = "D6D75E64",
                             IsReverse = false,
-                            EndBehavior = AnimationEndBehavior.StayAtLastFrame
+                            EndBehavior = AnimationEndBehavior.StayAtLastFrame,
+                            SoundHash = "B1C914DD"
                         }
                     }
                 }
@@ -761,6 +764,20 @@ namespace RA2Installer
                 {
                     // 保存音频数据到临时文件，使用哈希值命名
                     string tempFile = Path.Combine(Path.GetTempPath(), $"{hashValue}.wav");
+                    
+                    // 如果临时文件已存在，先删除它
+                    if (File.Exists(tempFile))
+                    {
+                        try
+                        {
+                            File.Delete(tempFile);
+                        }
+                        catch
+                        {
+                            // 忽略删除失败的异常
+                        }
+                    }
+                    
                     File.WriteAllBytes(tempFile, audioData);
                     return tempFile;
                 }
@@ -1379,9 +1396,6 @@ namespace RA2Installer
         {
             // 使用新的动画播放方法
             PlayPageAnimations(_currentPage, true);
-
-            // 播放第二页的音效
-            PlayPage2Sounds();
         }
 
         /// <summary>
@@ -1391,9 +1405,6 @@ namespace RA2Installer
         {
             // 使用新的动画播放方法
             PlayPageAnimations(_currentPage, true);
-            
-            // 播放第三页的音效
-            PlayPage2Sounds();
         }
 
         /// <summary>
@@ -1407,25 +1418,6 @@ namespace RA2Installer
             // 保留此方法以确保兼容性
             File.AppendAllText(_logFile, "Legacy Page3 animation completed event handler called\n");
         }
-
-        /// <summary>
-        /// 播放第二页的音效
-        /// </summary>
-        private void PlayPage2Sounds()
-        {
-            try
-            {
-                string? soundFile1 = LoadAudioFromMix("B1C914DD");
-                PlayAudio(_soundPlayer, soundFile1);
-            }
-            catch (Exception ex)
-            {
-                File.AppendAllText(_logFile, "Error playing Page2 sounds: " + ex.Message + "\n");
-            }
-        }
-
-
-
 
 
         /// <summary>
@@ -1557,7 +1549,7 @@ namespace RA2Installer
         /// <param name="animations">动画配置列表</param>
         /// <param name="index">当前要播放的动画索引</param>
         /// <param name="callback">所有动画播放完成后的回调函数</param>
-        private void PlayAnimationsSequentially(List<AnimationConfig> animations, int index, Action? callback = null)
+        private async void PlayAnimationsSequentially(List<AnimationConfig> animations, int index, Action? callback = null)
         {
             try
             {
@@ -1570,7 +1562,7 @@ namespace RA2Installer
                 }
 
                 var currentAnimation = animations[index];
-                File.AppendAllText(_logFile, $"Playing animation {index + 1}/{animations.Count} with hash: {currentAnimation.ShpHash}, reverse: {currentAnimation.IsReverse}, end behavior: {currentAnimation.EndBehavior}\n");
+                File.AppendAllText(_logFile, $"Playing animation {index + 1}/{animations.Count} with hash: {currentAnimation.ShpHash}, reverse: {currentAnimation.IsReverse}, end behavior: {currentAnimation.EndBehavior}, sound: {currentAnimation.SoundHash}, delay: {currentAnimation.SoundDelay}ms\n");
 
                 // 加载Setup.mix文件
                 MixFile mixFile = new MixFile(SetupMixPath);
@@ -1664,6 +1656,21 @@ namespace RA2Installer
                         PlayAnimationsSequentially(animations, currentIndex + 1, callback);
                     }
                 };
+
+                // 处理延迟
+                if (currentAnimation.SoundDelay > 0)
+                {
+                    File.AppendAllText(_logFile, $"Waiting for {currentAnimation.SoundDelay}ms before starting animation\n");
+                    await Task.Delay(currentAnimation.SoundDelay);
+                }
+
+                // 播放音效
+                if (!string.IsNullOrEmpty(currentAnimation.SoundHash))
+                {
+                    File.AppendAllText(_logFile, $"Playing sound effect: {currentAnimation.SoundHash}\n");
+                    string? soundFile = LoadAudioFromMix(currentAnimation.SoundHash);
+                    PlayAudio(_soundPlayer, soundFile);
+                }
 
                 // 开始播放动画
                 _shpAnimationPlayer.Play();
