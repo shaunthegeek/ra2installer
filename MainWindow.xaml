@@ -48,9 +48,12 @@
     </Window.Resources>
 
     <Grid Width="640" Height="480">
-        <!-- 动画显示控件（共享） -->
+        <!-- 主要区域：动画显示控件（共享） -->
         <Image x:Name="AnimationImage" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,75,0,0" Width="470"/>
         
+        <!-- 雷达区：动画显示控件（共享） -->
+        <Image x:Name="RadarAnimationImage" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="472,0,0,0" Width="168" Height="177"/>
+
         <!-- 雷达区：从Language.dll读取的文本显示区域（共享） -->
         <StackPanel x:Name="RadarTextStackPanel" Orientation="Vertical" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="483,39,0,0" Width="154"/>
         

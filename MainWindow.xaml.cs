@@ -30,6 +30,7 @@ namespace RA2Installer
         private string? _buttonClickSoundFile;
         private string? _backgroundMusicFile;
         private ShpAnimationPlayer? _shpAnimationPlayer;
+        private ShpAnimationPlayer? _radarShpAnimationPlayer;
 
         // 日志文件路径
         private string _logFile = string.Empty;
@@ -49,6 +50,8 @@ namespace RA2Installer
         private class AnimationConfig
         {
             public string ShpHash { get; set; } = string.Empty;
+            public string PalHash { get; set; } = "397C46E0"; // 默认色卡
+            public bool IsRadarAnimation { get; set; } = false; // 是否为雷达区动画
             public bool IsReverse { get; set; }
             public AnimationEndBehavior EndBehavior { get; set; }
             public string SoundHash { get; set; } = string.Empty;
@@ -137,11 +140,25 @@ namespace RA2Installer
                             EndBehavior = AnimationEndBehavior.StayAtLastFrame,
                             SoundHash = "C7918F4A",
                             SoundDelay = 1000
+                        },
+                        new AnimationConfig {
+                            ShpHash = "E9490E87",
+                            PalHash = "297C46E0",
+                            IsRadarAnimation = true,
+                            IsReverse = true,
+                            EndBehavior = AnimationEndBehavior.StayAtFirstFrame
                         }
                     },
                     ExitAnimations = new List<AnimationConfig> {
                         new AnimationConfig {
                             ShpHash = "EA92E578",
+                            IsReverse = true,
+                            EndBehavior = AnimationEndBehavior.Disappear
+                        },
+                        new AnimationConfig {
+                            ShpHash = "E9490E87",
+                            PalHash = "297C46E0",
+                            IsRadarAnimation = true,
                             IsReverse = true,
                             EndBehavior = AnimationEndBehavior.Disappear
                         }
@@ -733,7 +750,7 @@ namespace RA2Installer
 
                 ShpFile shpFile;
 
-                // 使用用户指定的 PAL 文件
+                // 使用默认的 PAL 文件
                 byte[]? palData = null;
                 string userSpecifiedPalHash = "397C46E0";
                 palData = mixFile.GetPalByHash(userSpecifiedPalHash);
@@ -769,6 +786,107 @@ namespace RA2Installer
             {
                 // 记录错误但不退出程序
                 File.AppendAllText(_logFile, "Error loading SHP animation\n");
+                File.AppendAllText(_logFile, "Message: " + ex.Message + "\n");
+                File.AppendAllText(_logFile, "Stack trace: " + ex.StackTrace + "\n");
+            }
+        }
+
+        /// <summary>
+        /// 从指定路径的 Setup.mix 中加载指定哈希值和类型的 SHP 文件并准备雷达区动画
+        /// 如果加载失败则输出日志但不退出程序
+        /// </summary>
+        /// <param name="setupMixPath">Setup.mix 文件的路径</param>
+        /// <param name="fileNameHash">文件名哈希值</param>
+        private void LoadRadarShpAnimationData(string setupMixPath, string fileNameHash)
+        {
+            try
+            {
+                // 简单的日志写入，避免格式化字符串可能的问题
+                File.AppendAllText(_logFile, "Starting to load radar SHP animation\n");
+                File.AppendAllText(_logFile, "Hash: " + fileNameHash + "\n");
+
+                // 检查 RadarAnimationImage 是否存在
+                if (RadarAnimationImage == null)
+                {
+                    File.AppendAllText(_logFile, "RadarAnimationImage control is null\n");
+                    return;
+                }
+                else
+                {
+                    File.AppendAllText(_logFile, "RadarAnimationImage control is available\n");
+                }
+
+                // 加载 Setup.mix 文件
+                File.AppendAllText(_logFile, "Loading mix file\n");
+                File.AppendAllText(_logFile, "Path: " + setupMixPath + "\n");
+
+                // 检查文件是否存在
+                if (!File.Exists(setupMixPath))
+                {
+                    File.AppendAllText(_logFile, "Mix file does not exist\n");
+                    return;
+                }
+                else
+                {
+                    File.AppendAllText(_logFile, "Mix file exists\n");
+                }
+
+                MixFile mixFile = new MixFile(setupMixPath);
+                File.AppendAllText(_logFile, "Mix file loaded\n");
+
+                // 尝试获取指定哈希值和类型的 SHP 文件
+                File.AppendAllText(_logFile, "Attempting to get radar SHP file\n");
+                byte[]? shpData = mixFile.GetShpByHash(fileNameHash);
+
+                if (shpData == null)
+                {
+                    File.AppendAllText(_logFile, "Failed to load radar SHP file\n");
+                    return;
+                }
+                else
+                {
+                    File.AppendAllText(_logFile, "Successfully loaded radar SHP file\n");
+                    File.AppendAllText(_logFile, "Size: " + shpData.Length + " bytes\n");
+                }
+
+                ShpFile shpFile;
+
+                // 使用默认的 PAL 文件
+                byte[]? palData = null;
+                string userSpecifiedPalHash = "397C46E0";
+                palData = mixFile.GetPalByHash(userSpecifiedPalHash);
+                if (palData != null)
+                {
+                    File.AppendAllText(_logFile, "Successfully loaded user specified PAL file with hash: " + userSpecifiedPalHash + "\n");
+                    File.AppendAllText(_logFile, "Size: " + palData.Length + " bytes\n");
+
+                    // 使用找到的 PAL 文件解析 SHP 文件
+                    File.AppendAllText(_logFile, "Parsing radar SHP file with PAL\n");
+                    shpFile = new ShpFile(shpData, palData);
+                }
+                else
+                {
+                    File.AppendAllText(_logFile, "Failed to load user specified PAL file with hash: " + userSpecifiedPalHash + "\n");
+                    throw new Exception($"Failed to load specified PAL file with hash: {userSpecifiedPalHash}");
+                }
+
+                File.AppendAllText(_logFile, "Radar SHP file parsed successfully\n");
+                File.AppendAllText(_logFile, "Frame count: " + shpFile.FrameCount + "\n");
+                File.AppendAllText(_logFile, "Width: " + shpFile.Width + "\n");
+                File.AppendAllText(_logFile, "Height: " + shpFile.Height + "\n");
+
+                // 创建雷达区动画播放器但不开始播放
+                File.AppendAllText(_logFile, "Creating radar animation player\n");
+                _radarShpAnimationPlayer = new ShpAnimationPlayer(shpFile, RadarAnimationImage);
+                // 订阅动画完成事件
+                _radarShpAnimationPlayer.AnimationCompleted += RadarShpAnimationPlayer_AnimationCompleted;
+                File.AppendAllText(_logFile, "Radar animation player created\n");
+                File.AppendAllText(_logFile, "AnimationCompleted event subscribed\n");
+            }
+            catch (Exception ex)
+            {
+                // 记录错误但不退出程序
+                File.AppendAllText(_logFile, "Error loading radar SHP animation\n");
                 File.AppendAllText(_logFile, "Message: " + ex.Message + "\n");
                 File.AppendAllText(_logFile, "Stack trace: " + ex.StackTrace + "\n");
             }
@@ -1376,9 +1494,16 @@ namespace RA2Installer
         /// <param name="e">事件参数</param>
         private void ShpAnimationPlayer_AnimationCompleted(object? sender, EventArgs e)
         {
-            // 此方法已被PlayAnimationsSequentially中的事件处理程序替代
+            // 此方法已被PlayAnimations中的事件处理程序替代
             // 保留此方法以确保兼容性
             File.AppendAllText(_logFile, "Legacy SHP animation completed event handler called\n");
+        }
+
+        private void RadarShpAnimationPlayer_AnimationCompleted(object? sender, EventArgs e)
+        {
+            // 此方法已被PlayAnimations中的事件处理程序替代
+            // 保留此方法以确保兼容性
+            File.AppendAllText(_logFile, "Legacy radar SHP animation completed event handler called\n");
         }
 
         /// <summary>
@@ -1773,7 +1898,7 @@ namespace RA2Installer
         /// <param name="e">事件参数</param>
         private void Page3Animation_Completed(object? sender, EventArgs e)
         {
-            // 此方法已被PlayAnimationsSequentially中的事件处理程序替代
+            // 此方法已被PlayAnimations中的事件处理程序替代
             // 保留此方法以确保兼容性
             File.AppendAllText(_logFile, "Legacy Page3 animation completed event handler called\n");
         }
@@ -1880,7 +2005,7 @@ namespace RA2Installer
                 }
 
                 // 开始顺序播放动画
-                PlayAnimationsSequentially(animations, 0, callback);
+                PlayAnimations(animations, 0, callback);
             }
             catch (Exception ex)
             {
@@ -1890,141 +2015,162 @@ namespace RA2Installer
         }
 
         /// <summary>
-        /// 顺序播放多个动画
+        /// 并行播放多个动画
         /// </summary>
         /// <param name="animations">动画配置列表</param>
         /// <param name="index">当前要播放的动画索引</param>
         /// <param name="callback">所有动画播放完成后的回调函数</param>
-        private async void PlayAnimationsSequentially(List<AnimationConfig> animations, int index, Action? callback = null)
+        private async void PlayAnimations(List<AnimationConfig> animations, int index, Action? callback = null)
         {
             try
             {
-                // 检查是否所有动画都已播放完成
+                // 检查是否所有动画都已处理
                 if (index >= animations.Count)
                 {
-                    File.AppendAllText(_logFile, "All animations played sequentially\n");
-                    callback?.Invoke();
+                    File.AppendAllText(_logFile, "All animations processed\n");
                     return;
                 }
 
-                var currentAnimation = animations[index];
-                File.AppendAllText(_logFile, $"Playing animation {index + 1}/{animations.Count} with hash: {currentAnimation.ShpHash}, reverse: {currentAnimation.IsReverse}, end behavior: {currentAnimation.EndBehavior}, sound: {currentAnimation.SoundHash}, delay: {currentAnimation.SoundDelay}ms\n");
-
-                // 加载Setup.mix文件
-                MixFile mixFile = new MixFile(SetupMixPath);
-
-                // 获取SHP文件数据
-                byte[]? shpData = mixFile.GetShpByHash(currentAnimation.ShpHash);
-                if (shpData == null)
+                // 并行播放所有动画
+                for (int i = 0; i < animations.Count; i++)
                 {
-                    File.AppendAllText(_logFile, $"Failed to load SHP file for animation {currentAnimation.ShpHash}\n");
-                    // 继续播放下一个动画
-                    PlayAnimationsSequentially(animations, index + 1, callback);
-                    return;
-                }
+                    var currentAnimation = animations[i];
+                    File.AppendAllText(_logFile, $"Playing animation {i + 1}/{animations.Count} with hash: {currentAnimation.ShpHash}, reverse: {currentAnimation.IsReverse}, end behavior: {currentAnimation.EndBehavior}, sound: {currentAnimation.SoundHash}, delay: {currentAnimation.SoundDelay}ms\n");
 
-                // 获取PAL文件数据
-                string palHash = "397C46E0";
-                byte[]? palData = mixFile.GetPalByHash(palHash);
-                if (palData == null)
-                {
-                    File.AppendAllText(_logFile, "Failed to load PAL file for animation\n");
-                    // 继续播放下一个动画
-                    PlayAnimationsSequentially(animations, index + 1, callback);
-                    return;
-                }
+                    // 加载Setup.mix文件
+                    MixFile mixFile = new MixFile(SetupMixPath);
 
-                // 解析SHP文件
-                ShpFile shpFile = new ShpFile(shpData, palData);
-
-                // 创建动画播放器
-                _shpAnimationPlayer = new ShpAnimationPlayer(shpFile, AnimationImage);
-
-                // 设置是否倒序播放
-                _shpAnimationPlayer.IsReverse = currentAnimation.IsReverse;
-
-                // 根据是否倒序，设置初始帧
-                if (currentAnimation.IsReverse)
-                {
-                    _shpAnimationPlayer.ResetToLastFrame();
-                }
-                else
-                {
-                    _shpAnimationPlayer.Reset();
-                }
-
-                // 确保AnimationImage可见
-                AnimationImage.Visibility = Visibility.Visible;
-
-                // 保存当前动画的配置和索引
-                int currentIndex = index;
-                AnimationConfig config = currentAnimation;
-
-                // 添加动画播放完成事件处理程序
-                _shpAnimationPlayer.AnimationCompleted += (sender, e) =>
-                {
-                    try
+                    // 获取SHP文件数据
+                    byte[]? shpData = mixFile.GetShpByHash(currentAnimation.ShpHash);
+                    if (shpData == null)
                     {
-                        File.AppendAllText(_logFile, $"Animation {currentIndex + 1}/{animations.Count} completed\n");
+                        File.AppendAllText(_logFile, $"Failed to load SHP file for animation {currentAnimation.ShpHash}\n");
+                        continue;
+                    }
 
-                        // 根据结束行为处理
-                        switch (config.EndBehavior)
+                    // 获取PAL文件数据
+                    string palHash = currentAnimation.PalHash;
+                    byte[]? palData = mixFile.GetPalByHash(palHash);
+                    if (palData == null)
+                    {
+                        File.AppendAllText(_logFile, "Failed to load PAL file for animation\n");
+                        continue;
+                    }
+
+                    // 解析SHP文件
+                    ShpFile shpFile = new ShpFile(shpData, palData);
+
+                    // 根据动画配置判断是主动画区还是雷达区动画
+                    bool isRadarAnimation = currentAnimation.IsRadarAnimation;
+
+                    // 保存当前动画的配置和索引
+                    int currentIndex = i;
+                    AnimationConfig config = currentAnimation;
+
+                    // 根据是否为雷达动画选择对应的播放器和图像控件
+                    ShpAnimationPlayer animationPlayer;
+                    System.Windows.Controls.Image animationImage;
+                    
+                    if (isRadarAnimation)
+                    {
+                        _radarShpAnimationPlayer = new ShpAnimationPlayer(shpFile, RadarAnimationImage);
+                        animationPlayer = _radarShpAnimationPlayer;
+                        animationImage = RadarAnimationImage;
+                    }
+                    else
+                    {
+                        _shpAnimationPlayer = new ShpAnimationPlayer(shpFile, AnimationImage);
+                        animationPlayer = _shpAnimationPlayer;
+                        animationImage = AnimationImage;
+                    }
+
+                    // 设置是否倒序播放
+                    animationPlayer.IsReverse = currentAnimation.IsReverse;
+
+                    // 根据是否倒序，设置初始帧
+                    if (currentAnimation.IsReverse)
+                    {
+                        animationPlayer.ResetToLastFrame();
+                    }
+                    else
+                    {
+                        animationPlayer.Reset();
+                    }
+
+                    // 确保动画图像可见
+                    animationImage.Visibility = Visibility.Visible;
+
+                    // 添加动画播放完成事件处理程序
+                    animationPlayer.AnimationCompleted += (sender, e) =>
+                    {
+                        try
                         {
-                            case AnimationEndBehavior.Disappear:
-                                // 隐藏动画
-                                if (AnimationImage != null)
-                                {
-                                    AnimationImage.Visibility = Visibility.Collapsed;
-                                    File.AppendAllText(_logFile, "Animation disappeared as per end behavior\n");
-                                }
-                                break;
-                            case AnimationEndBehavior.StayAtLastFrame:
-                                // 停留在最后一帧（不需要额外操作，动画播放完成后会自动停留在最后一帧）
-                                File.AppendAllText(_logFile, "Animation stayed at last frame as per end behavior\n");
-                                break;
-                            case AnimationEndBehavior.StayAtFirstFrame:
-                                // 停留在第一帧
-                                if (_shpAnimationPlayer != null)
-                                {
-                                    _shpAnimationPlayer.Reset();
-                                    File.AppendAllText(_logFile, "Animation stayed at first frame as per end behavior\n");
-                                }
-                                break;
+                            File.AppendAllText(_logFile, $"{((isRadarAnimation) ? "Radar " : "")}Animation {currentIndex + 1}/{animations.Count} completed\n");
+
+                            // 根据结束行为处理
+                            switch (config.EndBehavior)
+                            {
+                                case AnimationEndBehavior.Disappear:
+                                    // 隐藏动画
+                                    if (animationImage != null)
+                                    {
+                                        animationImage.Visibility = Visibility.Collapsed;
+                                        File.AppendAllText(_logFile, $"{((isRadarAnimation) ? "Radar " : "")}Animation disappeared as per end behavior\n");
+                                    }
+                                    break;
+                                case AnimationEndBehavior.StayAtLastFrame:
+                                    // 停留在最后一帧（不需要额外操作，动画播放完成后会自动停留在最后一帧）
+                                    File.AppendAllText(_logFile, $"{((isRadarAnimation) ? "Radar " : "")}Animation stayed at last frame as per end behavior\n");
+                                    break;
+                                case AnimationEndBehavior.StayAtFirstFrame:
+                                    // 停留在第一帧
+                                    if (animationPlayer != null)
+                                    {
+                                        animationPlayer.Reset();
+                                        File.AppendAllText(_logFile, $"{((isRadarAnimation) ? "Radar " : "")}Animation stayed at first frame as per end behavior\n");
+                                    }
+                                    break;
+                            }
+
+                            // 只有第一个动画完成时调用callback
+                            if (currentIndex == 0)
+                            {
+                                File.AppendAllText(_logFile, "First animation completed, calling callback\n");
+                                callback?.Invoke();
+                            }
                         }
+                        catch (Exception ex)
+                        {
+                            File.AppendAllText(_logFile, $"Error in {((isRadarAnimation) ? "radar " : "")}animation completed handler: {ex.Message}\n");
+                        }
+                    };
 
-                        // 播放下一个动画
-                        PlayAnimationsSequentially(animations, currentIndex + 1, callback);
-                    }
-                    catch (Exception ex)
+                    // 开始播放动画
+                    animationPlayer.Play();
+                    File.AppendAllText(_logFile, $"{((isRadarAnimation) ? "Radar " : "")}Animation {currentIndex + 1}/{animations.Count} started\n");
+
+                    // 播放音效（带延迟）
+                    if (!string.IsNullOrEmpty(currentAnimation.SoundHash))
                     {
-                        File.AppendAllText(_logFile, $"Error in animation completed handler: {ex.Message}\n");
-                        // 继续播放下一个动画
-                        PlayAnimationsSequentially(animations, currentIndex + 1, callback);
+                        if (currentAnimation.SoundDelay > 0)
+                        {
+                            File.AppendAllText(_logFile, $"Waiting for {currentAnimation.SoundDelay}ms before playing sound\n");
+                            await Task.Delay(currentAnimation.SoundDelay);
+                        }
+                        File.AppendAllText(_logFile, $"Playing sound effect: {currentAnimation.SoundHash}\n");
+                        string? soundFile = LoadAudioFromMix(currentAnimation.SoundHash);
+                        PlayAudio(_soundPlayer, soundFile);
                     }
-                };
-
-                // 开始播放动画
-                _shpAnimationPlayer.Play();
-                File.AppendAllText(_logFile, $"Animation {currentIndex + 1}/{animations.Count} started\n");
-
-                // 播放音效（带延迟）
-                if (!string.IsNullOrEmpty(currentAnimation.SoundHash))
-                {
-                    if (currentAnimation.SoundDelay > 0)
-                    {
-                        File.AppendAllText(_logFile, $"Waiting for {currentAnimation.SoundDelay}ms before playing sound\n");
-                        await Task.Delay(currentAnimation.SoundDelay);
-                    }
-                    File.AppendAllText(_logFile, $"Playing sound effect: {currentAnimation.SoundHash}\n");
-                    string? soundFile = LoadAudioFromMix(currentAnimation.SoundHash);
-                    PlayAudio(_soundPlayer, soundFile);
                 }
             }
             catch (Exception ex)
             {
                 File.AppendAllText(_logFile, $"Error playing animations sequentially: {ex.Message}\n");
-                // 继续播放下一个动画
-                PlayAnimationsSequentially(animations, index + 1, callback);
+                // 发生错误时仍然调用callback
+                if (index == 0)
+                {
+                    callback?.Invoke();
+                }
             }
         }
 
@@ -2105,7 +2251,7 @@ namespace RA2Installer
         /// <param name="e">事件参数</param>
         private void Page2Animation_Completed(object? sender, EventArgs e)
         {
-            // 此方法已被PlayAnimationsSequentially中的事件处理程序替代
+            // 此方法已被PlayAnimations中的事件处理程序替代
             // 保留此方法以确保兼容性
             File.AppendAllText(_logFile, "Legacy Page2 animation completed event handler called\n");
         }
