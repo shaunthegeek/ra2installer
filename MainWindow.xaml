@@ -84,6 +84,27 @@
             <TextBox x:Name="InputField3" Width="120" Height="20" Margin="0" BorderThickness="1,2,1,2" MaxLength="6" PreviewTextInput="InputField_PreviewTextInput" GotFocus="InputField_GotFocus" LostFocus="InputField_LostFocus" TextChanged="InputField_TextChanged" TabIndex="3"/>
             <TextBox x:Name="InputField4" Width="97" Height="20" Margin="0" BorderThickness="1,2,2,2" MaxLength="4" PreviewTextInput="InputField_PreviewTextInput" GotFocus="InputField_GotFocus" LostFocus="InputField_LostFocus" TextChanged="InputField_TextChanged" TabIndex="4"/>
         </StackPanel>
+        
+        <!-- 多选框区域（第四页特有） -->
+        <StackPanel x:Name="CheckBoxesStackPanel" Orientation="Vertical" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="30,80,0,0" Visibility="Collapsed">
+            <TextBlock x:Name="CheckBoxesTitleTextBlock" Foreground="Yellow" FontSize="16" Margin="0,0,0,30"/>
+            <StackPanel Orientation="Horizontal" Margin="10,5,0,20" x:Name="CheckBoxItem1">
+                <Image x:Name="CheckBox1" Width="18" Height="18" Cursor="Hand" MouseLeftButtonUp="CheckBox_MouseLeftButtonUp" Tag="1"/>
+                <TextBlock x:Name="CheckBoxText1" Foreground="Yellow" FontSize="16" Margin="5,0,0,0" VerticalAlignment="Center"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="10,5,0,20" x:Name="CheckBoxItem2">
+                <Image x:Name="CheckBox2" Width="18" Height="18" Cursor="Hand" MouseLeftButtonUp="CheckBox_MouseLeftButtonUp" Tag="2"/>
+                <TextBlock x:Name="CheckBoxText2" Foreground="Yellow" FontSize="16" Margin="5,0,0,0" VerticalAlignment="Center"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="10,5,0,20" x:Name="CheckBoxItem3">
+                <Image x:Name="CheckBox3" Width="18" Height="18" Cursor="Hand" MouseLeftButtonUp="CheckBox_MouseLeftButtonUp" Tag="3"/>
+                <TextBlock x:Name="CheckBoxText3" Foreground="Yellow" FontSize="16" Margin="5,0,0,0" VerticalAlignment="Center"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="10,5,0,20" x:Name="CheckBoxItem4">
+                <Image x:Name="CheckBox4" Width="18" Height="18" Cursor="Hand" MouseLeftButtonUp="CheckBox_MouseLeftButtonUp" Tag="4"/>
+                <TextBlock x:Name="CheckBoxText4" Foreground="Yellow" FontSize="16" Margin="5,0,0,0" VerticalAlignment="Center"/>
+            </StackPanel>
+        </StackPanel>
 
         <!-- 按钮容器（共享） -->
         <StackPanel x:Name="ButtonContainer" Orientation="Vertical" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,9,29">

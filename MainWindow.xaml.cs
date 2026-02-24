@@ -138,7 +138,8 @@ namespace RA2Installer
                         new AnimationConfig {
                             ShpHash = "EA92E578",
                             IsReverse = false,
-                            EndBehavior = AnimationEndBehavior.StayAtLastFrame
+                            EndBehavior = AnimationEndBehavior.StayAtLastFrame,
+                            SoundHash = "C7918F4A"
                         }
                     },
                     ExitAnimations = new List<AnimationConfig> {
@@ -160,6 +161,18 @@ namespace RA2Installer
 
         // 存储用户输入的序列号
         private string _serialNumber = string.Empty;
+
+        // 存储多选框状态
+        private Dictionary<int, bool> _checkBoxStates = new Dictionary<int, bool> {
+            { 1, true },
+            { 2, true },
+            { 3, true },
+            { 4, true }
+        };
+
+        // 多选框SHP文件和PAL文件数据
+        private byte[]? _checkBoxShpData;
+        private byte[]? _checkBoxPalData;
 
         public MainWindow()
         {
@@ -883,6 +896,296 @@ namespace RA2Installer
             }
         }
 
+        /// <summary>
+        /// 加载多选框图片数据
+        /// </summary>
+        private void LoadCheckBoxImages()
+        {
+            try
+            {
+                File.AppendAllText(_logFile, "Loading checkbox images\n");
+
+                // 加载Setup.mix文件
+                MixFile mixFile = new MixFile(SetupMixPath);
+
+                // 获取多选框SHP文件数据（hash DAB17B12）
+                _checkBoxShpData = mixFile.GetShpByHash("DAB17B12");
+                if (_checkBoxShpData == null)
+                {
+                    File.AppendAllText(_logFile, "Failed to load checkbox SHP file\n");
+                    return;
+                }
+
+                // 获取多选框PAL文件数据（色卡：317C46E0.pal）
+                _checkBoxPalData = mixFile.GetPalByHash("317C46E0");
+                if (_checkBoxPalData == null)
+                {
+                    File.AppendAllText(_logFile, "Failed to load checkbox PAL file\n");
+                    return;
+                }
+
+                File.AppendAllText(_logFile, "Checkbox images loaded successfully\n");
+
+                // 初始化所有多选框为未选中状态
+                UpdateCheckBoxVisualState(CheckBox1, 1);
+                UpdateCheckBoxVisualState(CheckBox2, 2);
+                UpdateCheckBoxVisualState(CheckBox3, 3);
+                UpdateCheckBoxVisualState(CheckBox4, 4);
+            }
+            catch (Exception ex)
+            {
+                File.AppendAllText(_logFile, $"Error loading checkbox images: {ex.Message}\n");
+            }
+        }
+
+        /// <summary>
+        /// 更新多选框视觉状态
+        /// </summary>
+        /// <param name="checkBoxImage">多选框Image控件</param>
+        /// <param name="checkBoxId">多选框ID</param>
+        private void UpdateCheckBoxVisualState(System.Windows.Controls.Image checkBoxImage, int checkBoxId)
+        {
+            try
+            {
+                if (_checkBoxShpData == null || _checkBoxPalData == null)
+                {
+                    File.AppendAllText(_logFile, "Checkbox SHP or PAL data not loaded\n");
+                    return;
+                }
+
+                bool isChecked = _checkBoxStates.ContainsKey(checkBoxId) ? _checkBoxStates[checkBoxId] : false;
+                int frameIndex = isChecked ? 0 : 1; // 选中使用第1帧（索引0），取消选中使用第2帧（索引1）
+
+                // 获取对应帧的图片
+                System.Windows.Media.Imaging.BitmapImage? frameImage = GetCheckBoxFrame(frameIndex);
+                if (frameImage != null)
+                {
+                    checkBoxImage.Source = frameImage;
+                    File.AppendAllText(_logFile, $"Updated checkbox {checkBoxId} visual state to {(isChecked ? "checked" : "unchecked")} based on state: {isChecked}\n");
+                }
+            }
+            catch (Exception ex)
+            {
+                File.AppendAllText(_logFile, $"Error updating checkbox visual state: {ex.Message}\n");
+            }
+        }
+
+        /// <summary>
+        /// 获取多选框指定帧的图片
+        /// </summary>
+        /// <param name="frameIndex">帧索引（0为选中状态，1为未选中状态）</param>
+        /// <returns>BitmapImage对象或null</returns>
+        private System.Windows.Media.Imaging.BitmapImage? GetCheckBoxFrame(int frameIndex)
+        {
+            try
+            {
+                if (_checkBoxShpData == null || _checkBoxPalData == null)
+                {
+                    File.AppendAllText(_logFile, "Checkbox SHP or PAL data not loaded\n");
+                    return null;
+                }
+
+                // 解析SHP文件
+                ShpFile shpFile = new ShpFile(_checkBoxShpData, _checkBoxPalData);
+
+                // 检查帧索引是否有效
+                if (frameIndex < 0 || frameIndex >= shpFile.FrameCount)
+                {
+                    File.AppendAllText(_logFile, $"Invalid frame index: {frameIndex}, total frames: {shpFile.FrameCount}\n");
+                    return null;
+                }
+
+                // 获取指定帧的图片
+                System.Windows.Media.Imaging.BitmapImage frameImage = shpFile.GetFrame(frameIndex);
+                return frameImage;
+            }
+            catch (Exception ex)
+            {
+                File.AppendAllText(_logFile, $"Error getting checkbox frame: {ex.Message}\n");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// 多选框点击事件处理程序
+        /// </summary>
+        /// <param name="sender">发送者</param>
+        /// <param name="e">事件参数</param>
+        private void CheckBox_MouseLeftButtonUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            try
+            {
+                if (sender is System.Windows.Controls.Image checkBoxImage && checkBoxImage.Tag is string tag)
+                {
+                    int checkBoxId = int.Parse(tag);
+                    
+                    // 切换多选框状态
+                    if (_checkBoxStates.ContainsKey(checkBoxId))
+                    {
+                        _checkBoxStates[checkBoxId] = !_checkBoxStates[checkBoxId];
+                        File.AppendAllText(_logFile, $"Toggled checkbox {checkBoxId} to state: {_checkBoxStates[checkBoxId]}\n");
+                    }
+                    else
+                    {
+                        _checkBoxStates[checkBoxId] = true;
+                        File.AppendAllText(_logFile, $"Set checkbox {checkBoxId} to state: true\n");
+                    }
+
+                    // 更新多选框视觉状态
+                    UpdateCheckBoxVisualState(checkBoxImage, checkBoxId);
+
+                    // 播放按钮点击音效
+                    PlayButtonClickSound();
+                }
+            }
+            catch (Exception ex)
+            {
+                File.AppendAllText(_logFile, $"Error handling checkbox click: {ex.Message}\n");
+            }
+        }
+
+        /// <summary>
+        /// 加载多选框标题文本
+        /// </summary>
+        private void LoadCheckBoxesTitle()
+        {
+            try
+            {
+                File.AppendAllText(_logFile, "Loading checkboxes title text from Language.dll ID 197\n");
+
+                // Language.dll文件路径
+                string languageDllPath = "Assets/RA1/Setup/Language.dll";
+
+                // 检查文件是否存在
+                if (!File.Exists(languageDllPath))
+                {
+                    File.AppendAllText(_logFile, "Language.dll file not found\n");
+                    return;
+                }
+
+                // 确定要使用的语言
+                ushort languageId = GetLanguageIdForCurrentLanguage();
+                File.AppendAllText(_logFile, $"Using language ID: {languageId}\n");
+
+                // 读取字符串（ID 197）
+                string? text = ReadStringFromLanguageDll(languageDllPath, 197, languageId);
+                if (!string.IsNullOrEmpty(text))
+                {
+                    // 显示文本
+                    if (CheckBoxesTitleTextBlock != null)
+                    {
+                        CheckBoxesTitleTextBlock.Text = text;
+                        File.AppendAllText(_logFile, "Checkboxes title loaded and displayed from ID 197\n");
+                    }
+                }
+                else
+                {
+                    File.AppendAllText(_logFile, "Failed to read string ID 197\n");
+                }
+            }
+            catch (Exception ex)
+            {
+                File.AppendAllText(_logFile, $"Error loading checkboxes title: {ex.Message}\n");
+            }
+        }
+
+        /// <summary>
+        /// 通用函数：读取Language.dll中的字符串并替换其中的%s占位符
+        /// </summary>
+        /// <param name="stringId">字符串ID</param>
+        /// <param name="replacementId">替换字符串的ID</param>
+        /// <returns>替换后的字符串或null</returns>
+        private string? GetStringWithReplacement(int stringId, int replacementId)
+        {
+            try
+            {
+                // Language.dll文件路径
+                string languageDllPath = "Assets/RA1/Setup/Language.dll";
+
+                // 检查文件是否存在
+                if (!File.Exists(languageDllPath))
+                {
+                    File.AppendAllText(_logFile, "Language.dll file not found\n");
+                    return null;
+                }
+
+                // 确定要使用的语言
+                ushort languageId = GetLanguageIdForCurrentLanguage();
+
+                // 读取原始字符串
+                string? originalText = ReadStringFromLanguageDll(languageDllPath, stringId, languageId);
+                if (string.IsNullOrEmpty(originalText))
+                {
+                    File.AppendAllText(_logFile, $"Failed to read string ID {stringId}\n");
+                    return null;
+                }
+
+                // 读取替换字符串
+                string? replacementText = ReadStringFromLanguageDll(languageDllPath, replacementId, languageId);
+                if (string.IsNullOrEmpty(replacementText))
+                {
+                    File.AppendAllText(_logFile, $"Failed to read replacement string ID {replacementId}\n");
+                    return originalText; // 如果替换字符串读取失败，返回原始字符串
+                }
+
+                // 替换%s占位符
+                string result = originalText.Replace("%s", replacementText);
+                File.AppendAllText(_logFile, $"String ID {stringId} with replacement ID {replacementId}: '{originalText}' -> '{result}'\n");
+                return result;
+            }
+            catch (Exception ex)
+            {
+                File.AppendAllText(_logFile, $"Error getting string with replacement: {ex.Message}\n");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// 加载多选框选项文本
+        /// </summary>
+        private void LoadCheckBoxesItems()
+        {
+            try
+            {
+                File.AppendAllText(_logFile, "Loading checkboxes items text from Language.dll\n");
+
+                // 加载每个选项文本，使用ID 18作为替换文本
+                string? item1Text = GetStringWithReplacement(199, 18);
+                string? item2Text = GetStringWithReplacement(200, 18);
+                string? item3Text = GetStringWithReplacement(203, 18);
+                string? item4Text = GetStringWithReplacement(204, 18);
+
+                // 显示文本
+                if (CheckBoxText1 != null && !string.IsNullOrEmpty(item1Text))
+                {
+                    CheckBoxText1.Text = item1Text;
+                    File.AppendAllText(_logFile, "Checkbox item 1 loaded and displayed from ID 199\n");
+                }
+
+                if (CheckBoxText2 != null && !string.IsNullOrEmpty(item2Text))
+                {
+                    CheckBoxText2.Text = item2Text;
+                    File.AppendAllText(_logFile, "Checkbox item 2 loaded and displayed from ID 200\n");
+                }
+
+                if (CheckBoxText3 != null && !string.IsNullOrEmpty(item3Text))
+                {
+                    CheckBoxText3.Text = item3Text;
+                    File.AppendAllText(_logFile, "Checkbox item 3 loaded and displayed from ID 203\n");
+                }
+
+                if (CheckBoxText4 != null && !string.IsNullOrEmpty(item4Text))
+                {
+                    CheckBoxText4.Text = item4Text;
+                    File.AppendAllText(_logFile, "Checkbox item 4 loaded and displayed from ID 204\n");
+                }
+            }
+            catch (Exception ex)
+            {
+                File.AppendAllText(_logFile, $"Error loading checkboxes items: {ex.Message}\n");
+            }
+        }
+
         private static T? FindVisualChild<T>(DependencyObject parent) where T : DependencyObject
         {
             if (parent == null)
@@ -1284,15 +1587,22 @@ namespace RA2Installer
                 // 显示底部文本
                 LoadBottomText();
 
-                // 显示第四页特有元素（无边框许可证内容区域）
-                if (LicenseStackPanel != null)
-                {
-                    LicenseStackPanel.Visibility = Visibility.Visible;
-                    File.AppendAllText(_logFile, "LicenseStackPanel visibility set to Visible for Page 4\n");
-                }
+                // 隐藏其他页面特有元素
+                LicenseStackPanel.Visibility = Visibility.Collapsed;
+                InputFieldsStackPanel.Visibility = Visibility.Collapsed;
 
-                // 从Language.dll ID 210读取许可证内容并显示
-                LoadLicenseContentFromLanguageDll();
+                // 显示第四页特有元素（多选框区域）
+                CheckBoxesStackPanel.Visibility = Visibility.Visible;
+                File.AppendAllText(_logFile, "CheckBoxesStackPanel visibility set to Visible for Page 4\n");
+
+                // 加载并初始化多选框图片
+                LoadCheckBoxImages();
+                
+                // 加载多选框标题文本
+                LoadCheckBoxesTitle();
+                
+                // 加载多选框选项文本
+                LoadCheckBoxesItems();
 
                 // 加载并播放第四页的动画
                 PlayPageAnimations(pageNumber, true, () =>
@@ -1303,11 +1613,6 @@ namespace RA2Installer
 
                 // 从Language.dll读取字符串并显示
                 LoadAndDisplayRadarStrings();
-
-                // 显示输入框区域
-                InputFieldsStackPanel.Visibility = Visibility.Visible;
-                // 默认选中第一个输入框
-                InputField1.Focus();
 
             }
         }
@@ -1719,24 +2024,22 @@ namespace RA2Installer
                     }
                 };
 
-                // 处理延迟
-                if (currentAnimation.SoundDelay > 0)
-                {
-                    File.AppendAllText(_logFile, $"Waiting for {currentAnimation.SoundDelay}ms before starting animation\n");
-                    await Task.Delay(currentAnimation.SoundDelay);
-                }
+                // 开始播放动画
+                _shpAnimationPlayer.Play();
+                File.AppendAllText(_logFile, $"Animation {currentIndex + 1}/{animations.Count} started\n");
 
-                // 播放音效
+                // 播放音效（带延迟）
                 if (!string.IsNullOrEmpty(currentAnimation.SoundHash))
                 {
+                    if (currentAnimation.SoundDelay > 0)
+                    {
+                        File.AppendAllText(_logFile, $"Waiting for {currentAnimation.SoundDelay}ms before playing sound\n");
+                        await Task.Delay(currentAnimation.SoundDelay);
+                    }
                     File.AppendAllText(_logFile, $"Playing sound effect: {currentAnimation.SoundHash}\n");
                     string? soundFile = LoadAudioFromMix(currentAnimation.SoundHash);
                     PlayAudio(_soundPlayer, soundFile);
                 }
-
-                // 开始播放动画
-                _shpAnimationPlayer.Play();
-                File.AppendAllText(_logFile, $"Animation {currentIndex + 1}/{animations.Count} started\n");
             }
             catch (Exception ex)
             {

@@ -1,6 +1,9 @@
 using System.IO;
 using System.Windows.Media.Imaging;
 using System.Windows.Media;
+using System.Drawing;
+using System.Windows.Interop;
+using System;
 
 namespace RA2Installer
 {
@@ -442,6 +445,72 @@ namespace RA2Installer
         public int Height
         {
             get { return _height; }
+        }
+
+        /// <summary>
+        /// 获取指定帧的图片
+        /// </summary>
+        /// <param name="frameIndex">帧索引</param>
+        /// <returns>BitmapImage对象</returns>
+        public System.Windows.Media.Imaging.BitmapImage GetFrame(int frameIndex)
+        {
+            try
+            {
+                if (frameIndex < 0 || frameIndex >= _frames.Count)
+                {
+                    // 返回空图像
+                    return CreateEmptyBitmapImage();
+                }
+
+                // 转换BitmapSource为BitmapImage
+                BitmapSource frame = _frames[frameIndex];
+                System.Windows.Media.Imaging.BitmapImage bitmapImage = new System.Windows.Media.Imaging.BitmapImage();
+                using (var stream = new MemoryStream())
+                {
+                    System.Windows.Media.Imaging.PngBitmapEncoder encoder = new System.Windows.Media.Imaging.PngBitmapEncoder();
+                    encoder.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(frame));
+                    encoder.Save(stream);
+                    stream.Position = 0;
+                    bitmapImage.BeginInit();
+                    bitmapImage.CacheOption = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad;
+                    bitmapImage.StreamSource = stream;
+                    bitmapImage.EndInit();
+                }
+                return bitmapImage;
+            }
+            catch (Exception ex)
+            {
+                string logFile = Path.Combine(Path.GetTempPath(), "ra2installer.log");
+                File.AppendAllText(logFile, $"Error getting frame: {ex.Message}\n");
+                // 返回空图像
+                return CreateEmptyBitmapImage();
+            }
+        }
+
+        /// <summary>
+        /// 创建空的BitmapImage
+        /// </summary>
+        /// <returns>空的BitmapImage对象</returns>
+        private System.Windows.Media.Imaging.BitmapImage CreateEmptyBitmapImage()
+        {
+            // 创建一个空的BitmapSource
+            System.Windows.Media.Imaging.BitmapSource emptyBitmap = System.Windows.Media.Imaging.BitmapSource.Create(
+                1, 1, 96, 96, System.Windows.Media.PixelFormats.Bgra32, null, new byte[4], 4);
+
+            // 转换为BitmapImage
+            System.Windows.Media.Imaging.BitmapImage bitmapImage = new System.Windows.Media.Imaging.BitmapImage();
+            using (var stream = new MemoryStream())
+            {
+                System.Windows.Media.Imaging.PngBitmapEncoder encoder = new System.Windows.Media.Imaging.PngBitmapEncoder();
+                encoder.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(emptyBitmap));
+                encoder.Save(stream);
+                stream.Position = 0;
+                bitmapImage.BeginInit();
+                bitmapImage.CacheOption = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad;
+                bitmapImage.StreamSource = stream;
+                bitmapImage.EndInit();
+            }
+            return bitmapImage;
         }
     }
 
