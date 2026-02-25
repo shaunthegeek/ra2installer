@@ -222,8 +222,39 @@ namespace RA2Installer
                             ShpHash = "EA92E578",
                             IsReverse = false,
                             EndBehavior = AnimationEndBehavior.StayAtLastFrame,
-                            SoundHash = "C7918F4A",
-                            SoundDelay = 1000
+                        },
+                        new AnimationConfig {
+                            ShpHash = "E9490E87",
+                            PalHash = "297C46E0",
+                            IsRadarAnimation = true,
+                            IsReverse = true,
+                            EndBehavior = AnimationEndBehavior.StayAtFirstFrame
+                        }
+                    },
+                    ExitAnimations = new List<AnimationConfig> {
+                        new AnimationConfig {
+                            ShpHash = "EA92E578",
+                            IsReverse = true,
+                            EndBehavior = AnimationEndBehavior.Disappear
+                        },
+                        new AnimationConfig {
+                            ShpHash = "E9490E87",
+                            PalHash = "297C46E0",
+                            IsRadarAnimation = true,
+                            IsReverse = true,
+                            EndBehavior = AnimationEndBehavior.Disappear
+                        }
+                    }
+                }
+            },
+            {
+                6,
+                new PageAnimationConfig {
+                    IntroAnimations = new List<AnimationConfig> {
+                        new AnimationConfig {
+                            ShpHash = "EA92E578",
+                            IsReverse = false,
+                            EndBehavior = AnimationEndBehavior.StayAtLastFrame,
                         },
                         new AnimationConfig {
                             ShpHash = "E9490E87",
@@ -263,6 +294,9 @@ namespace RA2Installer
         // 存储安装路径
         private string _installationPath = string.Empty;
 
+        // 存储开始菜单文件夹名称
+        private string _startMenuFolderName = string.Empty;
+
         // 存储多选框状态
         private Dictionary<int, bool> _checkBoxStates = new Dictionary<int, bool> {
             { 1, true },
@@ -284,10 +318,13 @@ namespace RA2Installer
                 File.WriteAllText(_logFile, "Starting MainWindow initialization\n");
 
                 // 首先初始化组件，这样 Grid 控件就会被创建
+                File.AppendAllText(_logFile, "Calling InitializeComponent()\n");
                 InitializeComponent();
+                File.AppendAllText(_logFile, "InitializeComponent() completed\n");
 
                 string cursorPath = "Assets/3D_red_normalselect.cur";
                 this.Cursor = new System.Windows.Input.Cursor(cursorPath);
+                File.AppendAllText(_logFile, "Cursor set\n");
 
                 File.AppendAllText(_logFile, "Components initialized, checking AnimationImage\n");
 
@@ -299,6 +336,43 @@ namespace RA2Installer
                 else
                 {
                     File.AppendAllText(_logFile, "AnimationImage control is null\n");
+                }
+
+                // 检查 Page6 控件是否存在
+                if (Page6ContentStackPanel != null)
+                {
+                    File.AppendAllText(_logFile, "Page6ContentStackPanel control is available\n");
+                }
+                else
+                {
+                    File.AppendAllText(_logFile, "Page6ContentStackPanel control is null\n");
+                }
+
+                if (Page6Line1TextBlock != null)
+                {
+                    File.AppendAllText(_logFile, "Page6Line1TextBlock control is available\n");
+                }
+                else
+                {
+                    File.AppendAllText(_logFile, "Page6Line1TextBlock control is null\n");
+                }
+
+                if (Page6Line2TextBlock != null)
+                {
+                    File.AppendAllText(_logFile, "Page6Line2TextBlock control is available\n");
+                }
+                else
+                {
+                    File.AppendAllText(_logFile, "Page6Line2TextBlock control is null\n");
+                }
+
+                if (Page6InputTextBox != null)
+                {
+                    File.AppendAllText(_logFile, "Page6InputTextBox control is available\n");
+                }
+                else
+                {
+                    File.AppendAllText(_logFile, "Page6InputTextBox control is null\n");
                 }
 
                 File.AppendAllText(_logFile, "Loading background image\n");
@@ -1718,6 +1792,18 @@ namespace RA2Installer
                     ShowMatchingElements(pageNumber);
                 });
             }
+            else if (pageNumber == 6)
+            {
+                // 加载并播放第六页的动画
+                PlayPageAnimations(pageNumber, true, () =>
+                {
+                    // 加载第六页的文本内容
+                    LoadPage6Content();
+
+                    // 显示匹配的元素
+                    ShowMatchingElements(pageNumber);
+                });
+            }
         }
 
         /// <summary>
@@ -1782,6 +1868,59 @@ namespace RA2Installer
             catch (Exception ex)
             {
                 File.AppendAllText(_logFile, $"Error loading page 5 content: {ex.Message}\n");
+            }
+        }
+
+        /// <summary>
+        /// 加载第六页的文本内容
+        /// </summary>
+        private void LoadPage6Content()
+        {
+            try
+            {
+                File.AppendAllText(_logFile, "Loading page 6 content from Language.dll\n");
+
+                // Language.dll文件路径
+                string languageDllPath = "Assets/RA1/Setup/Language.dll";
+
+                // 检查文件是否存在
+                if (!File.Exists(languageDllPath))
+                {
+                    File.AppendAllText(_logFile, "Language.dll file not found\n");
+                    return;
+                }
+
+                // 确定要使用的语言
+                ushort languageId = GetLanguageIdForCurrentLanguage();
+                File.AppendAllText(_logFile, $"Using language ID: {languageId}\n");
+
+                // 加载第一行文本（ID 123，使用ID 18替换）
+                string? line1Text = GetStringWithReplacement(123, 18);
+                if (!string.IsNullOrEmpty(line1Text) && Page6Line1TextBlock != null)
+                {
+                    Page6Line1TextBlock.Text = line1Text;
+                    File.AppendAllText(_logFile, $"Page 6 line 1 loaded from ID 123 with replacement ID 18: '{line1Text}'\n");
+                }
+
+                // 加载第二行文本（ID 121）
+                string? line2Text = ReadStringFromLanguageDll(languageDllPath, 121, languageId);
+                if (!string.IsNullOrEmpty(line2Text) && Page6Line2TextBlock != null)
+                {
+                    Page6Line2TextBlock.Text = line2Text;
+                    File.AppendAllText(_logFile, $"Page 6 line 2 loaded from ID 121: '{line2Text}'\n");
+                }
+
+                // 加载第三行文本框内容（ID 7）
+                string? line3Text = ReadStringFromLanguageDll(languageDllPath, 7, languageId);
+                if (!string.IsNullOrEmpty(line3Text) && Page6InputTextBox != null)
+                {
+                    Page6InputTextBox.Text = line3Text;
+                    File.AppendAllText(_logFile, $"Page 6 input box loaded from ID 7: '{line3Text}'\n");
+                }
+            }
+            catch (Exception ex)
+            {
+                File.AppendAllText(_logFile, $"Error loading page 6 content: {ex.Message}\n");
             }
         }
 
@@ -2052,7 +2191,19 @@ namespace RA2Installer
             }
             else if (_currentPage == 5)
             {
-                // 第5页：播放退出动画，然后可以跳转到下一页（如果有）
+                // 第5页：播放退出动画，然后跳转到第六页
+                PlayPageAnimations(_currentPage, false, () => SwitchToPage(6));
+            }
+            else if (_currentPage == 6)
+            {
+                // 第6页：保存开始菜单文件夹名称
+                if (Page6InputTextBox != null)
+                {
+                    _startMenuFolderName = Page6InputTextBox.Text;
+                    File.AppendAllText(_logFile, $"Start menu folder name saved: {_startMenuFolderName}\n");
+                }
+                
+                // 第6页：播放退出动画，然后可以跳转到下一页（如果有）
                 // 这里暂时只做动画播放，不跳转
                 PlayPageAnimations(_currentPage, false, null);
             }
