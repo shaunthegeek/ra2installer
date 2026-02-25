@@ -113,4 +113,7 @@ Neither EA nor Westwood shall have any responsibility or liability to you or any
   <data name="IAgreeToTheseTerms" xml:space="preserve">
     <value>I agree to these terms</value>
   </data>
+  <data name="BrowseButton" xml:space="preserve">
+    <value>Browse</value>
+  </data>
 </root>

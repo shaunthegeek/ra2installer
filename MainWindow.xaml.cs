@@ -67,7 +67,7 @@ namespace RA2Installer
         [STAThread]
         public static void Main()
         {
-            Application app = new Application();
+            System.Windows.Application app = new System.Windows.Application();
             app.Run(new MainWindow());
         }
 
@@ -213,6 +213,41 @@ namespace RA2Installer
                         }
                     }
                 }
+            },
+            {
+                5,
+                new PageAnimationConfig {
+                    IntroAnimations = new List<AnimationConfig> {
+                        new AnimationConfig {
+                            ShpHash = "EA92E578",
+                            IsReverse = false,
+                            EndBehavior = AnimationEndBehavior.StayAtLastFrame,
+                            SoundHash = "C7918F4A",
+                            SoundDelay = 1000
+                        },
+                        new AnimationConfig {
+                            ShpHash = "E9490E87",
+                            PalHash = "297C46E0",
+                            IsRadarAnimation = true,
+                            IsReverse = true,
+                            EndBehavior = AnimationEndBehavior.StayAtFirstFrame
+                        }
+                    },
+                    ExitAnimations = new List<AnimationConfig> {
+                        new AnimationConfig {
+                            ShpHash = "EA92E578",
+                            IsReverse = true,
+                            EndBehavior = AnimationEndBehavior.Disappear
+                        },
+                        new AnimationConfig {
+                            ShpHash = "E9490E87",
+                            PalHash = "297C46E0",
+                            IsRadarAnimation = true,
+                            IsReverse = true,
+                            EndBehavior = AnimationEndBehavior.Disappear
+                        }
+                    }
+                }
             }
         };
 
@@ -224,6 +259,9 @@ namespace RA2Installer
 
         // 存储用户输入的序列号
         private string _serialNumber = string.Empty;
+
+        // 存储安装路径
+        private string _installationPath = string.Empty;
 
         // 存储多选框状态
         private Dictionary<int, bool> _checkBoxStates = new Dictionary<int, bool> {
@@ -401,7 +439,7 @@ namespace RA2Installer
                         TextBlock textBlock = new TextBlock
                         {
                             Text = text,
-                            Foreground = Brushes.Yellow,
+                            Foreground = System.Windows.Media.Brushes.Yellow,
                             FontSize = 10,
                             TextAlignment = TextAlignment.Left,
                             TextWrapping = TextWrapping.Wrap,
@@ -1468,7 +1506,7 @@ namespace RA2Installer
             _bottomTextTimer.Elapsed += (sender, e) =>
             {
                 // 在UI线程上执行隐藏操作
-                Application.Current.Dispatcher.Invoke(() =>
+                System.Windows.Application.Current.Dispatcher.Invoke(() =>
                 {
                     if (BottomTextBlock != null)
                     {
@@ -1668,6 +1706,175 @@ namespace RA2Installer
                     ShowMatchingElements(pageNumber);
                 });
             }
+            else if (pageNumber == 5)
+            {
+                // 加载并播放第五页的动画
+                PlayPageAnimations(pageNumber, true, () =>
+                {
+                    // 加载第五页的文本内容
+                    LoadPage5Content();
+
+                    // 显示匹配的元素
+                    ShowMatchingElements(pageNumber);
+                });
+            }
+        }
+
+        /// <summary>
+        /// 加载第五页的文本内容
+        /// </summary>
+        private void LoadPage5Content()
+        {
+            try
+            {
+                File.AppendAllText(_logFile, "Loading page 5 content from Language.dll\n");
+
+                // Language.dll文件路径
+                string languageDllPath = "Assets/RA1/Setup/Language.dll";
+
+                // 检查文件是否存在
+                if (!File.Exists(languageDllPath))
+                {
+                    File.AppendAllText(_logFile, "Language.dll file not found\n");
+                    return;
+                }
+
+                // 确定要使用的语言
+                ushort languageId = GetLanguageIdForCurrentLanguage();
+                File.AppendAllText(_logFile, $"Using language ID: {languageId}\n");
+
+                // 加载第一行文本（ID 124，使用ID 18替换）
+                string? line1Text = GetStringWithReplacement(124, 18);
+                if (!string.IsNullOrEmpty(line1Text) && Page5Line1TextBlock != null)
+                {
+                    Page5Line1TextBlock.Text = line1Text;
+                    File.AppendAllText(_logFile, $"Page 5 line 1 loaded from ID 124 with replacement ID 18: '{line1Text}'\n");
+                }
+
+                // 加载第二行文本框内容（ID 5）
+                string? line2Text = ReadStringFromLanguageDll(languageDllPath, 5, languageId);
+                if (!string.IsNullOrEmpty(line2Text) && Page5PathTextBox != null)
+                {
+                    Page5PathTextBox.Text = line2Text;
+                    _installationPath = line2Text;
+                    File.AppendAllText(_logFile, $"Page 5 line 2 loaded from ID 5: '{line2Text}'\n");
+                    File.AppendAllText(_logFile, $"Installation path saved: {_installationPath}\n");
+                    // 更新第四行的可用空间
+                    UpdatePage5FreeSpace(line2Text);
+                }
+
+                // 加载第三行左对齐文本（ID 120）
+                string? line3LeftText = ReadStringFromLanguageDll(languageDllPath, 120, languageId);
+                if (!string.IsNullOrEmpty(line3LeftText) && Page5Line3LeftTextBlock != null)
+                {
+                    Page5Line3LeftTextBlock.Text = line3LeftText;
+                    File.AppendAllText(_logFile, $"Page 5 line 3 left loaded from ID 120: '{line3LeftText}'\n");
+                }
+
+                // 加载第四行左对齐文本（ID 119）
+                string? line4LeftText = ReadStringFromLanguageDll(languageDllPath, 119, languageId);
+                if (!string.IsNullOrEmpty(line4LeftText) && Page5Line4LeftTextBlock != null)
+                {
+                    Page5Line4LeftTextBlock.Text = line4LeftText;
+                    File.AppendAllText(_logFile, $"Page 5 line 4 left loaded from ID 119: '{line4LeftText}'\n");
+                }
+            }
+            catch (Exception ex)
+            {
+                File.AppendAllText(_logFile, $"Error loading page 5 content: {ex.Message}\n");
+            }
+        }
+
+        /// <summary>
+        /// 更新第五页第四行的可用空间
+        /// </summary>
+        /// <param name="path">目录路径</param>
+        private void UpdatePage5FreeSpace(string path)
+        {
+            try
+            {
+                // 提取盘符
+                string driveLetter = string.Empty;
+                if (!string.IsNullOrEmpty(path) && path.Length >= 2 && path[1] == ':')
+                {
+                    driveLetter = path.Substring(0, 2);
+                    File.AppendAllText(_logFile, $"Extracted drive letter: {driveLetter}\n");
+                }
+
+                if (!string.IsNullOrEmpty(driveLetter))
+                {
+                    // 获取磁盘信息
+                    DriveInfo driveInfo = new DriveInfo(driveLetter);
+                    if (driveInfo.IsReady)
+                    {
+                        // 计算可用空间（单位：K）
+                        long freeSpaceK = driveInfo.AvailableFreeSpace / 1024;
+                        string freeSpaceText = $"{freeSpaceK} K";
+                        
+                        if (Page5Line4RightTextBlock != null)
+                        {
+                            Page5Line4RightTextBlock.Text = freeSpaceText;
+                            File.AppendAllText(_logFile, $"Updated page 5 free space: {freeSpaceText}\n");
+                        }
+                    }
+                    else
+                    {
+                        File.AppendAllText(_logFile, $"Drive {driveLetter} is not ready\n");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                File.AppendAllText(_logFile, $"Error updating page 5 free space: {ex.Message}\n");
+            }
+        }
+
+        /// <summary>
+        /// 浏览按钮点击事件处理程序
+        /// </summary>
+        /// <param name="sender">发送者</param>
+        /// <param name="e">事件参数</param>
+        private void BrowseButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                // 播放按钮点击音效
+                PlayButtonClickSound();
+
+                // 创建文件夹选择对话框
+                var dialog = new System.Windows.Forms.FolderBrowserDialog();
+                dialog.Description = "选择安装目录";
+                
+                // 如果当前文本框有内容，设置为初始目录
+                if (!string.IsNullOrEmpty(Page5PathTextBox?.Text))
+                {
+                    string currentPath = Page5PathTextBox.Text;
+                    if (Directory.Exists(currentPath))
+                    {
+                        dialog.SelectedPath = currentPath;
+                    }
+                }
+
+                // 显示对话框
+                var result = dialog.ShowDialog();
+                if (result == System.Windows.Forms.DialogResult.OK)
+                {
+                    string selectedPath = dialog.SelectedPath;
+                    if (Page5PathTextBox != null)
+                    {
+                        Page5PathTextBox.Text = selectedPath;
+                        _installationPath = selectedPath;
+                        File.AppendAllText(_logFile, $"Selected folder: {selectedPath}\n");
+                        File.AppendAllText(_logFile, $"Installation path saved: {_installationPath}\n");
+                        // 更新第四行的可用空间
+                        UpdatePage5FreeSpace(selectedPath);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                File.AppendAllText(_logFile, $"Error in BrowseButton_Click: {ex.Message}\n");
+            }
         }
 
         /// <summary>
@@ -1705,7 +1912,7 @@ namespace RA2Installer
         /// </summary>
         private void InputField_TextChanged(object sender, TextChangedEventArgs e)
         {
-            if (sender is TextBox textBox)
+            if (sender is System.Windows.Controls.TextBox textBox)
             {
                 // 检查输入框是否已满
                 if (textBox.Text.Length == textBox.MaxLength)
@@ -1743,6 +1950,13 @@ namespace RA2Installer
             {
                 BackButton.Visibility = _currentPage == 1 ? Visibility.Collapsed : Visibility.Visible;
                 File.AppendAllText(_logFile, $"BackButton visibility set to {(BackButton.Visibility == Visibility.Visible ? "Visible" : "Collapsed")} for Page {_currentPage}\n");
+            }
+
+            // 浏览按钮只在第5页显示
+            if (BrowseButton != null)
+            {
+                BrowseButton.Visibility = _currentPage == 5 ? Visibility.Visible : Visibility.Collapsed;
+                File.AppendAllText(_logFile, $"BrowseButton visibility set to {(BrowseButton.Visibility == Visibility.Visible ? "Visible" : "Collapsed")} for Page {_currentPage}\n");
             }
         }
 
@@ -1798,10 +2012,10 @@ namespace RA2Installer
         {
             PlayButtonClickSound();
 
-            // 切换到上一页
+            // 切换到上一页，播放退出动画
             if (_currentPage > 1)
             {
-                SwitchToPage(_currentPage - 1);
+                PlayPageAnimations(_currentPage, false, () => SwitchToPage(_currentPage - 1));
             }
         }
 
@@ -1830,6 +2044,17 @@ namespace RA2Installer
                 
                 // 第3页：播放退出动画，然后跳转到第四页
                 PlayPageAnimations(_currentPage, false, () => SwitchToPage(4));
+            }
+            else if (_currentPage == 4)
+            {
+                // 第4页：播放退出动画，然后跳转到第五页
+                PlayPageAnimations(_currentPage, false, () => SwitchToPage(5));
+            }
+            else if (_currentPage == 5)
+            {
+                // 第5页：播放退出动画，然后可以跳转到下一页（如果有）
+                // 这里暂时只做动画播放，不跳转
+                PlayPageAnimations(_currentPage, false, null);
             }
         }
 
@@ -2104,7 +2329,7 @@ namespace RA2Installer
         private void CancelButton_Click(object sender, RoutedEventArgs e)
         {
             PlayButtonClickSound();
-            Application.Current.Shutdown();
+            System.Windows.Application.Current.Shutdown();
         }
 
         // 存储动画帧用于同意按钮

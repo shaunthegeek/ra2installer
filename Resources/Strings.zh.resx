@@ -112,4 +112,7 @@
   <data name="IAgreeToTheseTerms" xml:space="preserve">
     <value>我同意這些條款</value>
   </data>
+  <data name="BrowseButton" xml:space="preserve">
+    <value>瀏覽</value>
+  </data>
 </root>

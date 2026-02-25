@@ -112,5 +112,14 @@ namespace RA2Installer.Resources {
                 return ResourceManager.GetString("IAgreeToTheseTerms", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Browse.
+        /// </summary>
+        public static string BrowseButton {
+            get {
+                return ResourceManager.GetString("BrowseButton", resourceCulture);
+            }
+        }
     }
 }
