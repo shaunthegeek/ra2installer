@@ -279,6 +279,39 @@ namespace RA2Installer
                         }
                     }
                 }
+            },
+            {
+                7,
+                new PageAnimationConfig {
+                    IntroAnimations = new List<AnimationConfig> {
+                        new AnimationConfig {
+                            ShpHash = "EA92E578",
+                            IsReverse = false,
+                            EndBehavior = AnimationEndBehavior.StayAtLastFrame,
+                        },
+                        new AnimationConfig {
+                            ShpHash = "E9490E87",
+                            PalHash = "297C46E0",
+                            IsRadarAnimation = true,
+                            IsReverse = true,
+                            EndBehavior = AnimationEndBehavior.StayAtFirstFrame
+                        }
+                    },
+                    ExitAnimations = new List<AnimationConfig> {
+                        new AnimationConfig {
+                            ShpHash = "EA92E578",
+                            IsReverse = true,
+                            EndBehavior = AnimationEndBehavior.Disappear
+                        },
+                        new AnimationConfig {
+                            ShpHash = "E9490E87",
+                            PalHash = "297C46E0",
+                            IsRadarAnimation = true,
+                            IsReverse = true,
+                            EndBehavior = AnimationEndBehavior.Disappear
+                        }
+                    }
+                }
             }
         };
 
@@ -293,6 +326,9 @@ namespace RA2Installer
 
         // 存储安装路径
         private string _installationPath = string.Empty;
+
+        // 存储网络组件安装路径
+        private string _internetComponentInstallationPath = string.Empty;
 
         // 存储开始菜单文件夹名称
         private string _startMenuFolderName = string.Empty;
@@ -1804,6 +1840,18 @@ namespace RA2Installer
                     ShowMatchingElements(pageNumber);
                 });
             }
+            else if (pageNumber == 7)
+            {
+                // 加载并播放第七页的动画
+                PlayPageAnimations(pageNumber, true, () =>
+                {
+                    // 加载第七页的文本内容
+                    LoadPage7Content();
+
+                    // 显示匹配的元素
+                    ShowMatchingElements(pageNumber);
+                });
+            }
         }
 
         /// <summary>
@@ -1925,6 +1973,66 @@ namespace RA2Installer
         }
 
         /// <summary>
+        /// 加载第七页的文本内容
+        /// </summary>
+        private void LoadPage7Content()
+        {
+            try
+            {
+                File.AppendAllText(_logFile, "Loading page 7 content from Language.dll\n");
+
+                // Language.dll文件路径
+                string languageDllPath = "Assets/RA1/Setup/Language.dll";
+
+                // 检查文件是否存在
+                if (!File.Exists(languageDllPath))
+                {
+                    File.AppendAllText(_logFile, "Language.dll file not found\n");
+                    return;
+                }
+
+                // 确定要使用的语言
+                ushort languageId = GetLanguageIdForCurrentLanguage();
+                File.AppendAllText(_logFile, $"Using language ID: {languageId}\n");
+
+                string? line1Text = GetStringWithReplacement(124, 23);
+                if (!string.IsNullOrEmpty(line1Text) && Page7Line1TextBlock != null)
+                {
+                    Page7Line1TextBlock.Text = line1Text;
+                }
+
+                string? line2Text = ReadStringFromLanguageDll(languageDllPath, 8, languageId);
+                if (!string.IsNullOrEmpty(line2Text) && Page7PathTextBox != null)
+                {
+                    Page7PathTextBox.Text = line2Text;
+                    _internetComponentInstallationPath = line2Text;
+                    // 更新第四行的可用空间
+                    UpdatePage7FreeSpace(line2Text);
+                }
+
+                // 加载第三行左对齐文本（ID 120）
+                string? line3LeftText = ReadStringFromLanguageDll(languageDllPath, 120, languageId);
+                if (!string.IsNullOrEmpty(line3LeftText) && Page7Line3LeftTextBlock != null)
+                {
+                    Page7Line3LeftTextBlock.Text = line3LeftText;
+                    File.AppendAllText(_logFile, $"Page 7 line 3 left loaded from ID 120: '{line3LeftText}'\n");
+                }
+
+                // 加载第四行左对齐文本（ID 119）
+                string? line4LeftText = ReadStringFromLanguageDll(languageDllPath, 119, languageId);
+                if (!string.IsNullOrEmpty(line4LeftText) && Page7Line4LeftTextBlock != null)
+                {
+                    Page7Line4LeftTextBlock.Text = line4LeftText;
+                    File.AppendAllText(_logFile, $"Page 7 line 4 left loaded from ID 119: '{line4LeftText}'\n");
+                }
+            }
+            catch (Exception ex)
+            {
+                File.AppendAllText(_logFile, $"Error loading page 7 content: {ex.Message}\n");
+            }
+        }
+
+        /// <summary>
         /// 更新第五页第四行的可用空间
         /// </summary>
         /// <param name="path">目录路径</param>
@@ -1969,6 +2077,50 @@ namespace RA2Installer
         }
 
         /// <summary>
+        /// 更新第七页第四行的可用空间
+        /// </summary>
+        /// <param name="path">目录路径</param>
+        private void UpdatePage7FreeSpace(string path)
+        {
+            try
+            {
+                // 提取盘符
+                string driveLetter = string.Empty;
+                if (!string.IsNullOrEmpty(path) && path.Length >= 2 && path[1] == ':')
+                {
+                    driveLetter = path.Substring(0, 2);
+                    File.AppendAllText(_logFile, $"Extracted drive letter: {driveLetter}\n");
+                }
+
+                if (!string.IsNullOrEmpty(driveLetter))
+                {
+                    // 获取磁盘信息
+                    DriveInfo driveInfo = new DriveInfo(driveLetter);
+                    if (driveInfo.IsReady)
+                    {
+                        // 计算可用空间（单位：K）
+                        long freeSpaceK = driveInfo.AvailableFreeSpace / 1024;
+                        string freeSpaceText = $"{freeSpaceK} K";
+                        
+                        if (Page7Line4RightTextBlock != null)
+                        {
+                            Page7Line4RightTextBlock.Text = freeSpaceText;
+                            File.AppendAllText(_logFile, $"Updated page 7 free space: {freeSpaceText}\n");
+                        }
+                    }
+                    else
+                    {
+                        File.AppendAllText(_logFile, $"Drive {driveLetter} is not ready\n");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                File.AppendAllText(_logFile, $"Error updating page 7 free space: {ex.Message}\n");
+            }
+        }
+
+        /// <summary>
         /// 浏览按钮点击事件处理程序
         /// </summary>
         /// <param name="sender">发送者</param>
@@ -1984,10 +2136,18 @@ namespace RA2Installer
                 var dialog = new System.Windows.Forms.FolderBrowserDialog();
                 dialog.Description = "选择安装目录";
                 
-                // 如果当前文本框有内容，设置为初始目录
-                if (!string.IsNullOrEmpty(Page5PathTextBox?.Text))
+                // 根据当前页码选择对应的文本框
+                if (_currentPage == 5 && !string.IsNullOrEmpty(Page5PathTextBox?.Text))
                 {
                     string currentPath = Page5PathTextBox.Text;
+                    if (Directory.Exists(currentPath))
+                    {
+                        dialog.SelectedPath = currentPath;
+                    }
+                }
+                else if (_currentPage == 7 && !string.IsNullOrEmpty(Page7PathTextBox?.Text))
+                {
+                    string currentPath = Page7PathTextBox.Text;
                     if (Directory.Exists(currentPath))
                     {
                         dialog.SelectedPath = currentPath;
@@ -1999,7 +2159,7 @@ namespace RA2Installer
                 if (result == System.Windows.Forms.DialogResult.OK)
                 {
                     string selectedPath = dialog.SelectedPath;
-                    if (Page5PathTextBox != null)
+                    if (_currentPage == 5 && Page5PathTextBox != null)
                     {
                         Page5PathTextBox.Text = selectedPath;
                         _installationPath = selectedPath;
@@ -2007,6 +2167,15 @@ namespace RA2Installer
                         File.AppendAllText(_logFile, $"Installation path saved: {_installationPath}\n");
                         // 更新第四行的可用空间
                         UpdatePage5FreeSpace(selectedPath);
+                    }
+                    else if (_currentPage == 7 && Page7PathTextBox != null)
+                    {
+                        Page7PathTextBox.Text = selectedPath;
+                        _internetComponentInstallationPath = selectedPath;
+                        File.AppendAllText(_logFile, $"Selected folder: {selectedPath}\n");
+                        File.AppendAllText(_logFile, $"Network component installation path saved: {_internetComponentInstallationPath}\n");
+                        // 更新第四行的可用空间
+                        UpdatePage7FreeSpace(selectedPath);
                     }
                 }
             }
@@ -2091,10 +2260,10 @@ namespace RA2Installer
                 File.AppendAllText(_logFile, $"BackButton visibility set to {(BackButton.Visibility == Visibility.Visible ? "Visible" : "Collapsed")} for Page {_currentPage}\n");
             }
 
-            // 浏览按钮只在第5页显示
+            // 浏览按钮在第5页和第7页显示
             if (BrowseButton != null)
             {
-                BrowseButton.Visibility = _currentPage == 5 ? Visibility.Visible : Visibility.Collapsed;
+                BrowseButton.Visibility = (_currentPage == 5 || _currentPage == 7) ? Visibility.Visible : Visibility.Collapsed;
                 File.AppendAllText(_logFile, $"BrowseButton visibility set to {(BrowseButton.Visibility == Visibility.Visible ? "Visible" : "Collapsed")} for Page {_currentPage}\n");
             }
         }
@@ -2203,7 +2372,12 @@ namespace RA2Installer
                     File.AppendAllText(_logFile, $"Start menu folder name saved: {_startMenuFolderName}\n");
                 }
                 
-                // 第6页：播放退出动画，然后可以跳转到下一页（如果有）
+                // 第6页：播放退出动画，然后跳转到第七页
+                PlayPageAnimations(_currentPage, false, () => SwitchToPage(7));
+            }
+            else if (_currentPage == 7)
+            {
+                // 第7页：播放退出动画，然后可以跳转到下一页（如果有）
                 // 这里暂时只做动画播放，不跳转
                 PlayPageAnimations(_currentPage, false, null);
             }

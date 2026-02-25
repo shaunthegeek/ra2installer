@@ -146,12 +146,33 @@
             <TextBox x:Name="Page6InputTextBox" Width="400" Height="25" Margin="0,0,0,15" HorizontalContentAlignment="Left" Background="Transparent" local:PageProperties.PageNumbers="6"/>
         </StackPanel>
 
+        <!-- 第七页内容区域 -->
+        <StackPanel x:Name="Page7ContentStackPanel" Orientation="Vertical" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="30,30,0,0" Visibility="Collapsed" local:PageProperties.PageNumbers="7">
+            <!-- 第一行：来自dll ID 124 -->
+            <TextBlock x:Name="Page7Line1TextBlock" Foreground="#BB080B" FontSize="16" Margin="0,0,0,15" local:PageProperties.PageNumbers="7"/>
+            
+            <!-- 第二行：红色边框的文本框，内容来自dll ID 5 -->
+            <TextBox x:Name="Page7PathTextBox" Width="400" Height="25" Margin="0,250,0,30"  Background="Transparent" HorizontalContentAlignment="Left" local:PageProperties.PageNumbers="7"/>
+        
+            <!-- 第三行：左对齐的文案来自dll ID 120，右对齐的文字为358693 K -->
+            <Grid x:Name="Page7Line3Grid" Width="400" Height="25" Margin="0,0,0,0" local:PageProperties.PageNumbers="7">
+                <TextBlock x:Name="Page7Line3LeftTextBlock" Foreground="#BB080B" FontSize="16" HorizontalAlignment="Left" VerticalAlignment="Center" local:PageProperties.PageNumbers="7"/>
+                <TextBlock x:Name="Page7Line3RightTextBlock" Foreground="#BB080B" FontSize="16" HorizontalAlignment="Right" VerticalAlignment="Center" Text="695 K" local:PageProperties.PageNumbers="7"/>
+            </Grid>
+            
+            <!-- 第四行：左对齐的文案来自dll ID 119，右对齐的文字来自第2行内容所在盘符的空余空间 -->
+            <Grid x:Name="Page7Line4Grid" Width="400" Height="25" Margin="0,0,0,15" local:PageProperties.PageNumbers="7">
+                <TextBlock x:Name="Page7Line4LeftTextBlock" Foreground="#BB080B" FontSize="16" HorizontalAlignment="Left" VerticalAlignment="Center" local:PageProperties.PageNumbers="7"/>
+                <TextBlock x:Name="Page7Line4RightTextBlock" Foreground="#BB080B" FontSize="16" HorizontalAlignment="Right" VerticalAlignment="Center" local:PageProperties.PageNumbers="7"/>
+            </Grid>
+        </StackPanel>
+
         <!-- 按钮容器（共享） -->
-        <StackPanel x:Name="ButtonContainer" Orientation="Vertical" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,9,29" local:PageProperties.PageNumbers="1,2,3,4,5,6">
+        <StackPanel x:Name="ButtonContainer" Orientation="Vertical" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,9,29" local:PageProperties.PageNumbers="1,2,3,4,5,6,7">
             <!-- 导航按钮（所有页面共用） -->
-            <StackPanel x:Name="NavigationButtonsStackPanel" Orientation="Vertical" local:PageProperties.PageNumbers="1,2,3,4,5,6">
+            <StackPanel x:Name="NavigationButtonsStackPanel" Orientation="Vertical" local:PageProperties.PageNumbers="1,2,3,4,5,6,7">
                 <!-- 浏览按钮（第五页特有） -->
-                <Button x:Name="BrowseButton" Width="145" Height="42" Margin="0,0,0,0" Click="BrowseButton_Click" local:PageProperties.PageNumbers="5">
+                <Button x:Name="BrowseButton" Width="145" Height="42" Margin="0,0,0,0" Click="BrowseButton_Click" local:PageProperties.PageNumbers="5,7">
                     <Button.Template>
                         <ControlTemplate TargetType="Button">
                             <Grid>
@@ -166,7 +187,7 @@
                         </ControlTemplate>
                     </Button.Template>
                 </Button>
-                <Button x:Name="BackButton" Width="145" Height="42" Margin="0,0,0,0" Click="BackButton_Click" local:PageProperties.PageNumbers="2,3,4,5,6">
+                <Button x:Name="BackButton" Width="145" Height="42" Margin="0,0,0,0" Click="BackButton_Click" local:PageProperties.PageNumbers="2,3,4,5,6,7">
                     <Button.Template>
                         <ControlTemplate TargetType="Button">
                             <Grid>
@@ -181,7 +202,7 @@
                         </ControlTemplate>
                     </Button.Template>
                 </Button>
-                <Button x:Name="NextButton" Width="145" Height="42" Margin="0,0,0,0" Click="NextButton_Click" local:PageProperties.PageNumbers="1,2,3,4,5,6">
+                <Button x:Name="NextButton" Width="145" Height="42" Margin="0,0,0,0" Click="NextButton_Click" local:PageProperties.PageNumbers="1,2,3,4,5,6,7">
                     <Button.Template>
                         <ControlTemplate TargetType="Button">
                             <Grid>
@@ -199,7 +220,7 @@
             </StackPanel>
             
             <!-- 取消按钮（共享） -->
-            <Button x:Name="CancelButton" Width="145" Height="42" Click="CancelButton_Click" local:PageProperties.PageNumbers="1,2,3,4,5,6">
+            <Button x:Name="CancelButton" Width="145" Height="42" Click="CancelButton_Click" local:PageProperties.PageNumbers="1,2,3,4,5,6,7">
                 <Button.Template>
                     <ControlTemplate TargetType="Button">
                         <Grid>
