@@ -1,5 +1,8 @@
 # 红警 2 安装程序重制版
 
+语言：[English](README.md) | 中文
+
+支持系统：
 ![Static Badge](https://img.shields.io/badge/Windows-7-FAD429)
 ![Static Badge](https://img.shields.io/badge/Windows-8-00ADEF)
 ![Static Badge](https://img.shields.io/badge/Windows-10-0078D6)

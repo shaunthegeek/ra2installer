@@ -1,5 +1,8 @@
 # Red Alert 2 Installer Remake
 
+Language: English | [中文](README.zh-CN.md)
+
+Runs on:
 ![Static Badge](https://img.shields.io/badge/Windows-7-FAD429)
 ![Static Badge](https://img.shields.io/badge/Windows-8-00ADEF)
 ![Static Badge](https://img.shields.io/badge/Windows-10-0078D6)
