@@ -119,7 +119,7 @@
             <TextBlock x:Name="Page5Line1TextBlock" Foreground="#BB080B" FontSize="16" Margin="0,0,0,15" local:PageProperties.PageNumbers="5"/>
             
             <!-- 第二行：红色边框的文本框，内容来自dll ID 5 -->
-            <TextBox x:Name="Page5PathTextBox" Width="400" Height="25" Margin="0,250,0,30" HorizontalContentAlignment="Left" local:PageProperties.PageNumbers="5"/>
+            <TextBox x:Name="Page5PathTextBox" Width="400" Height="25" Margin="0,250,0,30"  Background="Transparent" HorizontalContentAlignment="Left" local:PageProperties.PageNumbers="5"/>
         
             <!-- 第三行：左对齐的文案来自dll ID 120，右对齐的文字为358693 K -->
             <Grid x:Name="Page5Line3Grid" Width="400" Height="25" Margin="0,0,0,0" local:PageProperties.PageNumbers="5">
