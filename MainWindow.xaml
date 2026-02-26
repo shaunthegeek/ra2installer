@@ -182,10 +182,26 @@
             <TextBox x:Name="Page8InputTextBox" Width="400" Height="25" Margin="0,0,0,15" HorizontalContentAlignment="Left" Background="Transparent" local:PageProperties.PageNumbers="8"/>
         </StackPanel>
 
+        <!-- 第九页内容区域 -->
+        <StackPanel x:Name="Page9ContentStackPanel" Orientation="Vertical" HorizontalAlignment="Left" VerticalAlignment="Top" Width="400" Margin="30,30,0,0" Visibility="Collapsed" local:PageProperties.PageNumbers="9">
+            <!-- 上部：3行文案（自动换行）来自dll ID 176、177、178 -->
+            <TextBlock x:Name="Page9Line1TextBlock" Foreground="#BB080B" FontSize="16" Margin="0,0,0,15" TextWrapping="Wrap" local:PageProperties.PageNumbers="9"/>
+            <TextBlock x:Name="Page9Line2TextBlock" Foreground="#BB080B" FontSize="16" Margin="0,0,0,15" TextWrapping="Wrap" local:PageProperties.PageNumbers="9"/>
+            <TextBlock x:Name="Page9Line3TextBlock" Foreground="#BB080B" FontSize="16" Margin="0,0,0,30" TextWrapping="Wrap" local:PageProperties.PageNumbers="9"/>
+            
+            <!-- 下部：1行文案（来自dll ID 175）和1个纵向滚动的大段文本区 -->
+            <TextBlock x:Name="Page9Line4TextBlock" Foreground="#BB080B" FontSize="16" Margin="0,0,0,0" local:PageProperties.PageNumbers="9"/>
+            <Border Width="400" Height="100" BorderThickness="1" BorderBrush="#BB080B" local:PageProperties.PageNumbers="9">
+                <ScrollViewer x:Name="Page9ScrollViewer" Width="390" Height="100" VerticalScrollBarVisibility="Auto" local:PageProperties.PageNumbers="9">
+                    <TextBlock x:Name="Page9ContentTextBlock" Foreground="#BB080B" FontSize="12" TextWrapping="Wrap" local:PageProperties.PageNumbers="9"/>
+                </ScrollViewer>
+            </Border>
+        </StackPanel>
+
         <!-- 按钮容器（共享） -->
-        <StackPanel x:Name="ButtonContainer" Orientation="Vertical" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,9,29" local:PageProperties.PageNumbers="1,2,3,4,5,6,7,8">
+        <StackPanel x:Name="ButtonContainer" Orientation="Vertical" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,9,29" local:PageProperties.PageNumbers="1,2,3,4,5,6,7,8,9">
             <!-- 导航按钮（所有页面共用） -->
-            <StackPanel x:Name="NavigationButtonsStackPanel" Orientation="Vertical" local:PageProperties.PageNumbers="1,2,3,4,5,6,7,8">
+            <StackPanel x:Name="NavigationButtonsStackPanel" Orientation="Vertical" local:PageProperties.PageNumbers="1,2,3,4,5,6,7,8,9">
                 <!-- 浏览按钮（第五页特有） -->
                 <Button x:Name="BrowseButton" Width="145" Height="42" Margin="0,0,0,0" Click="BrowseButton_Click" local:PageProperties.PageNumbers="5,7">
                     <Button.Template>
@@ -202,7 +218,7 @@
                         </ControlTemplate>
                     </Button.Template>
                 </Button>
-                <Button x:Name="BackButton" Width="145" Height="42" Margin="0,0,0,0" Click="BackButton_Click" local:PageProperties.PageNumbers="2,3,4,5,6,7,8">
+                <Button x:Name="BackButton" Width="145" Height="42" Margin="0,0,0,0" Click="BackButton_Click" local:PageProperties.PageNumbers="2,3,4,5,6,7,8,9">
                     <Button.Template>
                         <ControlTemplate TargetType="Button">
                             <Grid>
@@ -217,7 +233,7 @@
                         </ControlTemplate>
                     </Button.Template>
                 </Button>
-                <Button x:Name="NextButton" Width="145" Height="42" Margin="0,0,0,0" Click="NextButton_Click" local:PageProperties.PageNumbers="1,2,3,4,5,6,7,8">
+                <Button x:Name="NextButton" Width="145" Height="42" Margin="0,0,0,0" Click="NextButton_Click" local:PageProperties.PageNumbers="1,2,3,4,5,6,7,8,9">
                     <Button.Template>
                         <ControlTemplate TargetType="Button">
                             <Grid>
@@ -235,7 +251,7 @@
             </StackPanel>
             
             <!-- 取消按钮（共享） -->
-            <Button x:Name="CancelButton" Width="145" Height="42" Click="CancelButton_Click" local:PageProperties.PageNumbers="1,2,3,4,5,6,7,8">
+            <Button x:Name="CancelButton" Width="145" Height="42" Click="CancelButton_Click" local:PageProperties.PageNumbers="1,2,3,4,5,6,7,8,9">
                 <Button.Template>
                     <ControlTemplate TargetType="Button">
                         <Grid>

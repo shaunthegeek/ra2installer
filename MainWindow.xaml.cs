@@ -345,6 +345,39 @@ namespace RA2Installer
                         }
                     }
                 }
+            },
+            {
+                9,
+                new PageAnimationConfig {
+                    IntroAnimations = new List<AnimationConfig> {
+                        new AnimationConfig {
+                            ShpHash = "EA92E578",
+                            IsReverse = false,
+                            EndBehavior = AnimationEndBehavior.StayAtLastFrame,
+                        },
+                        new AnimationConfig {
+                            ShpHash = "E9490E87",
+                            PalHash = "297C46E0",
+                            IsRadarAnimation = true,
+                            IsReverse = true,
+                            EndBehavior = AnimationEndBehavior.StayAtFirstFrame
+                        }
+                    },
+                    ExitAnimations = new List<AnimationConfig> {
+                        new AnimationConfig {
+                            ShpHash = "EA92E578",
+                            IsReverse = true,
+                            EndBehavior = AnimationEndBehavior.Disappear
+                        },
+                        new AnimationConfig {
+                            ShpHash = "E9490E87",
+                            PalHash = "297C46E0",
+                            IsRadarAnimation = true,
+                            IsReverse = true,
+                            EndBehavior = AnimationEndBehavior.Disappear
+                        }
+                    }
+                }
             }
         };
 
@@ -1900,6 +1933,18 @@ namespace RA2Installer
                     ShowMatchingElements(pageNumber);
                 });
             }
+            else if (pageNumber == 9)
+            {
+                // 加载并播放第九页的动画
+                PlayPageAnimations(pageNumber, true, () =>
+                {
+                    // 加载第九页的文本内容
+                    LoadPage9Content();
+
+                    // 显示匹配的元素
+                    ShowMatchingElements(pageNumber);
+                });
+            }
         }
 
         /// <summary>
@@ -2129,6 +2174,93 @@ namespace RA2Installer
             catch (Exception ex)
             {
                 File.AppendAllText(_logFile, $"Error loading page 7 content: {ex.Message}\n");
+            }
+        }
+
+        /// <summary>
+        /// 加载第九页的文本内容
+        /// </summary>
+        private void LoadPage9Content()
+        {
+            try
+            {
+                File.AppendAllText(_logFile, "Loading page 9 content from Language.dll\n");
+
+                // Language.dll文件路径
+                string languageDllPath = "Assets/RA1/Setup/Language.dll";
+
+                // 检查文件是否存在
+                if (!File.Exists(languageDllPath))
+                {
+                    File.AppendAllText(_logFile, "Language.dll file not found\n");
+                    return;
+                }
+
+                // 确定要使用的语言
+                ushort languageId = GetLanguageIdForCurrentLanguage();
+                File.AppendAllText(_logFile, $"Using language ID: {languageId}\n");
+
+                // 加载第一行文本（ID 176）
+                string? line1Text = ReadStringFromLanguageDll(languageDllPath, 176, languageId);
+                if (!string.IsNullOrEmpty(line1Text) && Page9Line1TextBlock != null)
+                {
+                    Page9Line1TextBlock.Text = line1Text;
+                    File.AppendAllText(_logFile, $"Page 9 line 1 loaded from ID 176: '{line1Text}'\n");
+                }
+
+                // 加载第二行文本（ID 177）
+                string? line2Text = ReadStringFromLanguageDll(languageDllPath, 177, languageId);
+                if (!string.IsNullOrEmpty(line2Text) && Page9Line2TextBlock != null)
+                {
+                    Page9Line2TextBlock.Text = line2Text;
+                    File.AppendAllText(_logFile, $"Page 9 line 2 loaded from ID 177: '{line2Text}'\n");
+                }
+
+                // 加载第三行文本（ID 178）
+                string? line3Text = ReadStringFromLanguageDll(languageDllPath, 178, languageId);
+                if (!string.IsNullOrEmpty(line3Text) && Page9Line3TextBlock != null)
+                {
+                    Page9Line3TextBlock.Text = line3Text;
+                    File.AppendAllText(_logFile, $"Page 9 line 3 loaded from ID 178: '{line3Text}'\n");
+                }
+
+                // 加载第四行文本（ID 175）
+                string? line4Text = ReadStringFromLanguageDll(languageDllPath, 175, languageId);
+                if (!string.IsNullOrEmpty(line4Text) && Page9Line4TextBlock != null)
+                {
+                    Page9Line4TextBlock.Text = line4Text;
+                    File.AppendAllText(_logFile, $"Page 9 line 4 loaded from ID 175: '{line4Text}'\n");
+                }
+
+                // 设置纵向滚动的大段文本区内容
+                if (Page9ContentTextBlock != null)
+                {
+                    // 读取各个DLL ID的实际值
+                    string? value169 = ReadStringFromLanguageDll(languageDllPath, 169, languageId);
+                    string? value18 = ReadStringFromLanguageDll(languageDllPath, 18, languageId);
+                    string? value170 = ReadStringFromLanguageDll(languageDllPath, 170, languageId);
+                    string? value61 = ReadStringFromLanguageDll(languageDllPath, 61, languageId);
+                    string? value198 = ReadStringFromLanguageDll(languageDllPath, 198, languageId);
+                    string? value199 = ReadStringFromLanguageDll(languageDllPath, 199, languageId);
+                    string? value64 = ReadStringFromLanguageDll(languageDllPath, 64, languageId);
+
+                    // 构建滚动文本内容
+                    string scrollableContent = ReadStringFromLanguageDll(languageDllPath, 169, languageId) + "\n" +
+                                              "    " + ReadStringFromLanguageDll(languageDllPath, 18, languageId) + "\n" +
+                                              ReadStringFromLanguageDll(languageDllPath, 170, languageId) + "\n" +
+                                              "    " + ReadStringFromLanguageDll(languageDllPath, 61, languageId) + "\n" +
+                                              ReadStringFromLanguageDll(languageDllPath, 198, languageId) + "\n" +
+                                              "    " + ReadStringFromLanguageDll(languageDllPath, 199, languageId) + "\n" +
+                                              ReadStringFromLanguageDll(languageDllPath, 64, languageId) + "\n" +
+                                              "    " + _installationPath;
+                    
+                    Page9ContentTextBlock.Text = scrollableContent;
+                    File.AppendAllText(_logFile, $"Page 9 scrollable content set\n");
+                }
+            }
+            catch (Exception ex)
+            {
+                File.AppendAllText(_logFile, $"Error loading page 9 content: {ex.Message}\n");
             }
         }
 
@@ -2490,7 +2622,7 @@ namespace RA2Installer
                 }
                 
                 // 第8页：播放退出动画，然后结束
-                PlayPageAnimations(_currentPage, false, null);
+                PlayPageAnimations(_currentPage, false, () => SwitchToPage(9));
             }
         }
 
