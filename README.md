@@ -10,6 +10,8 @@ Runs on:
 
 Using [TRAE.AI](https://www.trae.ai) to remake the installer for the classic game "Red Alert 2". Enable modern players to experience the nostalgic fun of the original installer on modern computers, including classic music, animations, copywriting, and ritualistic interactive experience. Attract more new players to join and start the beautiful time of classic games together.
 
+![Screenshot](screenshot.png)
+
 ## System Requirements
 
 - **Operating System**: Windows 7 (32-bit or 64-bit) or later
