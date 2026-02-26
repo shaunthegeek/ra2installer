@@ -312,6 +312,39 @@ namespace RA2Installer
                         }
                     }
                 }
+            },
+            {
+                8,
+                new PageAnimationConfig {
+                    IntroAnimations = new List<AnimationConfig> {
+                        new AnimationConfig {
+                            ShpHash = "EA92E578",
+                            IsReverse = false,
+                            EndBehavior = AnimationEndBehavior.StayAtLastFrame,
+                        },
+                        new AnimationConfig {
+                            ShpHash = "E9490E87",
+                            PalHash = "297C46E0",
+                            IsRadarAnimation = true,
+                            IsReverse = true,
+                            EndBehavior = AnimationEndBehavior.StayAtFirstFrame
+                        }
+                    },
+                    ExitAnimations = new List<AnimationConfig> {
+                        new AnimationConfig {
+                            ShpHash = "EA92E578",
+                            IsReverse = true,
+                            EndBehavior = AnimationEndBehavior.Disappear
+                        },
+                        new AnimationConfig {
+                            ShpHash = "E9490E87",
+                            PalHash = "297C46E0",
+                            IsRadarAnimation = true,
+                            IsReverse = true,
+                            EndBehavior = AnimationEndBehavior.Disappear
+                        }
+                    }
+                }
             }
         };
 
@@ -332,6 +365,9 @@ namespace RA2Installer
 
         // 存储开始菜单文件夹名称
         private string _startMenuFolderName = string.Empty;
+
+        // 存储网络组件开始菜单文件夹名称
+        private string _internetComponentStartMenuFolderName = string.Empty;
 
         // 存储多选框状态
         private Dictionary<int, bool> _checkBoxStates = new Dictionary<int, bool> {
@@ -1852,6 +1888,18 @@ namespace RA2Installer
                     ShowMatchingElements(pageNumber);
                 });
             }
+            else if (pageNumber == 8)
+            {
+                // 加载并播放第八页的动画
+                PlayPageAnimations(pageNumber, true, () =>
+                {
+                    // 加载第八页的文本内容
+                    LoadPage8Content();
+
+                    // 显示匹配的元素
+                    ShowMatchingElements(pageNumber);
+                });
+            }
         }
 
         /// <summary>
@@ -1969,6 +2017,58 @@ namespace RA2Installer
             catch (Exception ex)
             {
                 File.AppendAllText(_logFile, $"Error loading page 6 content: {ex.Message}\n");
+            }
+        }
+
+        /// <summary>
+        /// 加载第八页的文本内容
+        /// </summary>
+        private void LoadPage8Content()
+        {
+            try
+            {
+                File.AppendAllText(_logFile, "Loading page 8 content from Language.dll\n");
+
+                // Language.dll文件路径
+                string languageDllPath = "Assets/RA1/Setup/Language.dll";
+
+                // 检查文件是否存在
+                if (!File.Exists(languageDllPath))
+                {
+                    File.AppendAllText(_logFile, "Language.dll file not found\n");
+                    return;
+                }
+
+                // 确定要使用的语言
+                ushort languageId = GetLanguageIdForCurrentLanguage();
+                File.AppendAllText(_logFile, $"Using language ID: {languageId}\n");
+
+                // 加载第一行文本（ID 123）
+                string? line1Text = GetStringWithReplacement(123, 23);
+                if (!string.IsNullOrEmpty(line1Text) && Page8Line1TextBlock != null)
+                {
+                    Page8Line1TextBlock.Text = line1Text;
+                }
+
+                // 加载第二行文本（ID 121）
+                string? line2Text = ReadStringFromLanguageDll(languageDllPath, 121, languageId);
+                if (!string.IsNullOrEmpty(line2Text) && Page8Line2TextBlock != null)
+                {
+                    Page8Line2TextBlock.Text = line2Text;
+                    File.AppendAllText(_logFile, $"Page 8 line 2 loaded from ID 121: '{line2Text}'\n");
+                }
+
+                // 加载第三行文本框内容（ID 7）
+                string? line3Text = ReadStringFromLanguageDll(languageDllPath, 7, languageId);
+                if (!string.IsNullOrEmpty(line3Text) && Page8InputTextBox != null)
+                {
+                    Page8InputTextBox.Text = line3Text;
+                    File.AppendAllText(_logFile, $"Page 8 input box loaded from ID 7: '{line3Text}'\n");
+                }
+            }
+            catch (Exception ex)
+            {
+                File.AppendAllText(_logFile, $"Error loading page 8 content: {ex.Message}\n");
             }
         }
 
@@ -2377,8 +2477,19 @@ namespace RA2Installer
             }
             else if (_currentPage == 7)
             {
-                // 第7页：播放退出动画，然后可以跳转到下一页（如果有）
-                // 这里暂时只做动画播放，不跳转
+                // 第7页：播放退出动画，然后跳转到第八页
+                PlayPageAnimations(_currentPage, false, () => SwitchToPage(8));
+            }
+            else if (_currentPage == 8)
+            {
+                // 第8页：保存网络组件开始菜单文件夹名称
+                if (Page8InputTextBox != null)
+                {
+                    _internetComponentStartMenuFolderName = Page8InputTextBox.Text;
+                    File.AppendAllText(_logFile, $"Internet component start menu folder name saved: {_internetComponentStartMenuFolderName}\n");
+                }
+                
+                // 第8页：播放退出动画，然后结束
                 PlayPageAnimations(_currentPage, false, null);
             }
         }
