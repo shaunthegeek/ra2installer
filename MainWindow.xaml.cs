@@ -410,9 +410,133 @@ namespace RA2Installer
             { 4, true }
         };
 
-        // 多选框SHP文件和PAL文件数据
+        // 存储多选框SHP文件和PAL文件数据
         private byte[]? _checkBoxShpData;
         private byte[]? _checkBoxPalData;
+
+        // 第十页音频和图片配置
+        private class AudioImageConfig
+        {
+            public string AudioHash { get; set; }
+            public List<(string ImageHash, double DisplayTimeSeconds)> Images { get; set; }
+
+            public AudioImageConfig()
+            {
+                AudioHash = string.Empty;
+                Images = new List<(string ImageHash, double DisplayTimeSeconds)>();
+            }
+        }
+
+        private List<AudioImageConfig> _page10AudioImageConfigs = new List<AudioImageConfig>
+        {
+            new AudioImageConfig
+            {
+                AudioHash = "C791934A",
+                Images = new List<(string, double)> {
+                    ("9629BE25", 3),  // 第一张图3秒
+                    ("19C12F18", -1)  // 剩余时间都给第二张图
+                }
+            },
+            new AudioImageConfig
+            {
+                AudioHash = "C791954A",
+                Images = new List<(string, double)> {
+                    ("48723214", 5),  // 第一张图5秒
+                    ("9778720C", -1)  // 剩余时间都给第二张图
+                }
+            },
+            new AudioImageConfig
+            {
+                AudioHash = "C791974A",
+                Images = new List<(string, double)> {
+                    ("C6199B82", -1)  // 剩余时间都给这张图
+                }
+            },
+            new AudioImageConfig
+            {
+                AudioHash = "C791994A",
+                Images = new List<(string, double)> {
+                    ("33F8777F", -1)  // 剩余时间都给这张图
+                }
+            },
+            new AudioImageConfig
+            {
+                AudioHash = "C7919B4A",
+                Images = new List<(string, double)> {
+                    ("2E53912F", -1)  // 剩余时间都给这张图
+                }
+            },
+            new AudioImageConfig
+            {
+                AudioHash = "C791894C",
+                Images = new List<(string, double)> {
+                    ("3E53912F", -1)  // 剩余时间都给这张图
+                }
+            },
+            new AudioImageConfig
+            {
+                AudioHash = "C7918B4C",
+                Images = new List<(string, double)> {
+                    ("8D2D65F0", -1)  // 剩余时间都给这张图
+                }
+            },
+            new AudioImageConfig
+            {
+                AudioHash = "C7918D4C",
+                Images = new List<(string, double)> {
+                    ("5496E434", -1)  // 剩余时间都给这张图
+                }
+            },
+            new AudioImageConfig
+            {
+                AudioHash = "C7918F4C",
+                Images = new List<(string, double)> {
+                    ("9ADFECF8", -1)  // 剩余时间都给这张图
+                }
+            },
+            new AudioImageConfig
+            {
+                AudioHash = "C791914C",
+                Images = new List<(string, double)> {
+                    ("845CB6FF", -1)  // 剩余时间都给这张图
+                }
+            },
+            new AudioImageConfig
+            {
+                AudioHash = "C791934C",
+                Images = new List<(string, double)> {
+                    ("A1C82DA8", -1)  // 剩余时间都给这张图
+                }
+            },
+            new AudioImageConfig
+            {
+                AudioHash = "C791954C",
+                Images = new List<(string, double)> {
+                    ("E5916138", -1),  // 第一张图占用所有时间
+                    ("A83C4B21", 3),
+                    ("AA42B8FE", 3),
+                    ("757EC1F5", 3),
+                    ("7A814AF5", 3),
+                    ("52C1456E", 3),
+                    ("sub.bmp", 3), 
+                    ("8FA8F1B1", 3),
+                    ("9F3C4696", 3),
+                    ("E59545B3", 3),
+                    ("42C5E1FE", 3),
+                    ("F14C0542", 3),
+                    ("53B6E434", 3),
+                    ("CF1981EF", 3) 
+                }
+            }
+        };
+
+        // 第十页相关变量
+        private MediaPlayer? _page10AudioPlayer;
+        private int _currentAudioIndex = 0;
+        private System.Timers.Timer? _imageSwitchTimer;
+        private int _currentImageIndex = 0;
+        private AudioImageConfig? _currentAudioConfig;
+        private double _audioDuration = 0;
 
         public MainWindow()
         {
@@ -500,6 +624,8 @@ namespace RA2Installer
                 File.AppendAllText(_logFile, "Initializing MediaPlayer\n");
                 _backgroundMusicPlayer = new System.Windows.Media.MediaPlayer();
                 _soundPlayer = new System.Windows.Media.MediaPlayer();
+                _page10AudioPlayer = new System.Windows.Media.MediaPlayer();
+                _page10AudioPlayer.MediaEnded += Page10AudioPlayer_MediaEnded;
 
                 // 加载按钮点击音效
                 File.AppendAllText(_logFile, "Loading button click sound\n");
@@ -1198,6 +1324,195 @@ namespace RA2Installer
                 return null;
             }
         }
+
+        #region 第十页音频图片播放逻辑
+
+        /// <summary>
+        /// 音频播放结束事件处理
+        /// </summary>
+        private void Page10AudioPlayer_MediaEnded(object? sender, EventArgs e)
+        {
+            // 不停止图片切换定时器，让图片继续播放完成
+            
+            // 等待1秒后播放下一个音频
+            var timer = new System.Timers.Timer(2000);
+            timer.AutoReset = false;
+            timer.Elapsed += (s, args) =>
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    // 检查图片是否已经播放完成
+                    if (_imageSwitchTimer == null || _currentAudioConfig == null || _currentImageIndex >= _currentAudioConfig.Images.Count)
+                    {
+                        // 播放下一个音频
+                        _currentAudioIndex++;
+                        if (_currentAudioIndex < _page10AudioImageConfigs.Count)
+                        {
+                            PlayPage10Audio(_currentAudioIndex);
+                        }
+                        else
+                        {
+                            // 所有音频播放完成，重置索引
+                            _currentAudioIndex = 0;
+                            PlayPage10Audio(_currentAudioIndex);
+                        }
+                    }
+                });
+            };
+            timer.Start();
+        }
+
+        /// <summary>
+        /// 播放第十页的音频和图片
+        /// </summary>
+        private void PlayPage10Audio(int audioIndex)
+        {
+            if (audioIndex < 0 || audioIndex >= _page10AudioImageConfigs.Count)
+                return;
+
+            _currentAudioConfig = _page10AudioImageConfigs[audioIndex];
+            _currentImageIndex = 0;
+
+            // 加载并播放音频
+            if (_currentAudioConfig != null)
+            {
+                string? audioPath = LoadAudioFromMix(_currentAudioConfig.AudioHash);
+                if (audioPath != null)
+                {
+                    try
+                    {
+                        if (_page10AudioPlayer != null)
+                        {
+                            _page10AudioPlayer.Open(new Uri(audioPath));
+                            _page10AudioPlayer.Play();
+
+                            // 获取音频时长
+                            _page10AudioPlayer.MediaOpened += (sender, e) =>
+                            {
+                                if (_page10AudioPlayer != null)
+                                {
+                                    _audioDuration = _page10AudioPlayer.NaturalDuration.TimeSpan.TotalSeconds;
+                                    // 开始播放图片
+                                    StartPage10ImageSequence();
+                                }
+                            };
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        File.AppendAllText(_logFile, $"Error playing audio {_currentAudioConfig.AudioHash}: {ex.Message}\n");
+                        // 播放下一个音频
+                        _currentAudioIndex++;
+                        PlayPage10Audio(_currentAudioIndex);
+                    }
+                }
+                else
+                {
+                    File.AppendAllText(_logFile, $"Failed to load audio {_currentAudioConfig.AudioHash}\n");
+                    // 播放下一个音频
+                    _currentAudioIndex++;
+                    PlayPage10Audio(_currentAudioIndex);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 开始图片序列播放
+        /// </summary>
+        private void StartPage10ImageSequence()
+        {
+            if (_currentAudioConfig == null || _currentImageIndex >= _currentAudioConfig.Images.Count)
+                return;
+
+            // 加载第一张图片
+            LoadPage10Image(_currentAudioConfig.Images[_currentImageIndex].Item1);
+
+            // 计算第一张图片的显示时间
+            double displayTime = _currentAudioConfig.Images[_currentImageIndex].Item2;
+            if (displayTime == -1)
+            {
+                // 如果是最后一张图片，显示剩余时间
+                displayTime = _audioDuration;
+            }
+
+            // 设置定时器切换图片
+            _imageSwitchTimer = new System.Timers.Timer(displayTime * 1000);
+            _imageSwitchTimer.AutoReset = false;
+            _imageSwitchTimer.Elapsed += (sender, e) =>
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    _currentImageIndex++;
+                    if (_currentAudioConfig != null && _currentImageIndex < _currentAudioConfig.Images.Count)
+                    {
+                        // 加载下一张图片
+                        LoadPage10Image(_currentAudioConfig.Images[_currentImageIndex].Item1);
+
+                        // 计算下一张图片的显示时间
+                        double nextDisplayTime = _currentAudioConfig.Images[_currentImageIndex].Item2;
+                        if (nextDisplayTime == -1)
+                        {
+                            // 如果是最后一张图片，显示剩余时间
+                            // 计算已播放的时间
+                            double elapsedTime = 0;
+                            for (int i = 0; i < _currentImageIndex; i++)
+                            {
+                                double time = _currentAudioConfig.Images[i].Item2;
+                                if (time != -1)
+                                    elapsedTime += time;
+                            }
+                            nextDisplayTime = _audioDuration - elapsedTime;
+                        }
+
+                        // 重新设置定时器
+                        if (_imageSwitchTimer != null)
+                        {
+                            _imageSwitchTimer.Interval = nextDisplayTime * 1000;
+                            _imageSwitchTimer.Start();
+                        }
+                    }
+                });
+            };
+            _imageSwitchTimer.Start();
+        }
+
+        /// <summary>
+        /// 加载第十页的图片
+        /// </summary>
+        /// <param name="imageHash">图片哈希值</param>
+        private void LoadPage10Image(string imageHash)
+        {
+            try
+            {
+                MixFile mixFile = new MixFile(SetupMixPath);
+                System.Windows.Media.Imaging.BitmapImage? image = mixFile.GetImageByHash(imageHash);
+                if (image != null)
+                {
+                    Page10AnimationImage.Source = image;
+                }
+                else
+                {
+                    File.AppendAllText(_logFile, $"Failed to load image {imageHash}\n");
+                }
+            }
+            catch (Exception ex)
+            {
+                File.AppendAllText(_logFile, $"Error loading image {imageHash}: {ex.Message}\n");
+            }
+        }
+
+        /// <summary>
+        /// 停止第十页的音频和图片播放
+        /// </summary>
+        private void StopPage10Playback()
+        {
+            _page10AudioPlayer?.Stop();
+            _imageSwitchTimer?.Stop();
+            _imageSwitchTimer?.Dispose();
+            _imageSwitchTimer = null;
+        }
+
+        #endregion
 
         /// <summary>
         /// 加载按钮点击音效
@@ -1945,6 +2260,15 @@ namespace RA2Installer
                     ShowMatchingElements(pageNumber);
                 });
             }
+            else if (pageNumber == 10)
+            {
+                // 显示匹配的元素
+                ShowMatchingElements(pageNumber);
+
+                // 开始播放第十页的音频和图片
+                _currentAudioIndex = 0;
+                PlayPage10Audio(_currentAudioIndex);
+            }
         }
 
         /// <summary>
@@ -2555,6 +2879,11 @@ namespace RA2Installer
             // 切换到上一页，播放退出动画
             if (_currentPage > 1)
             {
+                // 停止第十页的播放
+                if (_currentPage == 10)
+                {
+                    StopPage10Playback();
+                }
                 PlayPageAnimations(_currentPage, false, () => SwitchToPage(_currentPage - 1));
             }
         }
@@ -2621,8 +2950,21 @@ namespace RA2Installer
                     File.AppendAllText(_logFile, $"Internet component start menu folder name saved: {_internetComponentStartMenuFolderName}\n");
                 }
                 
-                // 第8页：播放退出动画，然后结束
+                // 第8页：播放退出动画，然后跳转到第九页
                 PlayPageAnimations(_currentPage, false, () => SwitchToPage(9));
+            }
+            else if (_currentPage == 9)
+            {
+                // 第9页：播放退出动画，然后跳转到第十页
+                PlayPageAnimations(_currentPage, false, () => SwitchToPage(10));
+            }
+            else if (_currentPage == 10)
+            {
+                // 第10页：停止播放，然后结束
+                StopPage10Playback();
+                // 可以在这里添加结束逻辑，比如关闭窗口或返回首页
+                // 暂时先返回首页
+                SwitchToPage(1);
             }
         }
 
